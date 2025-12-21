@@ -177,3 +177,8 @@ The application continuously cycles through:
 - Reflecting
 
 With minimal user effort and AI handling most of the work.
+
+## Migration Command
+
+- for local development
+  pnpm prisma migrate dev --name init

@@ -1,26 +1,65 @@
+/* Custom nav underline effect for header links */
+.nav-link {
+  @apply text-base font-medium text-[var(--ch-bluegrey)] relative transition-colors;
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -8px;
+  height: 2px;
+  background: var(--ch-sage-dark);
+  opacity: 0;
+  transform: scaleX(0);
+  transition: opacity 0.2s, transform 0.2s;
+  border-radius: 1px;
+}
+.nav-link:hover::after,
+.nav-link:focus-visible::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* CalmHive Color Palette */
+  --ch-sage-dark: #19c496; /* Deep Sage Green (primary buttons) */
+  --ch-offwhite: #ffffff; /* Warm Off-White (background) */
+  --ch-taupe: #e6e1da; /* Light Taupe (cards) */
+  --ch-bluegrey: #000000; /* Muted Blue-Grey (secondary actions) */
+  --ch-text: #2f2f2f; /* Primary Text */
+
+  --background: var(--ch-offwhite);
+  --foreground: var(--ch-text);
 }
 
-@theme inline {
+:root {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Utility classes for CalmHive theme (optional, for easy use) */
+.ch-bg-card {
+  background: var(--ch-taupe);
+}
+.ch-bg-accent {
+  background: var(--ch-sage-light);
+}
+.ch-bg-primary {
+  background: var(--ch-sage-dark);
+}
+.ch-bg-secondary {
+  background: var(--ch-bluegrey);
+}
+.ch-text-primary {
+  color: var(--ch-text);
 }
