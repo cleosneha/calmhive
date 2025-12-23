@@ -19,6 +19,7 @@ This document provides comprehensive standards and strategies for coding agents 
 - **Performance:** Use the latest Next.js optimizations (e.g., Server Components, Suspense, streaming, caching, parallel routes).
 - **Accessibility:** Ensure all UI is accessible (ARIA, keyboard navigation, color contrast).
 - **Responsiveness:** All UI must be fully responsive and mobile-friendly.
+- **Color usage:** Never hardcode any color, use it directly from globals.css
 
 ---
 

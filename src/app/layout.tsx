@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
-import HeaderLoggedOut from "@/components/shared/header/header-logged-out";
-import Footer from "@/components/shared/footer/footer";
-
+import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
 const poppins = Poppins({
   subsets: ["latin"],
   variable: "--font-poppins",
   weight: ["400", "700"],
 });
-
-import "./globals.css";
 
 export const metadata: Metadata = {
   title: "CalmHive - Find Calm, Plan Mindfully",
@@ -25,9 +22,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${poppins.variable} antialiased`}>
-        <HeaderLoggedOut />
+        <Toaster />
         {children}
-        <Footer />
       </body>
     </html>
   );

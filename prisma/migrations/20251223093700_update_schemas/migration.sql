@@ -1,0 +1,47 @@
+/*
+  Warnings:
+
+  - You are about to drop the column `aiGeneratedDraft` on the `JournalEntry` table. All the data in the column will be lost.
+  - You are about to drop the column `rawResponses` on the `JournalEntry` table. All the data in the column will be lost.
+  - You are about to drop the column `aiGeneratedContent` on the `Plan` table. All the data in the column will be lost.
+  - You are about to drop the column `generatedAt` on the `Plan` table. All the data in the column will be lost.
+  - You are about to drop the column `status` on the `Plan` table. All the data in the column will be lost.
+  - You are about to drop the column `image` on the `User` table. All the data in the column will be lost.
+  - You are about to drop the `Account` table. If the table is not empty, all the data it contains will be lost.
+  - You are about to drop the `Session` table. If the table is not empty, all the data it contains will be lost.
+  - You are about to drop the `Verification` table. If the table is not empty, all the data it contains will be lost.
+
+*/
+-- DropForeignKey
+ALTER TABLE "Account" DROP CONSTRAINT "Account_userId_fkey";
+
+-- DropForeignKey
+ALTER TABLE "Session" DROP CONSTRAINT "Session_userId_fkey";
+
+-- DropForeignKey
+ALTER TABLE "Verification" DROP CONSTRAINT "Verification_userId_fkey";
+
+-- AlterTable
+ALTER TABLE "JournalEntry" DROP COLUMN "aiGeneratedDraft",
+DROP COLUMN "rawResponses";
+
+-- AlterTable
+ALTER TABLE "Plan" DROP COLUMN "aiGeneratedContent",
+DROP COLUMN "generatedAt",
+DROP COLUMN "status";
+
+-- AlterTable
+ALTER TABLE "User" DROP COLUMN "image",
+ADD COLUMN     "password" TEXT;
+
+-- DropTable
+DROP TABLE "Account";
+
+-- DropTable
+DROP TABLE "Session";
+
+-- DropTable
+DROP TABLE "Verification";
+
+-- DropEnum
+DROP TYPE "PlanStatus";

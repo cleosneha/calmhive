@@ -4,19 +4,29 @@ This document describes the end-to-end user flow of the CalmHive application, fr
 
 ---
 
-## 1. Landing & Entry
+## 1. Landing & Authentication
 
 - User lands on the application
-- No registration required
-- Clear option to:
-  - Start onboarding
-  - Continue anonymously
+- Prompted to login or register
+- Registration options:
+  - Email + password
+  - OAuth (optional)
+- No anonymous access
 
-Purpose: allow safe, zero-pressure entry.
+Purpose: Secure entry with user accounts.
 
 ---
 
-## 2. AI-Driven Onboarding (Pre-Registration)
+## 2. Post-Authentication Check
+
+- After successful login/registration:
+  - Check if user has completed onboarding (via `User.onboarded` flag in DB)
+  - If onboarded, proceed to dashboard
+  - If not onboarded, redirect to onboarding
+
+---
+
+## 3. AI-Driven Onboarding (Post-Registration)
 
 - Onboarding happens via conversational UI
 - User answers a small set of guided questions
@@ -33,26 +43,19 @@ Rules:
 
 Data Handling:
 
-- All onboarding responses are stored in `localStorage`
-- No backend persistence at this stage
+- All onboarding responses are stored directly in the backend DB
+- Linked to the user account via `Onboarding` model
 
 ---
 
-## 3. Registration Prompt
+## 4. Onboarding Completion
 
-- After onboarding completion, user is prompted to register
-- Registration options:
-  - Email + password
-  - OAuth (optional)
-
-On registration:
-
-- Onboarding data is sent from `localStorage` to backend
-- Data is linked to the user account
+- After onboarding, set `User.onboarded = true`
+- Proceed to dashboard
 
 ---
 
-## 4. Weekly Plan Generation
+## 5. Weekly Plan Generation
 
 - AI generates a personalized weekly plan using:
   - Onboarding responses
@@ -67,7 +70,7 @@ Plan Characteristics:
 
 ---
 
-## 5. Plan Review & Editing
+## 6. Plan Review & Editing
 
 ### Manual Editing
 
@@ -90,7 +93,7 @@ AI never edits without confirmation.
 
 ---
 
-## 6. Plan Finalization
+## 7. Plan Finalization
 
 - Once reviewed, the plan is finalized for the week
 - Plan remains stable
@@ -98,7 +101,7 @@ AI never edits without confirmation.
 
 ---
 
-## 7. Daily Task Updates
+## 8. Daily Task Updates
 
 - For each task, user can mark:
   - Done
@@ -110,7 +113,7 @@ All task updates are logged daily.
 
 ---
 
-## 8. Journaling Flow
+## 9. Journaling Flow
 
 ### Guided Journaling
 
@@ -125,7 +128,7 @@ All task updates are logged daily.
 
 ---
 
-## 9. Journal Signal Processing
+## 10. Journal Signal Processing
 
 - Journal content is processed to extract:
   - Emotional tone
@@ -135,7 +138,7 @@ All task updates are logged daily.
 
 ---
 
-## 10. Weekly Insight Generation (Cron Job)
+## 11. Weekly Insight Generation (Cron Job)
 
 - Weekly background job runs using:
   - Task completion data
@@ -147,7 +150,7 @@ All task updates are logged daily.
 
 ---
 
-## 11. Insights Page (In-App)
+## 12. Insights Page (In-App)
 
 - Insights are displayed on a dedicated Insights page
 - Content mirrors the weekly email but is more reflective
@@ -160,7 +163,7 @@ No scores, charts, or comparisons.
 
 ---
 
-## 12. Weekly Email Summary
+## 13. Weekly Email Summary
 
 - Weekly insights are sent to the user’s registered email
 - Short, supportive, non-judgmental format
