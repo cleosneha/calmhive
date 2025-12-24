@@ -2,6 +2,8 @@
 
 import db from "@/lib/db";
 import { sendOTPEmail } from "@/lib/email-service";
+import { apiResponse } from "@/utils/api-response";
+import { apiError } from "@/utils/api-error";
 
 /**
  * Generate a random 6-digit OTP
@@ -30,11 +32,11 @@ export async function createOTP(email: string) {
     });
 
     console.log(`✅ OTP created for ${email}: ${otp}`);
-    return { success: true, otp };
+    return apiResponse({ otp });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("❌ Failed to create OTP:", message);
-    return { success: false, error: "Failed to create OTP" };
+    return apiError("Failed to create OTP");
   }
 }
 
@@ -47,24 +49,21 @@ export async function sendOTP(email: string) {
   try {
     const otpResult = await createOTP(email);
 
-    if (!otpResult.success) {
-      return { success: false, error: "Failed to generate OTP" };
+    if (otpResult.status === "error") {
+      return apiError("Failed to generate OTP");
     }
 
-    const emailResult = await sendOTPEmail(email, otpResult.otp!);
+    const emailResult = await sendOTPEmail(email, otpResult.data.otp!);
 
     if (!emailResult.success) {
-      return { success: false, error: "Failed to send OTP email" };
+      return apiError("Failed to send OTP email");
     }
 
-    return {
-      success: true,
-      message: "OTP sent successfully to your email",
-    };
+    return apiResponse(null, "OTP sent successfully to your email");
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("❌ Failed to send OTP:", message);
-    return { success: false, error: "Failed to send OTP" };
+    return apiError("Failed to send OTP");
   }
 }
 
@@ -93,12 +92,12 @@ export async function verifyOTP(email: string, otp: string) {
     });
 
     if (!user) {
-      return { success: false, error: "User not found" };
+      return apiError("User not found", "USER_NOT_FOUND");
     }
 
     // Check if OTP matches
     if (user.verificationCode !== otp) {
-      return { success: false, error: "Invalid OTP" };
+      return apiError("Invalid OTP", "INVALID_OTP");
     }
 
     // Check if OTP has expired
@@ -106,10 +105,10 @@ export async function verifyOTP(email: string, otp: string) {
       user.verificationCodeExpiresAt &&
       new Date(user.verificationCodeExpiresAt).getTime() < new Date().getTime()
     ) {
-      return {
-        success: false,
-        error: "OTP has expired. Please request a new one.",
-      };
+      return apiError(
+        "OTP has expired. Please request a new one.",
+        "OTP_EXPIRED"
+      );
     }
 
     // Mark user as verified and clear verification code
@@ -123,19 +122,18 @@ export async function verifyOTP(email: string, otp: string) {
     });
 
     console.log(`✅ Email verified for ${email}`);
-    return {
-      success: true,
-      message: "Email verified successfully",
-      user: {
+    return apiResponse(
+      {
         id: user.id,
         email: user.email,
         name: user.name,
       },
-    };
+      "Email verified successfully"
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("❌ Failed to verify OTP:", message);
-    return { success: false, error: "Failed to verify OTP" };
+    return apiError("Failed to verify OTP");
   }
 }
 
@@ -152,21 +150,18 @@ export async function resendOTP(email: string) {
     });
 
     if (!user) {
-      return { success: false, error: "User not found" };
+      return apiError("User not found", "USER_NOT_FOUND");
     }
 
     // If already verified, don't send OTP
     if (user.emailVerified) {
-      return {
-        success: false,
-        error: "Email is already verified",
-      };
+      return apiError("Email is already verified", "ALREADY_VERIFIED");
     }
 
     return await sendOTP(email);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("❌ Failed to resend OTP:", message);
-    return { success: false, error: "Failed to resend OTP" };
+    return apiError("Failed to resend OTP");
   }
 }

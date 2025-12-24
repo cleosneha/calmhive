@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldLabel, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { InputGroup } from "@/components/ui/input-group";
+import { toast } from "sonner";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -19,14 +20,12 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
 
     setIsLoading(true);
     try {
@@ -37,13 +36,14 @@ export default function RegisterPage() {
         confirmPassword,
       });
       console.log("Register result:", result);
-      if (result.success) {
+      if (result.status === "success") {
+        toast.success("Account created! Please verify your email.");
         router.push(`/verify-email?email=${encodeURIComponent(email)}`);
       } else {
-        setError(result.error || "Registration failed. Please try again.");
+        toast.error(result.error || "Registration failed. Please try again.");
       }
     } catch (err) {
-      setError(
+      toast.error(
         err instanceof Error
           ? err.message
           : "Registration failed. Please try again."
@@ -60,7 +60,9 @@ export default function RegisterPage() {
         callbackURL: "/user",
       });
     } catch (error) {
-      setError("Google sign-up failed. Please try again.");
+      toast.error(
+        error instanceof Error ? error.message : "Google sign-up failed."
+      );
     }
   };
 
@@ -183,12 +185,6 @@ export default function RegisterPage() {
                   </InputGroup>
                 </Field>
               </FieldGroup>
-
-              {error && (
-                <div className="p-2 bg-red-50 border border-red-200 text-red-700 rounded text-xs">
-                  {error}
-                </div>
-              )}
 
               <Button
                 type="submit"

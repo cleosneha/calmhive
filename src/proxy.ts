@@ -7,7 +7,7 @@ export function proxy(request: NextRequest) {
   const token = request.cookies.get("better-auth.session_token")?.value;
 
   // Public routes that don't require authentication
-  const publicRoutes = ["/login", "/register", "/"];
+  // const publicRoutes = ["/login", "/register", "/"];
 
   // Routes that require authentication
   const protectedRoutes = [
@@ -16,6 +16,7 @@ export function proxy(request: NextRequest) {
     "/plan",
     "/insights",
     "/settings",
+    "/user",
   ];
 
   // If user is not authenticated (no session token)

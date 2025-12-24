@@ -1,5 +1,7 @@
 "use server";
 import nodemailer from "nodemailer";
+import { apiResponse } from "@/utils/api-response";
+import { apiError, getErrorMessage } from "@/utils/api-error";
 
 export async function sendMail(formData: {
   name: string;
@@ -22,9 +24,8 @@ export async function sendMail(formData: {
       subject: `[Calmhive] ${formData.subject}`,
       text: `Name: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`,
     });
-    return { success: true };
+    return apiResponse(null, "Email sent successfully");
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return { success: false, error: message };
+    return apiError(getErrorMessage(error));
   }
 }

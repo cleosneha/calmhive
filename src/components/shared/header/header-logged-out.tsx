@@ -47,7 +47,7 @@ export default function HeaderLoggedOut() {
         <div className="flex items-center gap-2">
           <Link
             href="/login"
-            className="rounded-full bg-[var(--ch-sage-dark)] hover:bg-[var(--ch-sage-light)] text-white hover:text-[var(--ch-sage-dark)] px-6 py-2 font-semibold text-base transition-colors shadow focus:outline-none focus:ring-2 focus:ring-[var(--ch-sage-light)]"
+            className="rounded-full bg-[var(--ch-sage-dark)] hover:bg-[var(--ch-sage-light)] text-white px-6 py-2 font-semibold text-base transition-colors shadow focus:outline-none focus:ring-2 focus:ring-[var(--ch-sage-light)]"
           >
             Get Started
           </Link>

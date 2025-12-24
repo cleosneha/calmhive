@@ -1,6 +1,4 @@
 "use client";
-
-import { useContext } from "react";
 import { authClient } from "@/lib/auth-client";
 
 /**

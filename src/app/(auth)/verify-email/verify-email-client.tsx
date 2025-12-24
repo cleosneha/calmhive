@@ -42,7 +42,7 @@ export default function VerifyEmailClient() {
     try {
       const result = await verifyOTP(email, otp);
 
-      if (result.success) {
+      if (result.status === "success") {
         toast.success("✓ Email verified successfully!");
         setTimeout(() => {
           router.push("/login");
@@ -62,8 +62,8 @@ export default function VerifyEmailClient() {
     setIsResending(true);
     try {
       const result = await resendOTP(email);
-      if (result.success) {
-        toast.success("OTP sent successfully to your email");
+      if (result.status === "success") {
+        toast.success(result.message || "OTP sent successfully to your email");
         setOtp("");
       } else {
         toast.error(result.error || "Failed to resend OTP");

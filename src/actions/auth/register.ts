@@ -5,6 +5,8 @@ import { sendOTP } from "@/actions/auth/otp";
 import { registerSchema } from "@/schemas/auth";
 import db from "@/lib/db";
 import { headers } from "next/headers";
+import { apiResponse } from "@/utils/api-response";
+import { apiError } from "@/utils/api-error";
 
 export async function registerUser({
   name,
@@ -26,7 +28,7 @@ export async function registerUser({
   });
   if (!result.success) {
     const firstIssue = result.error.issues[0];
-    return { success: false, error: firstIssue?.message || "Invalid input" };
+    return apiError(firstIssue?.message || "Invalid input", "VALIDATION_ERROR");
   }
 
   try {
@@ -38,10 +40,10 @@ export async function registerUser({
         await db.user.delete({ where: { email } });
       } else {
         // User already exists and is verified
-        return {
-          success: false,
-          error: "An account with this email already exists.",
-        };
+        return apiError(
+          "An account with this email already exists.",
+          "USER_EXISTS"
+        );
       }
     }
 
@@ -60,27 +62,26 @@ export async function registerUser({
 
     if (!response.ok) {
       const data = await response.json();
-      return {
-        success: false,
-        error: data.error?.message || "Registration failed. Please try again.",
-      };
+      return apiError(
+        data.error?.message || "Registration failed. Please try again."
+      );
     }
 
     // Send OTP for email verification
     const otpResult = await sendOTP(email);
-    if (otpResult.success) {
-      return { success: true };
+    if (otpResult.status === "success") {
+      return apiResponse(
+        null,
+        "Registration successful. Please verify your email."
+      );
     } else {
-      return { success: false, error: otpResult.error || "Failed to send OTP" };
+      return apiError(otpResult.error || "Failed to send OTP");
     }
   } catch (err) {
     const errorMessage =
       err instanceof Error
         ? err.message
         : "Registration failed. Please try again.";
-    return {
-      success: false,
-      error: errorMessage,
-    };
+    return apiError(errorMessage);
   }
 }

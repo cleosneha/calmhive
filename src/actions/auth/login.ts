@@ -4,12 +4,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import db from "@/lib/db";
-
-interface LoginResult {
-  success: boolean;
-  error?: string;
-  provider?: string;
-}
+import { apiError } from "@/utils/api-error";
 
 /**
  * Sign in user with email and password
@@ -21,7 +16,7 @@ export async function login({
 }: {
   email: string;
   password: string;
-}): Promise<LoginResult> {
+}) {
   try {
     const headersList = await headers();
 
@@ -91,29 +86,23 @@ export async function login({
             })
             .join(" or ");
 
-          return {
-            success: false,
-            error: `This account is registered with ${providerNames}. Please sign in with ${providerNames} instead.`,
-            provider: providers[0],
-          };
+          return apiError(
+            `This account is registered with ${providerNames}. Please sign in with ${providerNames} instead.`,
+            "OAUTH_ACCOUNT"
+          );
         }
       }
     }
 
-    return {
-      success: false,
-      error: errorMessage || "Invalid email or password.",
-    };
+    return apiError(errorMessage || "Invalid email or password.");
   } catch (err) {
     // Check if it's a redirect error (from redirect() call)
     if (err instanceof Error && err.message.includes("NEXT_REDIRECT")) {
       throw err;
     }
 
-    return {
-      success: false,
-      error:
-        err instanceof Error ? err.message : "Login failed. Please try again.",
-    };
+    return apiError(
+      err instanceof Error ? err.message : "Login failed. Please try again."
+    );
   }
 }

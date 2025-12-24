@@ -1,6 +1,11 @@
 /* Custom nav underline effect for header links */
 .nav-link {
-  @apply text-base font-medium text-[var(--ch-bluegrey)] relative transition-colors;
+  font-size: 1rem; /* Tailwind's text-base */
+  font-weight: 500; /* Tailwind's font-medium */
+  color: var(--ch-bluegrey); /* Tailwind's text-[var(--ch-bluegrey)] */
+  position: relative; /* Tailwind's relative */
+  transition-property: color;
+  transition-duration: 150ms; /* Tailwind's transition-colors */
 }
 .nav-link::after {
   content: "";
@@ -23,15 +28,46 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
 :root {
   /* CalmHive Color Palette */
   --ch-sage-dark: #19c496; /* Deep Sage Green (primary buttons) */
+  --ch-sage-light: #24c096c5; /* Deep Sage Green (primary buttons) */
   --ch-offwhite: #ffffff; /* Warm Off-White (background) */
   --ch-taupe: #e6e1da; /* Light Taupe (cards) */
   --ch-bluegrey: #000000; /* Muted Blue-Grey (secondary actions) */
-  --ch-text: #2f2f2f; /* Primary Text */ --radius: 0.625rem; --background: oklch(1 0 0); --foreground: oklch(0.141 0.005 285.823); --card: oklch(1 0 0); --card-foreground: oklch(0.141 0.005 285.823); --popover: oklch(1 0 0); --popover-foreground: oklch(0.141 0.005 285.823); --primary: oklch(0.21 0.006 285.885); --primary-foreground: oklch(0.985 0 0); --secondary: oklch(0.967 0.001 286.375); --secondary-foreground: oklch(0.21 0.006 285.885); --muted: oklch(0.967 0.001 286.375); --muted-foreground: oklch(0.552 0.016 285.938); --accent: oklch(0.967 0.001 286.375); --accent-foreground: oklch(0.21 0.006 285.885); --destructive: oklch(0.577 0.245 27.325); --border: oklch(0.92 0.004 286.32); --input: oklch(0.92 0.004 286.32); --ring: oklch(0.705 0.015 286.067); --chart-1: oklch(0.646 0.222 41.116); --chart-2: oklch(0.6 0.118 184.704); --chart-3: oklch(0.398 0.07 227.392); --chart-4: oklch(0.828 0.189 84.429); --chart-5: oklch(0.769 0.188 70.08); --sidebar: oklch(0.985 0 0); --sidebar-foreground: oklch(0.141 0.005 285.823); --sidebar-primary: oklch(0.21 0.006 285.885); --sidebar-primary-foreground: oklch(0.985 0 0); --sidebar-accent: oklch(0.967 0.001 286.375); --sidebar-accent-foreground: oklch(0.21 0.006 285.885); --sidebar-border: oklch(0.92 0.004 286.32); --sidebar-ring: oklch(0.705 0.015 286.067);
+  --ch-text: #2f2f2f; /* Primary Text */
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  --primary: oklch(0.21 0.006 285.885);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.705 0.015 286.067);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-primary: oklch(0.21 0.006 285.885);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.967 0.001 286.375);
+  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+  --sidebar-border: oklch(0.92 0.004 286.32);
+  --sidebar-ring: oklch(0.705 0.015 286.067);
 }
 
 :root {
@@ -62,7 +98,7 @@ body {
   color: var(--ch-text);
 }
 
-@theme inline {
+:root {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -136,12 +172,31 @@ body {
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
 }
-
+.sidebar {
+  background: var(--sidebar);
+  color: var(--sidebar-foreground);
+  width: 5rem;
+  min-width: 5rem;
+  max-width: 5rem;
+  transition: none;
+}
+.sidebar-link {
+  transition: background 0.2s, color 0.2s;
+}
+.sidebar-link:hover {
+  background: var(--ch-sage-dark, #19c496) 10%;
+  color: var(--ch-sage-dark, #19c496);
+}
+.sidebar-user-initials {
+  transition: background 0.2s, color 0.2s;
+}
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--border);
+    outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--background);
+    color: var(--foreground);
   }
 }

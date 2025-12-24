@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function HeroSection() {
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -39,12 +41,12 @@ export default function HeroSection() {
           and reflection. No pressure, no judgment—just calm progress at your
           pace.
         </p>
-        <a
-          href="/onboarding"
-          className="mt-2 rounded-full bg-[var(--ch-sage-dark)] hover:bg-[var(--ch-sage-light)] text-white hover:text-[var(--ch-sage-dark)] px-8 py-3 font-semibold text-lg transition-colors shadow focus:outline-none focus:ring-2 focus:ring-[var(--ch-sage-light)]"
+        <Button
+          asChild
+          className="mt-2 rounded-full bg-[var(--ch-sage-dark)] hover:bg-[var(--ch-sage-light)] text-white  px-8 py-3 font-semibold text-lg transition-colors shadow focus:outline-none focus:ring-2 focus:ring-[var(--ch-sage-light)]"
         >
-          Get Started
-        </a>
+          <Link href="/onboarding">Get Started</Link>
+        </Button>
       </div>
 
       {/* Hidden Image to check load */}

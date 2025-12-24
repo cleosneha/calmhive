@@ -4,6 +4,8 @@ import { auth } from "@/lib/auth";
 import db from "@/lib/db";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { apiResponse } from "@/utils/api-response";
+import { apiError, getErrorMessage } from "@/utils/api-error";
 
 /**
  * Get the current authenticated user session
@@ -80,7 +82,7 @@ export async function getUserById(userId: string) {
  */
 export async function updateUserProfile(
   userId: string,
-  data: { name?: string; }
+  data: { name?: string }
 ) {
   try {
     const user = await db.user.update({
@@ -93,10 +95,10 @@ export async function updateUserProfile(
       },
     });
 
-    return { success: true, user };
+    return apiResponse(user, "Profile updated successfully");
   } catch (error) {
     console.error("Error updating user:", error);
-    return { success: false, error: "Failed to update user profile" };
+    return apiError("Failed to update user profile");
   }
 }
 
@@ -116,9 +118,9 @@ export async function completeOnboarding(userId: string) {
       },
     });
 
-    return { success: true, user };
+    return apiResponse(user, "Onboarding completed successfully");
   } catch (error) {
     console.error("Error completing onboarding:", error);
-    return { success: false, error: "Failed to complete onboarding" };
+    return apiError("Failed to complete onboarding");
   }
 }
