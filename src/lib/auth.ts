@@ -29,6 +29,33 @@ export const auth = betterAuth({
     },
   },
   plugins: [nextCookies()], // Add nextCookies plugin for server actions cookie handling
+  callbacks: {
+    /**
+     * Inject custom user fields into session
+     * This allows direct access to onboarded status without DB queries
+     */
+    session: async ({
+      session,
+      user,
+    }: {
+      session: typeof auth.$Infer.Session;
+      user: typeof auth.$Infer.Session["user"];
+    }) => {
+      // Fetch user with onboarded field from DB
+      const dbUser = await db.user.findUnique({
+        where: { id: user.id },
+        select: { onboarded: true },
+      });
+
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          onboarded: dbUser?.onboarded ?? false,
+        },
+      };
+    },
+  },
 });
 
 export type Session = typeof auth.$Infer.Session;

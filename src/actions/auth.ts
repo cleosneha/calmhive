@@ -104,6 +104,9 @@ export async function updateUserProfile(
 
 /**
  * Mark user as onboarded
+ * After onboarding is complete, this updates the user record
+ * The session will automatically refresh with the new onboarded status
+ * due to the callback in src/lib/auth.ts
  */
 export async function completeOnboarding(userId: string) {
   try {

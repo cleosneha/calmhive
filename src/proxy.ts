@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Get session from cookies (Better Auth stores it there)
   const token = request.cookies.get("better-auth.session_token")?.value;
 
-  // Public routes that don't require authentication
-  // const publicRoutes = ["/login", "/register", "/"];
-
   // Routes that require authentication
   const protectedRoutes = [
     "/onboarding",
+    "/journal",
+    "/plan",
+    "/insights",
+    "/settings",
+    "/user",
+  ];
+
+  // Routes that require onboarding completion
+  const onboardingRequiredRoutes = [
     "/journal",
     "/plan",
     "/insights",
@@ -32,6 +40,35 @@ export function proxy(request: NextRequest) {
     // Redirect to home if trying to access auth routes
     if (pathname === "/login" || pathname === "/register") {
       return NextResponse.redirect(new URL("/user", request.url));
+    }
+
+    // Check if user is onboarded for onboarding-required routes
+    if (onboardingRequiredRoutes.some((route) => pathname.startsWith(route))) {
+      try {
+        const headersList = await headers();
+        const session = await auth.api.getSession({
+          headers: headersList,
+        });
+
+        // If user is not onboarded, redirect to onboarding
+        if (
+          session?.user &&
+          !(session.user as typeof session.user & { onboarded?: boolean })
+            .onboarded
+        ) {
+          // Allow access to /onboarding/chat and /onboarding/complete
+          if (
+            !pathname.startsWith("/onboarding/chat") &&
+            !pathname.startsWith("/onboarding/complete") &&
+            pathname !== "/onboarding"
+          ) {
+            return NextResponse.redirect(new URL("/onboarding", request.url));
+          }
+        }
+      } catch (error) {
+        console.error("Error checking onboarding status:", error);
+        // On error, allow request to proceed (fail open)
+      }
     }
   }
 
