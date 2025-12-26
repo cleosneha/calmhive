@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MdLogout } from "react-icons/md";
 import { useSignOut } from "@/hooks/useSession";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 const navLinks = [
@@ -44,6 +45,13 @@ export default function Sidebar() {
   const initials = getInitials(user?.name || user?.email);
   const pathname = usePathname();
   const { signOut } = useSignOut();
+  const router = useRouter();
+
+  // Handles sign out and redirects to login
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/login");
+  };
 
   return (
     <aside
@@ -118,7 +126,7 @@ export default function Sidebar() {
             className="mb-2 ml-2"
           >
             <DropdownMenuItem
-              onClick={signOut}
+              onClick={handleSignOut}
               className="text-[var(--destructive)] focus:bg-[var(--destructive)]/10"
             >
               <span className="flex items-center gap-2">
