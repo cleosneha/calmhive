@@ -11,6 +11,15 @@ import {
 } from "react-icons/fi";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { MdLogout } from "react-icons/md";
+import { useSignOut } from "@/hooks/useSession";
+import { Button } from "@/components/ui/button";
 
 const navLinks = [
   { href: "/user", icon: <FiHome />, label: "Home" },
@@ -34,6 +43,7 @@ export default function Sidebar() {
   const user = data?.user;
   const initials = getInitials(user?.name || user?.email);
   const pathname = usePathname();
+  const { signOut } = useSignOut();
 
   return (
     <aside
@@ -91,9 +101,32 @@ export default function Sidebar() {
       </nav>
       {/* User Initials at Bottom */}
       <div className="mb-2 mt-auto flex flex-col items-center w-full">
-        <div className="sidebar-user-initials bg-[var(--ch-sage-dark)] text-white w-10 h-10 flex items-center justify-center rounded-full text-base font-bold mb-1 mx-auto select-none">
-          {initials}
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="secondary"
+              size="icon"
+              className="sidebar-user-initials bg-[var(--ch-sage-dark)] text-white w-10 h-10 flex items-center justify-center rounded-full text-base font-bold mb-1 mx-auto select-none focus:outline-none focus:ring-2 focus:ring-[var(--ch-sage-dark)]"
+              aria-label="User menu"
+            >
+              {initials}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            sideOffset={12}
+            className="mb-2 ml-2"
+          >
+            <DropdownMenuItem
+              onClick={signOut}
+              className="text-[var(--destructive)] focus:bg-[var(--destructive)]/10"
+            >
+              <span className="flex items-center gap-2">
+                <MdLogout className="text-lg" /> Logout
+              </span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </aside>
   );
