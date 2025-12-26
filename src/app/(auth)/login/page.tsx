@@ -28,7 +28,7 @@ export default function LoginPage() {
     const result = await login({ email, password });
     if (result.status === "success") {
       toast.success("Login successful!");
-      router.push("/");
+      router.push("/user");
     } else {
       toast.error(result.error || "Login failed. Please try again.");
     }

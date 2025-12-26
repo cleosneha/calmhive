@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import db from "@/lib/db";
 import { apiError } from "@/utils/api-error";
+import { apiResponse } from "@/utils/api-response";
 
 /**
  * Sign in user with email and password
@@ -32,8 +33,8 @@ export async function login({
 
     // Check if the response contains cookies (successful auth)
     if (response.ok) {
-      // Redirect to dashboard on successful login
-      redirect("/user/");
+      // Return success response
+      return apiResponse(null, "Login successful");
     }
 
     // Handle authentication errors
