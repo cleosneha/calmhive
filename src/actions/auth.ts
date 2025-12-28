@@ -127,3 +127,108 @@ export async function completeOnboarding(userId: string) {
     return apiError("Failed to complete onboarding");
   }
 }
+
+/**
+ * Delete user account and all associated data
+ * Deletes user from DB, sessions, and vector embeddings from Pinecone/Qdrant
+ */
+export async function deleteUserAccount() {
+  try {
+    const session = await getSession();
+    if (!session?.user) {
+      return apiError("Unauthorized");
+    }
+
+    const userId = session.user.id;
+
+    // Delete vector embeddings from Pinecone
+    try {
+      const pineconeApiKey = process.env.PINECONE_API_KEY;
+      const pineconeIndexHost = process.env.PINECONE_INDEX_HOST;
+
+      if (pineconeApiKey && pineconeIndexHost) {
+        const response = await fetch(
+          `https://${pineconeIndexHost}/vectors/delete`,
+          {
+            method: "POST",
+            headers: {
+              "Api-Key": pineconeApiKey,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              filter: { userId: { $eq: userId } },
+            }),
+          }
+        );
+
+        if (response.ok) {
+          console.log(`✓ Deleted Pinecone embeddings for user: ${userId}`);
+        } else {
+          console.error(
+            "Failed to delete Pinecone embeddings:",
+            await response.text()
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting Pinecone embeddings:", error);
+    }
+
+    // Delete vector embeddings from Qdrant (if in development)
+    if (process.env.NODE_ENV === "development") {
+      try {
+        const qdrantUrl = process.env.QDRANT_URL || "http://localhost:6333";
+        const qdrantCollection =
+          process.env.QDRANT_COLLECTION || "calmhive_onboarding";
+
+        const response = await fetch(
+          `${qdrantUrl}/collections/${qdrantCollection}/points/delete`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              filter: {
+                must: [
+                  {
+                    key: "userId",
+                    match: { value: userId },
+                  },
+                ],
+              },
+            }),
+          }
+        );
+
+        if (response.ok) {
+          console.log(`✓ Deleted Qdrant embeddings for user: ${userId}`);
+        } else {
+          console.error(
+            "Failed to delete Qdrant embeddings:",
+            await response.text()
+          );
+        }
+      } catch (error) {
+        console.error("Error deleting Qdrant embeddings:", error);
+      }
+    }
+
+    // Delete all user data from database (cascades to related tables)
+    await db.user.delete({
+      where: { id: userId },
+    });
+
+    // Sign out the user
+    const headersList = await headers();
+    await auth.api.signOut({
+      headers: headersList,
+    });
+
+    console.log(`✓ Deleted user account: ${userId}`);
+    return apiResponse({ success: true }, "Account deleted successfully");
+  } catch (error) {
+    console.error("Error deleting user account:", error);
+    return apiError(getErrorMessage(error));
+  }
+}

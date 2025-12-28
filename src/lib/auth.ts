@@ -24,23 +24,25 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // Update session every 24 hours
     cookieCache: {
-      enabled: true,
-      maxAge: 5 * 60, // 5 minutes
+      enabled: false, // Disable cache to always fetch fresh session
     },
   },
   plugins: [nextCookies()], // Add nextCookies plugin for server actions cookie handling
+  user: {
+    additionalFields: {
+      onboarded: {
+        type: "boolean",
+        defaultValue: false,
+        required: false,
+      },
+    },
+  },
   callbacks: {
     /**
      * Inject custom user fields into session
      * This allows direct access to onboarded status without DB queries
      */
-    session: async ({
-      session,
-      user,
-    }: {
-      session: typeof auth.$Infer.Session;
-      user: typeof auth.$Infer.Session["user"];
-    }) => {
+    async session({ session, user }) {
       // Fetch user with onboarded field from DB
       const dbUser = await db.user.findUnique({
         where: { id: user.id },
@@ -48,9 +50,9 @@ export const auth = betterAuth({
       });
 
       return {
-        ...session,
+        session,
         user: {
-          ...session.user,
+          ...user,
           onboarded: dbUser?.onboarded ?? false,
         },
       };

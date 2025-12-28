@@ -11,6 +11,14 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: always
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
   adminer:
     image: adminer
     restart: always
@@ -18,3 +26,4 @@ services:
       - 8080:8080
 volumes:
   db_data:
+  qdrant_data:

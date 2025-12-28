@@ -23,6 +23,10 @@ This document provides comprehensive standards and strategies for coding agents 
 
 ---
 
+## Type safety
+
+- Use types folder to declare types and use in my entire application.
+
 ## 🗂️ Directory & Naming Conventions
 
 - **Folders:** `lowercase` + `kebab-case` (e.g., `user-profile/`)

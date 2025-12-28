@@ -21,6 +21,7 @@ model User {
     verificationCode          String? // Temporary OTP code for email verification
     verificationCodeExpiresAt DateTime? // OTP expiration time
     onboarded                 Boolean   @default(false)
+    currentPlan               Json? // Generated weekly plan (only after T&C)
     createdAt                 DateTime  @default(now())
     updatedAt                 DateTime  @updatedAt
 
@@ -76,12 +77,16 @@ model Session {
 }
 
 model Onboarding {
-    id        Int      @id @default(autoincrement())
-    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId    String   @unique
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-    responses Json
+    id            Int       @id @default(autoincrement())
+    user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId        String    @unique
+    responses     Json // Full responses { goals: "...", timeAvailability: "...", ... }
+    termsAccepted Boolean   @default(false)
+    completedAt   DateTime?
+    createdAt     DateTime  @default(now())
+    updatedAt     DateTime  @updatedAt
+
+    @@index([userId])
 }
 
 model Plan {
@@ -147,4 +152,50 @@ model Verification {
 
     @@index([identifier])
     @@map("verification")
+}
+
+// LangGraph Checkpoint Tables (managed by postgresSaver)
+model CheckpointMigration {
+    v Int @id @map("v")
+
+    @@map("checkpoint_migrations")
+}
+
+model Checkpoint {
+    threadId           String  @map("thread_id")
+    checkpointNs       String  @default("") @map("checkpoint_ns")
+    checkpointId       String  @map("checkpoint_id")
+    parentCheckpointId String? @map("parent_checkpoint_id")
+    type               String? @map("type")
+    checkpoint         Json    @map("checkpoint")
+    metadata           Json    @default("{}") @map("metadata")
+
+    @@id([threadId, checkpointNs, checkpointId])
+    @@map("checkpoints")
+}
+
+model CheckpointBlob {
+    threadId     String @map("thread_id")
+    checkpointNs String @default("") @map("checkpoint_ns")
+    channel      String @map("channel")
+    version      String @map("version")
+    type         String @map("type")
+    blob         Bytes? @map("blob")
+
+    @@id([threadId, checkpointNs, channel, version])
+    @@map("checkpoint_blobs")
+}
+
+model CheckpointWrite {
+    threadId     String  @map("thread_id")
+    checkpointNs String  @default("") @map("checkpoint_ns")
+    checkpointId String  @map("checkpoint_id")
+    taskId       String  @map("task_id")
+    idx          Int     @map("idx")
+    channel      String  @map("channel")
+    type         String? @map("type")
+    blob         Bytes   @map("blob")
+
+    @@id([threadId, checkpointNs, checkpointId, taskId, idx])
+    @@map("checkpoint_writes")
 }

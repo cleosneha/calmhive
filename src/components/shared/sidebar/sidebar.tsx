@@ -16,11 +16,24 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { MdLogout } from "react-icons/md";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { MdLogout, MdDeleteForever } from "react-icons/md";
 import { useSignOut } from "@/hooks/useSession";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { deleteUserAccount } from "@/actions/auth";
+import { useState } from "react";
 
 const navLinks = [
   { href: "/user", icon: <FiHome />, label: "Home" },
@@ -46,11 +59,44 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { signOut } = useSignOut();
   const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Handles sign out and redirects to login
   const handleSignOut = async () => {
     await signOut();
     router.push("/login");
+  };
+
+  // Handles account deletion confirmation
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const result = await deleteUserAccount();
+      if ("success" in result && result.success) {
+        // Clear router cache and redirect immediately
+        router.refresh();
+        router.push("/login");
+      } else {
+        alert(
+          "message" in result
+            ? result.message
+            : "Failed to delete account. Please try again."
+        );
+        setIsDeleting(false);
+        setShowDeleteDialog(false);
+      }
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      alert("Failed to delete account. Please try again.");
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
+
+  // Show delete confirmation dialog
+  const handleDeleteAccount = () => {
+    setShowDeleteDialog(true);
   };
 
   return (
@@ -127,15 +173,54 @@ export default function Sidebar() {
           >
             <DropdownMenuItem
               onClick={handleSignOut}
-              className="text-[var(--destructive)] focus:bg-[var(--destructive)]/10"
+              className="text-[var(--foreground)] hover:bg-[var(--ch-sage-light)] focus:bg-[var(--ch-sage-light)]"
             >
               <span className="flex items-center gap-2">
                 <MdLogout className="text-lg" /> Logout
               </span>
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleDeleteAccount}
+              disabled={isDeleting}
+              className="text-[var(--destructive)] hover:bg-[var(--destructive)]/10 focus:bg-[var(--destructive)]/10"
+            >
+              <span className="flex items-center gap-2">
+                <MdDeleteForever className="text-lg" />
+                {isDeleting ? "Deleting..." : "Delete Account"}
+              </span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Delete Account Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-[var(--destructive)]">
+              Delete Account
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete your account? This action cannot
+              be undone and will permanently delete all your data including
+              journal entries, plans, insights, and vector embeddings.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="cursor-pointer">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="bg-[var(--destructive)] hover:bg-[var(--destructive)]/90 text-white cursor-pointer"
+            >
+              {isDeleting ? "Deleting..." : "Delete Account"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </aside>
   );
 }
