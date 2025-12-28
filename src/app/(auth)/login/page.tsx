@@ -26,11 +26,11 @@ export default function LoginPage() {
     setIsLoading(true);
 
     const result = await login({ email, password });
-    if (result.status === "success") {
+    if ("error" in result) {
+      toast.error(result.error || "Login failed. Please try again.");
+    } else {
       toast.success("Login successful!");
       router.push("/user");
-    } else {
-      toast.error(result.error || "Login failed. Please try again.");
     }
     setIsLoading(false);
   };
@@ -41,8 +41,10 @@ export default function LoginPage() {
         provider: "google",
         callbackURL: "/user",
       });
-    } catch (error) {
-      toast.error("Google sign-in failed. Please try again.");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error("Google sign-in failed. Please try again.");
+      }
     }
   };
 

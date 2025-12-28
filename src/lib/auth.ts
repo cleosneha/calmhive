@@ -42,7 +42,7 @@ export const auth = betterAuth({
      * Inject custom user fields into session
      * This allows direct access to onboarded status without DB queries
      */
-    async session({ session, user }) {
+    async session({ session, user }: { session: any; user: any }) {
       // Fetch user with onboarded field from DB
       const dbUser = await db.user.findUnique({
         where: { id: user.id },

@@ -69,13 +69,13 @@ export async function registerUser({
 
     // Send OTP for email verification
     const otpResult = await sendOTP(email);
-    if (otpResult.status === "success") {
+    if ("error" in otpResult) {
+      return apiError(otpResult.error || "Failed to send OTP");
+    } else {
       return apiResponse(
         null,
         "Registration successful. Please verify your email."
       );
-    } else {
-      return apiError(otpResult.error || "Failed to send OTP");
     }
   } catch (err) {
     const errorMessage =

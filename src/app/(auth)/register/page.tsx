@@ -36,11 +36,11 @@ export default function RegisterPage() {
         confirmPassword,
       });
       console.log("Register result:", result);
-      if (result.status === "success") {
+      if ("error" in result) {
+        toast.error(result.error || "Registration failed. Please try again.");
+      } else {
         toast.success("Account created! Please verify your email.");
         router.push(`/verify-email?email=${encodeURIComponent(email)}`);
-      } else {
-        toast.error(result.error || "Registration failed. Please try again.");
       }
     } catch (err) {
       toast.error(

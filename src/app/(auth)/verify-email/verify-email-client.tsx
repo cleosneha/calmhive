@@ -42,13 +42,13 @@ export default function VerifyEmailClient() {
     try {
       const result = await verifyOTP(email, otp);
 
-      if (result.status === "success") {
+      if ("error" in result) {
+        toast.error(result.error || "Failed to verify OTP");
+      } else {
         toast.success("✓ Email verified successfully!");
         setTimeout(() => {
           router.push("/login");
         }, 2000);
-      } else {
-        toast.error(result.error || "Failed to verify OTP");
       }
     } catch (err) {
       toast.error("An unexpected error occurred");
@@ -62,11 +62,11 @@ export default function VerifyEmailClient() {
     setIsResending(true);
     try {
       const result = await resendOTP(email);
-      if (result.status === "success") {
+      if ("error" in result) {
+        toast.error(result.error || "Failed to resend OTP");
+      } else {
         toast.success(result.message || "OTP sent successfully to your email");
         setOtp("");
-      } else {
-        toast.error(result.error || "Failed to resend OTP");
       }
     } catch (err) {
       toast.error("Failed to resend OTP");
