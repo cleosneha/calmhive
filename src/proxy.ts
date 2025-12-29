@@ -4,10 +4,6 @@ import { headers } from "next/headers";
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Get session from cookies (Better Auth stores it there)
-  const token = request.cookies.get("better-auth.session_token")?.value;
-  console.log("Session token present:", !!token); // Debug log
-
   // Routes that require authentication
   const protectedRoutes = [
     "/onboarding",
@@ -27,59 +23,42 @@ export async function proxy(request: NextRequest) {
     "/user",
   ];
 
-  // If user is not authenticated (no session token)
-  if (!token) {
+  // Validate session using Better Auth directly
+  let session = null;
+  try {
+    const headersList = await headers();
+    session = await auth.api.getSession({
+      headers: headersList,
+    });
+  } catch (error) {
+    console.error("Error checking session:", error);
+  }
+
+  // If user is not authenticated
+  if (!session?.user) {
     // Redirect to login if trying to access protected route
     if (protectedRoutes.some((route) => pathname.startsWith(route))) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
-  }
+  } else {
+    // User is authenticated
+    // Redirect to home if trying to access auth routes
+    if (pathname === "/login" || pathname === "/register") {
+      return NextResponse.redirect(new URL("/user", request.url));
+    }
 
-  // If user is authenticated
-  if (token) {
-    // Validate session token
-    try {
-      const headersList = await headers();
-      const session = await auth.api.getSession({
-        headers: headersList,
-      });
-      // If session is invalid, redirect to login
-      if (!session?.user) {
-        if (protectedRoutes.some((route) => pathname.startsWith(route))) {
-          return NextResponse.redirect(new URL("/login", request.url));
-        }
-      }
-
-      // Redirect to home if trying to access auth routes
-      if (pathname === "/login" || pathname === "/register") {
-        return NextResponse.redirect(new URL("/user", request.url));
-      }
-
-      // Check if user is onboarded for onboarding-required routes
-      if (
-        onboardingRequiredRoutes.some((route) => pathname.startsWith(route))
-      ) {
-        // If user is not onboarded, redirect to onboarding
+    // Check if user is onboarded for onboarding-required routes
+    if (onboardingRequiredRoutes.some((route) => pathname.startsWith(route))) {
+      // If user is not onboarded, redirect to onboarding
+      if (!session.user.onboarded) {
+        // Allow access to /onboarding/chat and /onboarding/complete
         if (
-          session?.user &&
-          !(session.user as typeof session.user & { onboarded?: boolean })
-            .onboarded
+          !pathname.startsWith("/onboarding/chat") &&
+          !pathname.startsWith("/onboarding/complete") &&
+          pathname !== "/onboarding"
         ) {
-          // Allow access to /onboarding/chat and /onboarding/complete
-          if (
-            !pathname.startsWith("/onboarding/chat") &&
-            !pathname.startsWith("/onboarding/complete") &&
-            pathname !== "/onboarding"
-          ) {
-            return NextResponse.redirect(new URL("/onboarding", request.url));
-          }
+          return NextResponse.redirect(new URL("/onboarding", request.url));
         }
-      }
-    } catch (error) {
-      console.error("Error checking session:", error);
-      // On session error, redirect to login for protected routes
-      if (protectedRoutes.some((route) => pathname.startsWith(route))) {
-        return NextResponse.redirect(new URL("/login", request.url));
       }
     }
   }
