@@ -56,7 +56,9 @@ export async function sendOTPEmail(email: string, otp: string) {
             
             <p style="color: #94a3b8; font-size: 12px; margin: 0; text-align: center;">
               © 2025 CalmHive. All rights reserved.<br>
-              <a href="http://localhost:3000" style="color: #0284c7; text-decoration: none;">Visit CalmHive</a>
+              <a href="${
+                process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+              }" style="color: #0284c7; text-decoration: none;">Visit CalmHive</a>
             </p>
           </div>
         </div>

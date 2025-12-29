@@ -6,6 +6,7 @@ export async function proxy(request: NextRequest) {
 
   // Get session from cookies (Better Auth stores it there)
   const token = request.cookies.get("better-auth.session_token")?.value;
+  console.log("Session token present:", !!token); // Debug log
 
   // Routes that require authentication
   const protectedRoutes = [
