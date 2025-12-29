@@ -1,8 +1,6 @@
-interface InsightPageProps {
-  params: Promise<{ weekId: string }>;
-}
+import type { InsightPageParams } from "@/types";
 
-export default async function InsightDetailPage({ params }: InsightPageProps) {
+export default async function InsightDetailPage({ params }: InsightPageParams) {
   const { weekId } = await params;
 
   return (

@@ -35,6 +35,7 @@ export async function startOnboardingSession() {
     messages,
     step: result.step,
     isComplete: result.isComplete,
+    waitingForSafetyAck: result.waitingForSafetyAck,
   };
 }
 
@@ -63,6 +64,7 @@ export async function processOnboardingMessage(userMessage: string) {
     step: result.step,
     isComplete: result.isComplete,
     needsSafetyRedirect: result.needsSafetyRedirect,
+    waitingForSafetyAck: result.waitingForSafetyAck,
   };
 }
 
@@ -86,6 +88,7 @@ export async function getOnboardingState() {
     step: state.values.step,
     isComplete: state.values.isComplete,
     needsSafetyRedirect: state.values.needsSafetyRedirect,
+    waitingForSafetyAck: state.values.waitingForSafetyAck,
   };
 }
 

@@ -1,11 +1,4 @@
-/**
- * Standard API error structure for consistent error handling
- */
-interface ApiError {
-  status: "error";
-  error: string;
-  code?: string;
-}
+import type { ApiError } from "@/types";
 
 /**
  * Create an API error response

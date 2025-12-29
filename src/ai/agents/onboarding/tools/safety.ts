@@ -11,70 +11,85 @@ const CRITICAL_TRIGGERS = [
   /crisis/i,
   /end it all/i,
   /want to die/i,
+  /depress/i,
+  /anxiety/i,
+  /panic attack/i,
 ];
 
-const CRITICAL_SAFETY_MESSAGE = `I'm really sorry you're feeling this way. CalmHive is only designed to support gentle daily habits and relaxation.
-Please reach out to a trusted friend, family member, or professional counselor/doctor right away.
-You can continue onboarding whenever you're ready, or come back later.`;
+const CRITICAL_SAFETY_MESSAGE = `I'm really sorry you're feeling this way. 
 
-const SEVERE_HEALTH_MESSAGE = `Thank you for sharing. It sounds like you may benefit from professional medical guidance.
-CalmHive is designed for light daily habits and relaxation, not medical conditions.
-Please consult your doctor or healthcare provider to address these concerns.
-We're here to support your wellness journey once you've checked in with a professional. 💚`;
+⚠️ **Important:** CalmHive is designed for gentle daily habits and relaxation. We strongly recommend that you seek guidance from a professional counselor, therapist, or doctor right away.
 
-/**
- * Tool: Check for critical distress keywords (rule-based)
- */
-export function checkCriticalSafety(input: string): {
-  isTriggered: boolean;
-  message: string;
-} {
-  const triggered = CRITICAL_TRIGGERS.some((trigger) => trigger.test(input));
+We can still help you create a personalized plan, but please consult with a healthcare professional first for proper support. 💚
 
-  return {
-    isTriggered: triggered,
-    message: CRITICAL_SAFETY_MESSAGE,
-  };
-}
+If you'd like to continue with your onboarding, please respond with "continue" and I'll proceed with the next question.`;
+
+const HEALTH_ISSUE_MESSAGE = `Thank you for sharing. 
+
+⚠️ **Important:** It sounds like you may benefit from professional medical guidance. CalmHive is designed for light daily habits and relaxation, not for addressing medical conditions.
+
+We strongly advise you to consult your doctor or healthcare provider to address these concerns properly.
+
+We can still help you create a personalized wellness plan, but please seek professional medical support first. 🤍
+
+If you'd like to continue with your onboarding, please respond with "continue" and I'll proceed with the next question.`;
 
 /**
- * Tool: Check for severe health issues using LLM classification
+ * Unified safety check: Detects concerning responses with minimal LLM usage
+ * 1. Rule-based check (fast, no LLM)
+ * 2. LLM check only for ambiguous cases (optimized)
  */
-export async function checkSevereHealth(input: string): Promise<{
+export async function checkUserSafety(input: string): Promise<{
   isTriggered: boolean;
   message: string;
 }> {
+  // Step 1: Rule-based check (instant, no cost)
+  const hasKeyword = CRITICAL_TRIGGERS.some((trigger) => trigger.test(input));
+
+  if (hasKeyword) {
+    return {
+      isTriggered: true,
+      message: CRITICAL_SAFETY_MESSAGE,
+    };
+  }
+
+  // Step 2: Quick heuristics to skip LLM for obviously safe inputs
+  const wordCount = input.trim().split(/\s+/).length;
+  const isTooShort = wordCount < 3; // "yes", "no", "skip" etc.
+  const isSimpleAnswer =
+    wordCount < 5 && !/\b(pain|hurt|sick|ill|disease|disorder)\b/i.test(input);
+
+  if (isTooShort || isSimpleAnswer) {
+    return { isTriggered: false, message: "" };
+  }
+
+  // Step 3: LLM check for complex/ambiguous responses (minimal usage)
   try {
-    const prompt = `Classify if this user input mentions severe health issues (mental or physical conditions requiring medical attention):
-"${input}"
+    const response = await llm.invoke(
+      `Does this mention severe health/mental issues requiring medical care? Answer ONLY "yes" or "no":\n"${input}"`
+    );
 
-Only respond with JSON: { "hasSevereIssue": true/false, "type": "mental"/"physical"/"emergency"/"none" }`;
-
-    // Add timeout to prevent long waits
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error("LLM timeout")), 5000);
-    });
-
-    const response = await Promise.race([llm.invoke(prompt), timeoutPromise]);
     const content =
       typeof response.content === "string"
-        ? response.content
-        : JSON.stringify(response.content);
+        ? response.content.toLowerCase().trim()
+        : "";
 
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return { isTriggered: false, message: "" };
-    }
-
-    const result = JSON.parse(jsonMatch[0]);
+    const isTriggered = content.includes("yes");
 
     return {
-      isTriggered: result.hasSevereIssue === true,
-      message: SEVERE_HEALTH_MESSAGE,
+      isTriggered,
+      message: isTriggered ? HEALTH_ISSUE_MESSAGE : "",
     };
   } catch (error) {
-    console.error("Failed to check severe health:", error);
-    // Gracefully continue without safety check if LLM fails
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.log(errorMessage);
+    if (errorMessage.includes("quota") || errorMessage.includes("429")) {
+      console.error("⚠️ LLM quota exhausted. Using rule-based safety only.");
+    } else {
+      console.error("Safety check error:", errorMessage);
+    }
+
+    // Fallback: no trigger if LLM fails
     return { isTriggered: false, message: "" };
   }
 }

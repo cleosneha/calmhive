@@ -101,17 +101,19 @@ export default function LoginPage() {
                       disabled={isLoading}
                       className="pl-10 pr-10"
                     />
-                    <button
+                    <Button
                       type="button"
                       tabIndex={-1}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--ch-text)]/40 text-lg focus:outline-none cursor-pointer"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--ch-text)]/40 text-lg focus:outline-none cursor-pointer p-0 h-6 w-6"
                       onClick={() => setShowPassword((v) => !v)}
                       aria-label={
                         showPassword ? "Hide password" : "Show password"
                       }
                     >
                       {showPassword ? <HiOutlineEyeOff /> : <HiOutlineEye />}
-                    </button>
+                    </Button>
                   </InputGroup>
                 </Field>
               </FieldGroup>

@@ -1,9 +1,4 @@
-export interface OnboardingQuestion {
-  key: string;
-  text: string;
-  options: string[];
-  required: boolean;
-}
+import type { OnboardingQuestion } from "@/types";
 
 export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
   {

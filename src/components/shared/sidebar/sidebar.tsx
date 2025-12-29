@@ -74,9 +74,8 @@ export default function Sidebar() {
     try {
       const result = await deleteUserAccount();
       if ("success" in result && result.success) {
-        // Clear router cache and redirect immediately
-        router.refresh();
-        router.push("/login");
+        // Use window.location for hard redirect
+        window.location.href = "/login";
       } else {
         alert(
           "message" in result

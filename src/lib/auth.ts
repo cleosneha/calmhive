@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import db from "./db";
+import type { SessionCallbackParams } from "@/types";
 
 export const auth = betterAuth({
   database: prismaAdapter(db, {
@@ -42,7 +43,7 @@ export const auth = betterAuth({
      * Inject custom user fields into session
      * This allows direct access to onboarded status without DB queries
      */
-    async session({ session, user }: { session: any; user: any }) {
+    async session({ session, user }: SessionCallbackParams) {
       // Fetch user with onboarded field from DB
       const dbUser = await db.user.findUnique({
         where: { id: user.id },

@@ -1,10 +1,6 @@
-import { ReactNode } from "react";
 import Sidebar from "@/components/shared/sidebar/sidebar";
 import HamburgerHeader from "@/components/shared/hamburger-header/hamburger-header";
-
-interface AuthenticatedLayoutProps {
-  children: ReactNode;
-}
+import type { AuthenticatedLayoutProps } from "@/types";
 
 export default function AuthenticatedLayout({
   children,

@@ -15,7 +15,7 @@ CalmHive is designed for light daily habits and relaxation, not medical conditio
 
 Please consult your doctor or healthcare provider to address these concerns.
 
-We're here to support your wellness journey once you've checked in with a professional. 💚`;
+We're here to support your wellness journey once you've checked in with a professional. 🤍`;
 
 /**
  * Critical triggers for rule-based safety check

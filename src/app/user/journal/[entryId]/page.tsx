@@ -1,10 +1,8 @@
-interface JournalEntryPageProps {
-  params: Promise<{ entryId: string }>;
-}
+import type { JournalEntryPageParams } from "@/types";
 
 export default async function JournalEntryPage({
   params,
-}: JournalEntryPageProps) {
+}: JournalEntryPageParams) {
   const { entryId } = await params;
 
   return (

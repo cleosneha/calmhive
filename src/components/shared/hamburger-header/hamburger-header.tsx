@@ -80,8 +80,8 @@ export default function HamburgerHeader() {
     try {
       const result = await deleteUserAccount();
       if ("success" in result && result.success) {
-        router.refresh();
-        router.push("/login");
+        // Use window.location for hard redirect
+        window.location.href = "/login";
       } else {
         alert(
           "message" in result

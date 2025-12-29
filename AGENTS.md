@@ -26,6 +26,7 @@ This document provides comprehensive standards and strategies for coding agents 
 ## Type safety
 
 - Use types folder to declare types and use in my entire application.
+- Don't write types directly into files, use types folder for types and interfaces.
 
 ## 🗂️ Directory & Naming Conventions
 

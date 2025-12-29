@@ -7,19 +7,13 @@
  * a graph-based implementation.
  */
 
+import type { OnboardingState } from "@/types";
+
 /**
  * State definition for onboarding flow
+ * Re-exported from types folder for backward compatibility
  */
-export interface OnboardingState {
-  userId: string;
-  userName: string;
-  step: number;
-  responses: Record<string, string>;
-  messages: { role: "assistant" | "user"; content: string }[];
-  needsSafetyRedirect: boolean;
-  safetyMessage?: string;
-  isComplete: boolean;
-}
+export type { OnboardingState } from "@/types";
 
 // Rest of the implementation has been moved to src/actions/onboarding.ts
 // This file is kept for reference only

@@ -23,6 +23,17 @@ function routeEntry(state: OnboardingStateType): string {
     return "greet";
   }
 
+  // If page is refreshed (state exists but last message was AI asking a question)
+  // Re-prompt the same question instead of processing
+  const lastMessage = state.messages[state.messages.length - 1];
+  const lastMessageIsAI = lastMessage?._getType() === "ai";
+
+  if (lastMessageIsAI && state.step > 0 && !state.isComplete) {
+    // The AI asked a question but user hasn't answered yet
+    // Re-ask the same question
+    return "ask_question";
+  }
+
   // If user has sent a message, process it
   return "process_response";
 }
@@ -31,8 +42,13 @@ function routeEntry(state: OnboardingStateType): string {
  * Router: Determine next node based on state
  */
 function routeOnboardingFlow(state: OnboardingStateType): string {
-  // If safety redirect is triggered, stay on current step
-  if (state.needsSafetyRedirect) {
+  // If waiting for safety acknowledgment, return END to show message
+  if (state.waitingForSafetyAck) {
+    return END;
+  }
+
+  // If safety redirect is triggered but acknowledged, proceed to next question
+  if (state.needsSafetyRedirect && !state.waitingForSafetyAck) {
     return "ask_question";
   }
 

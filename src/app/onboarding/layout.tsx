@@ -1,8 +1,4 @@
-import { ReactNode } from "react";
-
-interface OnboardingLayoutProps {
-  children: ReactNode;
-}
+import type { OnboardingLayoutProps } from "@/types";
 
 export default function OnboardingLayout({ children }: OnboardingLayoutProps) {
   return (

@@ -1,7 +1,7 @@
 import { AIMessage } from "@langchain/core/messages";
 import type { OnboardingStateType } from "./state";
 import { ONBOARDING_QUESTIONS } from "@/onboarding/questions";
-import { checkCriticalSafety, checkSevereHealth } from "./tools/safety";
+import { checkUserSafety } from "./tools/safety";
 
 /**
  * Node: Greet User and Check Readiness
@@ -13,7 +13,11 @@ export async function greetNode(state: OnboardingStateType) {
     return {};
   }
 
-  const greeting = `Hey ${state.userName}! Let's start understanding you for a better experience. Are you ready to start?`;
+  const greeting = `Hey ${state.userName}! Let's start understanding you for a better experience. 
+
+You can tap an option (it will appear in the box) and edit it, or type your own.
+
+Are you ready to start?`;
 
   return {
     messages: [new AIMessage(greeting)],
@@ -29,7 +33,7 @@ export async function reassuranceNode(state: OnboardingStateType) {
   return {
     messages: [
       new AIMessage(
-        "No pressure at all! Take your time. Please tell me 'ready to start' whenever you feel good to go. 💚"
+        "No pressure at all! Take your time. Please tell me 'ready to start' whenever you feel good to go. 🤍"
       ),
     ],
     step: 0, // Keep at step 0
@@ -48,12 +52,7 @@ export async function askQuestionNode(state: OnboardingStateType) {
   }
 
   const question = ONBOARDING_QUESTIONS[questionIndex];
-  let prompt = question.text + "\n\n";
-
-  if (question.options.length > 0) {
-    prompt +=
-      "You can tap an option (it will appear in the box) and edit it, or type your own.";
-  }
+  let prompt = question.text;
 
   if (!question.required) {
     prompt += "\n\n(This one is totally optional — you can skip.)";
@@ -95,23 +94,40 @@ export async function processResponseNode(
     );
   const needsSafetyCheck = !isReadinessResponse && !isPredefinedOption;
 
-  // Safety checks only for free-form text responses
-  if (needsSafetyCheck) {
-    // Safety Check #1: Critical Distress (rule-based, no LLM)
-    const criticalSafety = checkCriticalSafety(userInput);
-    if (criticalSafety.isTriggered) {
+  // Check if user is acknowledging safety message
+  const isAcknowledgingSafety =
+    state.waitingForSafetyAck && userInput.toLowerCase().includes("continue");
+
+  if (isAcknowledgingSafety) {
+    // Check if this was the last question
+    const isLastQuestion = state.step === ONBOARDING_QUESTIONS.length;
+
+    if (isLastQuestion) {
+      // Clear safety flags and mark as complete
       return {
-        messages: [new AIMessage(criticalSafety.message)],
-        needsSafetyRedirect: true,
+        waitingForSafetyAck: false,
+        needsSafetyRedirect: false,
+        step: state.step + 1,
+        isComplete: true,
       };
     }
 
-    // Safety Check #2: Severe Health (LLM-based, only for custom text)
-    const severeHealth = await checkSevereHealth(userInput);
-    if (severeHealth.isTriggered) {
+    // Not last question, proceed to next question
+    return {
+      waitingForSafetyAck: false,
+      needsSafetyRedirect: false,
+      step: state.step + 1,
+    };
+  }
+
+  // Unified safety check (optimized: rule-based + minimal LLM usage)
+  if (needsSafetyCheck) {
+    const safetyResult = await checkUserSafety(userInput);
+    if (safetyResult.isTriggered) {
       return {
-        messages: [new AIMessage(severeHealth.message)],
+        messages: [new AIMessage(safetyResult.message)],
         needsSafetyRedirect: true,
+        waitingForSafetyAck: true,
       };
     }
   }
@@ -206,9 +222,13 @@ export async function processResponseNode(
  * Final message before redirecting to T&C
  */
 export async function completeNode(state: OnboardingStateType) {
-  const message = `Thank you so much for sharing! That's all I need to create your personalized plan. 💚
+  const message = `Thank you so much for sharing! That's all I need to create your personalized plan. 🤍
 
-One last step: Please review and accept our Terms & Conditions to continue.`;
+🎉 **Your responses have been saved!**
+
+One last step: Please review and accept our Terms & Conditions to continue.
+
+Click "Proceed to Terms & Conditions" below to continue.`;
 
   return {
     messages: [new AIMessage(message)],

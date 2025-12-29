@@ -1,11 +1,4 @@
-/**
- * Standard API response structure for consistent data formatting
- */
-interface ApiResponse<T = unknown> {
-  status: "success";
-  data: T;
-  message?: string;
-}
+import type { ApiResponse } from "@/types";
 
 /**
  * Create a success API response with consistent formatting

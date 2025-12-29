@@ -1,8 +1,5 @@
 import { FaRegEdit, FaPaperPlane, FaChartBar } from "react-icons/fa";
-
-interface AuthLeftSectionProps {
-  type: "register" | "login" | "verify";
-}
+import type { AuthLeftSectionProps } from "@/types";
 
 const features = [
   {

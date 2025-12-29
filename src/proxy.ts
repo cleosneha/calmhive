@@ -42,7 +42,6 @@ export async function proxy(request: NextRequest) {
       const session = await auth.api.getSession({
         headers: headersList,
       });
-      console.log("Session in proxy:", session);
       // If session is invalid, redirect to login
       if (!session?.user) {
         if (protectedRoutes.some((route) => pathname.startsWith(route))) {

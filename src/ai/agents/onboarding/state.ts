@@ -34,6 +34,10 @@ export const OnboardingState = Annotation.Root({
     reducer: (_, value) => value,
     default: () => false,
   }),
+  waitingForSafetyAck: Annotation<boolean>({
+    reducer: (_, value) => value,
+    default: () => false,
+  }),
 });
 
 export type OnboardingStateType = typeof OnboardingState.State;

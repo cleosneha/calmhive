@@ -214,15 +214,20 @@ export async function deleteUserAccount() {
       }
     }
 
+    // Sign out the user first (before deleting from database)
+    const headersList = await headers();
+    try {
+      await auth.api.signOut({
+        headers: headersList,
+      });
+    } catch (error) {
+      // Ignore sign out errors, we'll delete the user anyway
+      console.warn("Error during sign out (continuing with deletion):", error);
+    }
+
     // Delete all user data from database (cascades to related tables)
     await db.user.delete({
       where: { id: userId },
-    });
-
-    // Sign out the user
-    const headersList = await headers();
-    await auth.api.signOut({
-      headers: headersList,
     });
 
     console.log(`✓ Deleted user account: ${userId}`);
