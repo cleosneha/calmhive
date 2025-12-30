@@ -144,22 +144,19 @@ export async function deleteUserAccount() {
     // Delete vector embeddings from Pinecone
     try {
       const pineconeApiKey = process.env.PINECONE_API_KEY;
-      const pineconeIndexName = process.env.PINECONE_INDEX_NAME;
+      const pineconeIndexHost = process.env.PINECONE_INDEX_HOST;
 
-      if (pineconeApiKey && pineconeIndexName) {
-        const response = await fetch(
-          `https://${pineconeIndexName}/vectors/delete`,
-          {
-            method: "POST",
-            headers: {
-              "Api-Key": pineconeApiKey,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              filter: { userId: { $eq: userId } },
-            }),
-          }
-        );
+      if (pineconeApiKey && pineconeIndexHost) {
+        const response = await fetch(`${pineconeIndexHost}/vectors/delete`, {
+          method: "POST",
+          headers: {
+            "Api-Key": pineconeApiKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            filter: { userId: { $eq: userId } },
+          }),
+        });
 
         if (response.ok) {
           console.log(`✓ Deleted Pinecone embeddings for user: ${userId}`);
