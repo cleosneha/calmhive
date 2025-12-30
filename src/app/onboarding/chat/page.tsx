@@ -165,16 +165,6 @@ export default function OnboardingChatPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-0 relative">
-      {/* Background Image (absolute, low opacity) */}
-      <div className="absolute inset-0 w-full h-full pointer-events-none z-0 flex items-center justify-center">
-        <Image
-          src="/assets/onboarding-background.png"
-          alt="Onboarding Background"
-          fill
-          style={{ objectFit: "cover", opacity: 0.1 }}
-          priority={false}
-        />
-      </div>
       <div className="w-full max-w-3xl rounded-t-xl rounded-b-xl shadow-lg p-0 flex flex-col h-[92vh] md:h-[90vh] bg-transparent relative z-10">
         {/* Chat Header */}
         <div className="px-6 py-4 border-b border-[var(--ch-sage-dark)]/10 flex items-center justify-between rounded-t-xl bg-white">
@@ -196,109 +186,83 @@ export default function OnboardingChatPage() {
           />
         </div>
 
-        {/* Chat Messages */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3 bg-transparent">
-          {messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`flex ${
-                msg.role === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
+        {/* Chat Messages & Suggestions Container with Background */}
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3 bg-transparent relative flex flex-col">
+          {/* Background Image covering both messages and suggestions */}
+          <div className="absolute inset-0 w-full h-full pointer-events-none z-0 flex items-center justify-center">
+            {/* Mobile background */}
+            <Image
+              src="/assets/onboarding-background.png"
+              alt="Onboarding Background"
+              fill
+              style={{
+                objectFit: "contain",
+                opacity: 0.5,
+              }}
+              priority={false}
+            />
+          </div>
+          {/* Messages and suggestions above background */}
+          <div className="relative z-30 flex flex-col flex-1">
+            {messages.map((msg, idx) => (
               <div
-                className={`rounded-2xl px-4 py-3 max-w-[80%] text-base shadow-sm ${
-                  msg.role === "assistant"
-                    ? "bg-[var(--ch-sage-light)] text-black prose prose-sm max-w-none"
-                    : "bg-white text-black"
+                key={idx}
+                className={`flex ${
+                  msg.role === "user" ? "justify-end" : "justify-start"
                 }`}
               >
-                {msg.role === "assistant" ? (
-                  <ReactMarkdown
-                    components={{
-                      p: ({ children }) => (
-                        <p className="mb-2 last:mb-0">{children}</p>
-                      ),
-                      strong: ({ children }) => (
-                        <strong className="font-bold">{children}</strong>
-                      ),
-                      em: ({ children }) => (
-                        <em className="italic">{children}</em>
-                      ),
-                      ul: ({ children }) => (
-                        <ul className="list-disc ml-4 mb-2">{children}</ul>
-                      ),
-                      ol: ({ children }) => (
-                        <ol className="list-decimal ml-4 mb-2">{children}</ol>
-                      ),
-                      li: ({ children }) => (
-                        <li className="mb-1">{children}</li>
-                      ),
-                    }}
-                  >
-                    {msg.content}
-                  </ReactMarkdown>
-                ) : (
-                  <div className="whitespace-pre-wrap">{msg.content}</div>
-                )}
-              </div>
-            </div>
-          ))}
-          {loading && (
-            <div className="flex justify-start">
-              <div className="bg-[var(--ch-sage-light)] rounded-2xl px-4 py-3 text-base">
-                <span className="animate-pulse">Thinking...</span>
-              </div>
-            </div>
-          )}
-          <div ref={chatEndRef} />
-        </div>
-
-        {/* Suggestions and Action Buttons Above Input */}
-        <div className="px-6 pt-4 pb-0 flex flex-col gap-2">
-          {/* Show "Proceed to T&C" option when onboarding is complete */}
-          {showProceedButton && (
-            <div className="flex flex-row items-start gap-2 mb-1">
-              <span className="mt-0.5 text-[var(--ch-sage-dark)]">
-                <VscWand className="w-4 h-4 inline-block align-middle" />
-              </span>
-              <div className="flex flex-col gap-1">
-                <Button
-                  type="button"
-                  onClick={() => router.push("/onboarding/terms")}
-                  disabled={loading}
-                  className="text-xs font-normal bg-[var(--ch-sage-light)] text-black px-3 py-1 mb-1 rounded-lg hover:bg-[var(--ch-sage-dark)] hover:text-white transition disabled:opacity-50 flex items-center text-left shadow-none border border-[var(--ch-sage-dark)]/10"
-                  style={{ fontSize: "0.85rem", minHeight: 0, height: "auto" }}
+                <div
+                  className={`rounded-2xl px-4 py-3 max-w-[80%] text-base shadow-sm ${
+                    msg.role === "assistant"
+                      ? "bg-[var(--ch-sage-light)] text-black prose prose-sm max-w-none"
+                      : "bg-white text-black"
+                  }`}
                 >
-                  Proceed to Terms & Conditions
-                </Button>
+                  {msg.role === "assistant" ? (
+                    <ReactMarkdown
+                      components={{
+                        p: ({ children }) => (
+                          <p className="mb-2 last:mb-0">{children}</p>
+                        ),
+                        strong: ({ children }) => (
+                          <strong className="font-bold">{children}</strong>
+                        ),
+                        em: ({ children }) => (
+                          <em className="italic">{children}</em>
+                        ),
+                        ul: ({ children }) => (
+                          <ul className="list-disc ml-4 mb-2">{children}</ul>
+                        ),
+                        ol: ({ children }) => (
+                          <ol className="list-decimal ml-4 mb-2">{children}</ol>
+                        ),
+                        li: ({ children }) => (
+                          <li className="mb-1">{children}</li>
+                        ),
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
+                  ) : (
+                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-
-          {/* Show continue button for safety acknowledgment */}
-          {showSafetyContinue && (
-            <div className="flex flex-row items-start gap-2 mb-1">
-              <span className="mt-0.5 text-[var(--ch-sage-dark)]">
-                <VscWand className="w-4 h-4 inline-block align-middle" />
-              </span>
-              <div className="flex flex-col gap-1">
-                <Button
-                  type="button"
-                  onClick={() => handleSend("continue")}
-                  disabled={loading}
-                  className="text-xs font-normal bg-[var(--ch-sage-light)] text-black px-3 py-1 mb-1 rounded-lg hover:bg-[var(--ch-sage-dark)] hover:text-white transition disabled:opacity-50 flex items-center text-left shadow-none border border-[var(--ch-sage-dark)]/10"
-                  style={{ fontSize: "0.85rem", minHeight: 0, height: "auto" }}
-                >
-                  Continue with onboarding
-                </Button>
+            ))}
+            {loading && (
+              <div className="flex justify-start">
+                <div className="bg-[var(--ch-sage-light)] rounded-2xl px-4 py-3 text-base">
+                  <span className="animate-pulse">Thinking...</span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+            <div ref={chatEndRef} />
+          </div>
 
-          {/* Readiness buttons for step 0 */}
-          {showReadinessButtons &&
-            !showSafetyContinue &&
-            !showProceedButton && (
+          {/* Suggestions and Action Buttons (inside same container as messages) */}
+          <div className="relative z-10 flex flex-col gap-2 mt-auto">
+            {/* Show "Proceed to T&C" option when onboarding is complete */}
+            {showProceedButton && (
               <div className="flex flex-row items-start gap-2 mb-1">
                 <span className="mt-0.5 text-[var(--ch-sage-dark)]">
                   <VscWand className="w-4 h-4 inline-block align-middle" />
@@ -306,7 +270,7 @@ export default function OnboardingChatPage() {
                 <div className="flex flex-col gap-1">
                   <Button
                     type="button"
-                    onClick={() => handleSend("Yes, ready to start")}
+                    onClick={() => router.push("/onboarding/terms")}
                     disabled={loading}
                     className="text-xs font-normal bg-[var(--ch-sage-light)] text-black px-3 py-1 mb-1 rounded-lg hover:bg-[var(--ch-sage-dark)] hover:text-white transition disabled:opacity-50 flex items-center text-left shadow-none border border-[var(--ch-sage-dark)]/10"
                     style={{
@@ -315,37 +279,22 @@ export default function OnboardingChatPage() {
                       height: "auto",
                     }}
                   >
-                    Yes, ready to start
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => handleSend("No, not ready yet")}
-                    disabled={loading}
-                    className="text-xs font-normal bg-[var(--ch-sage-light)] text-black px-3 py-1 mb-1 rounded-lg hover:bg-[var(--ch-sage-dark)] hover:text-white transition disabled:opacity-50 flex items-center text-left shadow-none border border-[var(--ch-sage-dark)]/10"
-                    style={{
-                      fontSize: "0.85rem",
-                      minHeight: 0,
-                      height: "auto",
-                    }}
-                  >
-                    No, not ready yet
+                    Proceed to Terms & Conditions
                   </Button>
                 </div>
               </div>
             )}
 
-          {/* Suggestions (vertical, above input) */}
-          {showSuggestions && (
-            <div className="flex flex-row items-start gap-2 mb-1">
-              <span className="mt-0.5 text-[var(--ch-sage-dark)]">
-                <VscWand className="w-4 h-4 inline-block align-middle" />
-              </span>
-              <div className="flex flex-col gap-1">
-                {currentQuestion.options.map((option, idx) => (
+            {/* Show continue button for safety acknowledgment */}
+            {showSafetyContinue && (
+              <div className="flex flex-row items-start gap-2 mb-1">
+                <span className="mt-0.5 text-[var(--ch-sage-dark)]">
+                  <VscWand className="w-4 h-4 inline-block align-middle" />
+                </span>
+                <div className="flex flex-col gap-1">
                   <Button
-                    key={idx}
                     type="button"
-                    onClick={() => handleOptionClick(option)}
+                    onClick={() => handleSend("continue")}
                     disabled={loading}
                     className="text-xs font-normal bg-[var(--ch-sage-light)] text-black px-3 py-1 mb-1 rounded-lg hover:bg-[var(--ch-sage-dark)] hover:text-white transition disabled:opacity-50 flex items-center text-left shadow-none border border-[var(--ch-sage-dark)]/10"
                     style={{
@@ -354,12 +303,78 @@ export default function OnboardingChatPage() {
                       height: "auto",
                     }}
                   >
-                    {option}
+                    Continue with onboarding
                   </Button>
-                ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {/* Readiness buttons for step 0 */}
+            {showReadinessButtons &&
+              !showSafetyContinue &&
+              !showProceedButton && (
+                <div className="flex flex-row items-start gap-2 mb-1">
+                  <span className="mt-0.5 text-[var(--ch-sage-dark)]">
+                    <VscWand className="w-4 h-4 inline-block align-middle" />
+                  </span>
+                  <div className="flex flex-col gap-1">
+                    <Button
+                      type="button"
+                      onClick={() => handleSend("Yes, ready to start")}
+                      disabled={loading}
+                      className="text-xs font-normal bg-[var(--ch-sage-light)] text-black px-3 py-1 mb-1 rounded-lg hover:bg-[var(--ch-sage-dark)] hover:text-white transition disabled:opacity-50 flex items-center text-left shadow-none border border-[var(--ch-sage-dark)]/10"
+                      style={{
+                        fontSize: "0.85rem",
+                        minHeight: 0,
+                        height: "auto",
+                      }}
+                    >
+                      Yes, ready to start
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => handleSend("No, not ready yet")}
+                      disabled={loading}
+                      className="text-xs font-normal bg-[var(--ch-sage-light)] text-black px-3 py-1 mb-1 rounded-lg hover:bg-[var(--ch-sage-dark)] hover:text-white transition disabled:opacity-50 flex items-center text-left shadow-none border border-[var(--ch-sage-dark)]/10"
+                      style={{
+                        fontSize: "0.85rem",
+                        minHeight: 0,
+                        height: "auto",
+                      }}
+                    >
+                      No, not ready yet
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+            {/* Suggestions (vertical, above input) */}
+            {showSuggestions && (
+              <div className="flex flex-row items-start gap-2 mb-1">
+                <span className="mt-0.5 text-[var(--ch-sage-dark)]">
+                  <VscWand className="w-4 h-4 inline-block align-middle" />
+                </span>
+                <div className="flex flex-col gap-1">
+                  {currentQuestion.options.map((option, idx) => (
+                    <Button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleOptionClick(option)}
+                      disabled={loading}
+                      className="text-xs font-normal bg-[var(--ch-sage-light)] text-black px-3 py-1 mb-1 rounded-lg hover:bg-[var(--ch-sage-dark)] hover:text-white transition disabled:opacity-50 flex items-center text-left shadow-none border border-[var(--ch-sage-dark)]/10"
+                      style={{
+                        fontSize: "0.85rem",
+                        minHeight: 0,
+                        height: "auto",
+                      }}
+                    >
+                      {option}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Chat Input - Hide when complete or waiting for safety ack */}
