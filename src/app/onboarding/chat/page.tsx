@@ -135,7 +135,7 @@ export default function OnboardingChatPage() {
   };
 
   const handleOptionClick = (option: string) => {
-    setInput(option);
+    handleSend(option);
   };
 
   // Show readiness buttons on step 0
@@ -187,7 +187,7 @@ export default function OnboardingChatPage() {
         </div>
 
         {/* Chat Messages & Suggestions Container with Background */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3 bg-transparent relative flex flex-col">
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 bg-transparent relative flex flex-col">
           {/* Background Image covering both messages and suggestions */}
           <div className="absolute inset-0 w-full h-full pointer-events-none z-0 flex items-center justify-center">
             {/* Mobile background */}
@@ -209,7 +209,7 @@ export default function OnboardingChatPage() {
                 key={idx}
                 className={`flex ${
                   msg.role === "user" ? "justify-end" : "justify-start"
-                }`}
+                } mb-4`}
               >
                 <div
                   className={`rounded-2xl px-4 py-3 max-w-[80%] text-base shadow-sm ${

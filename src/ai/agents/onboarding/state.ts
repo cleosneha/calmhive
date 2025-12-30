@@ -25,6 +25,12 @@ export const OnboardingState = Annotation.Root({
     default: () => ({}),
   }),
 
+  // Track the last user response for generating contextual follow-ups
+  lastUserResponse: Annotation<string | undefined>({
+    reducer: (_, value) => value,
+    default: () => undefined,
+  }),
+
   // Flags
   isComplete: Annotation<boolean>({
     reducer: (_, value) => value,
@@ -35,6 +41,10 @@ export const OnboardingState = Annotation.Root({
     default: () => false,
   }),
   waitingForSafetyAck: Annotation<boolean>({
+    reducer: (_, value) => value,
+    default: () => false,
+  }),
+  lastQuestionAcknowledged: Annotation<boolean>({
     reducer: (_, value) => value,
     default: () => false,
   }),

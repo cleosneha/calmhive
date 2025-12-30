@@ -7,6 +7,7 @@ import {
   reassuranceNode,
   askQuestionNode,
   processResponseNode,
+  markCompleteNode,
   completeNode,
 } from "./nodes";
 
@@ -57,6 +58,11 @@ function routeOnboardingFlow(state: OnboardingStateType): string {
     return "complete";
   }
 
+  // If last question has been acknowledged, mark as complete
+  if (state.lastQuestionAcknowledged) {
+    return "mark_complete";
+  }
+
   // If step is still 0 after processing, check if user is ready or not
   if (state.step === 0) {
     // If user just processed a message at step 0, they're not ready
@@ -64,7 +70,18 @@ function routeOnboardingFlow(state: OnboardingStateType): string {
     return "reassurance";
   }
 
-  // Otherwise, ask next question
+  // Check if processResponseNode already added a custom follow-up message
+  // If so, return END to display it
+  const lastMessage = state.messages[state.messages.length - 1];
+  const lastMessageIsAI = lastMessage?._getType() === "ai";
+
+  // If the last message is AI and we just incremented the step,
+  // it means processResponseNode generated a custom follow-up
+  if (lastMessageIsAI && state.step > 0) {
+    return END;
+  }
+
+  // Otherwise, ask next question (for predefined options)
   return "ask_question";
 }
 
@@ -79,6 +96,7 @@ export function createOnboardingGraph() {
     .addNode("reassurance", reassuranceNode)
     .addNode("ask_question", askQuestionNode)
     .addNode("process_response", processResponseNode)
+    .addNode("mark_complete", markCompleteNode)
     .addNode("complete", completeNode)
 
     // Define edges
@@ -87,6 +105,9 @@ export function createOnboardingGraph() {
     .addEdge("reassurance", END) // Reassurance returns, client displays it
     .addEdge("ask_question", END) // Ask question returns, client displays it
     .addConditionalEdges("process_response", routeOnboardingFlow)
+    .addConditionalEdges("mark_complete", (state) =>
+      state.isComplete ? "complete" : END
+    )
     .addEdge("complete", END);
 
   return workflow;

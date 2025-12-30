@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
@@ -14,8 +15,8 @@ export async function proxy(request: NextRequest) {
     "/user",
   ];
 
-  // Routes that require onboarding completion
-  const onboardingRequiredRoutes = [
+  // Routes that require both authentication and onboarding
+  const fullyProtectedRoutes = [
     "/journal",
     "/plan",
     "/insights",
@@ -23,7 +24,13 @@ export async function proxy(request: NextRequest) {
     "/user",
   ];
 
-  // Validate session using Better Auth directly
+  // Public routes (no auth required)
+  const publicRoutes = ["/", "/login", "/register"];
+
+  // Email verification routes
+  const verificationRoutes = ["/verify-email", "/resend-verification"];
+
+  // Validate session using Better Auth
   let session = null;
   try {
     const headersList = await headers();
@@ -34,33 +41,103 @@ export async function proxy(request: NextRequest) {
     console.error("Error checking session:", error);
   }
 
-  // If user is not authenticated
-  if (!session?.user) {
-    // Redirect to login if trying to access protected route
+  const user = session?.user;
+  const isLoggedIn = !!user;
+  const isVerified = user?.emailVerified ?? false;
+  const isOnboarded = user?.onboarded ?? false;
+
+  // ===== STEP 1: User not logged in =====
+  if (!isLoggedIn) {
+    // Allow access to public routes
+    if (publicRoutes.includes(pathname)) {
+      return NextResponse.next();
+    }
+
+    // Allow access to verification routes
+    if (verificationRoutes.some((route) => pathname.startsWith(route))) {
+      return NextResponse.next();
+    }
+
+    // Block access to protected routes - redirect to login
     if (protectedRoutes.some((route) => pathname.startsWith(route))) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
-  } else {
-    // User is authenticated
-    // Redirect to home if trying to access auth routes
+
+    return NextResponse.next();
+  }
+
+  // ===== STEP 2: User logged in but NOT verified =====
+  if (isLoggedIn && !isVerified) {
+    // Allow access to verification routes
+    if (verificationRoutes.some((route) => pathname.startsWith(route))) {
+      return NextResponse.next();
+    }
+
+    // Redirect away from login/register
+    if (pathname === "/login" || pathname === "/register") {
+      return NextResponse.redirect(new URL("/verify-email", request.url));
+    }
+
+    // Block access to all protected routes - redirect to verify email
+    if (protectedRoutes.some((route) => pathname.startsWith(route))) {
+      return NextResponse.redirect(new URL("/verify-email", request.url));
+    }
+
+    return NextResponse.next();
+  }
+
+  // ===== STEP 3: User logged in and verified but NOT onboarded =====
+  if (isLoggedIn && isVerified && !isOnboarded) {
+    // Redirect away from verify-email pages since user is already verified
+    if (verificationRoutes.some((route) => pathname.startsWith(route))) {
+      return NextResponse.redirect(new URL("/onboarding", request.url));
+    }
+
+    // Allow onboarding routes
+    if (
+      pathname === "/onboarding" ||
+      pathname.startsWith("/onboarding/chat") ||
+      pathname.startsWith("/onboarding/complete")
+    ) {
+      return NextResponse.next();
+    }
+
+    // Redirect away from login/register
+    if (pathname === "/login" || pathname === "/register") {
+      return NextResponse.redirect(new URL("/onboarding", request.url));
+    }
+
+    // Block access to fully protected routes - redirect to onboarding
+    if (fullyProtectedRoutes.some((route) => pathname.startsWith(route))) {
+      return NextResponse.redirect(new URL("/onboarding", request.url));
+    }
+
+    return NextResponse.next();
+  }
+
+  // ===== STEP 4: User logged in, verified, and onboarded (Fully authorized) =====
+  if (isLoggedIn && isVerified && isOnboarded) {
+    // Redirect away from verify-email pages since user is already verified and onboarded
+    if (verificationRoutes.some((route) => pathname.startsWith(route))) {
+      return NextResponse.redirect(new URL("/user", request.url));
+    }
+
+    // Redirect away from auth routes to dashboard
     if (pathname === "/login" || pathname === "/register") {
       return NextResponse.redirect(new URL("/user", request.url));
     }
 
-    // Check if user is onboarded for onboarding-required routes
-    if (onboardingRequiredRoutes.some((route) => pathname.startsWith(route))) {
-      // If user is not onboarded, redirect to onboarding
-      if (!session.user.onboarded) {
-        // Allow access to /onboarding/chat and /onboarding/complete
-        if (
-          !pathname.startsWith("/onboarding/chat") &&
-          !pathname.startsWith("/onboarding/complete") &&
-          pathname !== "/onboarding"
-        ) {
-          return NextResponse.redirect(new URL("/onboarding", request.url));
-        }
-      }
+    // Redirect away from onboarding
+    if (pathname === "/onboarding" || pathname.startsWith("/onboarding/")) {
+      return NextResponse.redirect(new URL("/user", request.url));
     }
+
+    // Allow access to all protected routes
+    if (protectedRoutes.some((route) => pathname.startsWith(route))) {
+      return NextResponse.next();
+    }
+
+    return NextResponse.next();
   }
 
   return NextResponse.next();

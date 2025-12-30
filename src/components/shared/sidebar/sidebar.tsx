@@ -34,6 +34,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { deleteUserAccount } from "@/actions/auth";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const navLinks = [
   { href: "/user", icon: <FiHome />, label: "Home" },
@@ -71,25 +72,28 @@ export default function Sidebar() {
   // Handles account deletion confirmation
   const handleConfirmDelete = async () => {
     setIsDeleting(true);
+    setShowDeleteDialog(false);
+
     try {
       const result = await deleteUserAccount();
       if ("success" in result && result.success) {
-        // Use window.location for hard redirect
-        window.location.href = "/login";
+        // Server action already signs out the user
+        // Show success message and redirect
+        toast.success("Account deleted successfully");
+        // Use href for hard navigation to clear all client state
+        window.location.href = "/";
       } else {
-        alert(
+        toast.error(
           "message" in result
             ? result.message
             : "Failed to delete account. Please try again."
         );
         setIsDeleting(false);
-        setShowDeleteDialog(false);
       }
     } catch (error) {
       console.error("Error deleting account:", error);
-      alert("Failed to delete account. Please try again.");
+      toast.error("Failed to delete account. Please try again.");
       setIsDeleting(false);
-      setShowDeleteDialog(false);
     }
   };
 
@@ -168,7 +172,7 @@ export default function Sidebar() {
           <DropdownMenuContent
             align="end"
             sideOffset={12}
-            className="mb-2 ml-2"
+            className="mb-2 ml-2 bg-white"
           >
             <DropdownMenuItem
               onClick={handleSignOut}

@@ -10,6 +10,12 @@ export interface OnboardingQuestion {
   text: string;
   options: string[];
   required: boolean;
+  followUps?: {
+    [optionText: string]: {
+      text: string;
+      nextKey: string;
+    };
+  };
 }
 
 /**

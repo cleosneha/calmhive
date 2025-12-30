@@ -1,7 +1,7 @@
 import { AIMessage } from "@langchain/core/messages";
 import type { OnboardingStateType } from "./state";
 import { ONBOARDING_QUESTIONS } from "@/onboarding/questions";
-import { checkUserSafety } from "./tools/safety";
+import { validateUserResponse } from "./tools/validation";
 
 /**
  * Node: Greet User and Check Readiness
@@ -13,7 +13,10 @@ export async function greetNode(state: OnboardingStateType) {
     return {};
   }
 
-  const greeting = `Hey ${state.userName}! Let's start understanding you for a better experience. 
+  // Extract first name from full name
+  const firstName = state.userName.split(" ")[0];
+
+  const greeting = `Hey ${firstName}! Let's start understanding you for a better experience. 
 
 You can tap an option (it will appear in the box) and edit it, or type your own.
 
@@ -29,7 +32,8 @@ Are you ready to start?`;
  * Node: Reassurance for Not Ready Users
  * Shows supportive message when user is not ready
  */
-export async function reassuranceNode(state: OnboardingStateType) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function reassuranceNode(_state: OnboardingStateType) {
   return {
     messages: [
       new AIMessage(
@@ -43,6 +47,7 @@ export async function reassuranceNode(state: OnboardingStateType) {
 /**
  * Node: Ask Current Question
  * Presents the current question based on step
+ * If there's a previous response, use the follow-up acknowledgment
  */
 export async function askQuestionNode(state: OnboardingStateType) {
   const questionIndex = state.step - 1;
@@ -52,7 +57,31 @@ export async function askQuestionNode(state: OnboardingStateType) {
   }
 
   const question = ONBOARDING_QUESTIONS[questionIndex];
-  let prompt = question.text;
+  let prompt = "";
+
+  // Check if we have a previous response and a matching follow-up
+  if (state.lastUserResponse && questionIndex > 0) {
+    const previousQuestion = ONBOARDING_QUESTIONS[questionIndex - 1];
+
+    // Check if the previous response matches a predefined option
+    if (previousQuestion.followUps) {
+      const followUp = previousQuestion.followUps[state.lastUserResponse];
+
+      if (followUp && followUp.nextKey === question.key) {
+        // Use the predefined follow-up text (includes acknowledgment + question)
+        prompt = followUp.text;
+      } else {
+        // Custom response - use the generated follow-up from state if available
+        // Otherwise just use the question text
+        prompt = question.text;
+      }
+    } else {
+      prompt = question.text;
+    }
+  } else {
+    // First question or no previous response
+    prompt = question.text;
+  }
 
   if (!question.required) {
     prompt += "\n\n(This one is totally optional — you can skip.)";
@@ -83,17 +112,6 @@ export async function processResponseNode(
   const question =
     questionIndex >= 0 ? ONBOARDING_QUESTIONS[questionIndex] : null;
 
-  // Skip safety checks for:
-  // 1. Readiness responses (step 0)
-  // 2. Predefined option selections
-  const isReadinessResponse = state.step === 0;
-  const isPredefinedOption =
-    question &&
-    question.options.some(
-      (option) => option.toLowerCase() === userInput.toLowerCase()
-    );
-  const needsSafetyCheck = !isReadinessResponse && !isPredefinedOption;
-
   // Check if user is acknowledging safety message
   const isAcknowledgingSafety =
     state.waitingForSafetyAck && userInput.toLowerCase().includes("continue");
@@ -118,18 +136,6 @@ export async function processResponseNode(
       needsSafetyRedirect: false,
       step: state.step + 1,
     };
-  }
-
-  // Unified safety check (optimized: rule-based + minimal LLM usage)
-  if (needsSafetyCheck) {
-    const safetyResult = await checkUserSafety(userInput);
-    if (safetyResult.isTriggered) {
-      return {
-        messages: [new AIMessage(safetyResult.message)],
-        needsSafetyRedirect: true,
-        waitingForSafetyAck: true,
-      };
-    }
   }
 
   // Handle readiness check (step 0)
@@ -172,7 +178,120 @@ export async function processResponseNode(
     };
   }
 
-  // Store response
+  // Skip validation for:
+  // 1. Predefined option selections
+  // 2. Empty responses (skip)
+  // 3. User explicitly wants to skip
+  const isPredefinedOption =
+    question &&
+    question.options.some(
+      (option) => option.toLowerCase() === userInput.toLowerCase()
+    );
+
+  // Check if user wants to skip (for optional questions)
+  const isSkipIntent =
+    question &&
+    userInput.length > 0 &&
+    (userInput.toLowerCase().includes("skip") ||
+      userInput.toLowerCase().includes("pass") ||
+      userInput.toLowerCase() === "no" ||
+      userInput.toLowerCase() === "nope");
+
+  // If user tries to skip a required question, show polite message
+  if (isSkipIntent && question?.required) {
+    return {
+      messages: [
+        new AIMessage(
+          "I understand you might want to skip, but I'd really appreciate your thoughts on this question. It helps me understand you better. Could you please share your response?"
+        ),
+      ],
+      step: state.step, // Keep same step
+    };
+  }
+
+  // Handle skip intent for optional questions
+  if (isSkipIntent) {
+    const isLastQuestion = state.step === ONBOARDING_QUESTIONS.length;
+
+    if (isLastQuestion) {
+      // Last question skipped - show acknowledgment
+      return {
+        step: state.step,
+        lastQuestionAcknowledged: true,
+        messages: [
+          new AIMessage(
+            "No worries at all! You've already shared so much valuable information. 🤍"
+          ),
+        ],
+      };
+    }
+
+    // Not last question - skip to next
+    return {
+      step: state.step + 1,
+    };
+  }
+
+  // For custom responses, use unified validation (single comprehensive check)
+  if (!isPredefinedOption && userInput.length > 0 && question) {
+    const isLastQuestion = state.step === ONBOARDING_QUESTIONS.length;
+
+    // For last question, generate acknowledgment instead of next question
+    const nextQuestionText = isLastQuestion
+      ? "Acknowledge their response warmly and thank them for sharing."
+      : ONBOARDING_QUESTIONS[state.step]?.text || "";
+
+    if (nextQuestionText) {
+      // Single unified validation: rule-based safety + LLM (relevance + follow-up)
+      const validationResult = await validateUserResponse(
+        userInput,
+        question.text,
+        nextQuestionText
+      );
+
+      // Handle safety issue (detected by rules or LLM)
+      if (validationResult.hasSafetyIssue) {
+        return {
+          messages: [new AIMessage(validationResult.safetyMessage || "")],
+          needsSafetyRedirect: true,
+          waitingForSafetyAck: true,
+        };
+      }
+
+      // Handle irrelevant response
+      if (!validationResult.isRelevant) {
+        return {
+          messages: [new AIMessage(validationResult.errorMessage || "")],
+          step: state.step, // Keep same step
+        };
+      }
+
+      // Valid response - use generated follow-up
+      const newResponses = {
+        [question.key]: userInput,
+      };
+
+      if (isLastQuestion) {
+        // Last question with custom response - show acknowledgment, mark step complete but not full completion yet
+        return {
+          responses: newResponses,
+          lastUserResponse: userInput,
+          step: state.step,
+          lastQuestionAcknowledged: true,
+          messages: [new AIMessage(validationResult.followUpText || "")],
+        };
+      }
+
+      return {
+        responses: newResponses,
+        lastUserResponse: userInput,
+        step: state.step + 1,
+        messages: [new AIMessage(validationResult.followUpText || "")],
+      };
+    }
+  }
+
+  // Store response for predefined options and custom responses (for last question)
   if (question && userInput) {
     const newResponses = {
       [question.key]: userInput,
@@ -182,27 +301,55 @@ export async function processResponseNode(
     const isLastQuestion = state.step === ONBOARDING_QUESTIONS.length;
 
     if (isLastQuestion) {
+      // Last question with predefined option - check if it's "Skip this question"
+      const isSkip = userInput.toLowerCase().includes("skip");
+
+      if (isSkip) {
+        // Show acknowledgment for skipping
+        return {
+          responses: newResponses,
+          lastUserResponse: userInput,
+          step: state.step,
+          lastQuestionAcknowledged: true,
+          messages: [
+            new AIMessage(
+              "No worries at all! You've already shared so much valuable information. 🤍"
+            ),
+          ],
+        };
+      }
+
+      // Store response and mark step complete but not full completion yet
       return {
         responses: newResponses,
-        step: state.step + 1,
-        isComplete: true,
+        lastUserResponse: userInput,
+        step: state.step,
+        lastQuestionAcknowledged: true,
       };
     }
 
+    // For predefined options, the askQuestionNode will handle the follow-up
     return {
       responses: newResponses,
+      lastUserResponse: userInput,
       step: state.step + 1,
     };
   }
 
-  // Skip optional question
+  // Skip optional question (empty input)
   if (question && !question.required && !userInput) {
     const isLastQuestion = state.step === ONBOARDING_QUESTIONS.length;
 
     if (isLastQuestion) {
+      // Last question skipped with empty input - show acknowledgment
       return {
-        step: state.step + 1,
-        isComplete: true,
+        step: state.step,
+        lastQuestionAcknowledged: true,
+        messages: [
+          new AIMessage(
+            "No worries at all! You've already shared so much valuable information. 🤍"
+          ),
+        ],
       };
     }
 
@@ -218,10 +365,23 @@ export async function processResponseNode(
 }
 
 /**
+ * Node: Mark Onboarding as Complete
+ * Intermediate node to mark onboarding as complete after acknowledgment
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function markCompleteNode(_state: OnboardingStateType) {
+  return {
+    isComplete: true,
+    step: ONBOARDING_QUESTIONS.length + 1,
+  };
+}
+
+/**
  * Node: Complete Onboarding
  * Final message before redirecting to T&C
  */
-export async function completeNode(state: OnboardingStateType) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function completeNode(_state: OnboardingStateType) {
   const message = `Thank you so much for sharing! That's all I need to create your personalized plan. 🤍
 
 🎉 **Your responses have been saved!**
