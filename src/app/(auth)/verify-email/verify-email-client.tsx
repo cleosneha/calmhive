@@ -10,7 +10,7 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import AuthLeftSection from "@/components/auth/AuthLeftSection";
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -77,10 +77,31 @@ export default function VerifyEmailClient() {
 
   if (!email) {
     return (
-      <div className="flex flex-col md:flex-row min-h-screen bg-white">
-        <AuthLeftSection type="verify" />
+      <div className="flex flex-col md:flex-row min-h-screen bg-white relative">
+        {/* Left Section - Verify OTP Image (Desktop only) */}
+        <div className="hidden md:flex w-full md:w-1/2 items-center justify-center bg-white relative overflow-hidden">
+          <Image
+            src="/assets/verify-otp.png"
+            alt="Verify OTP Background"
+            fill
+            style={{ objectFit: "contain" }}
+            priority
+            className="relative z-10"
+          />
+        </div>
 
-        <div className="w-full md:w-1/2 flex items-center justify-center px-4 md:px-8 py-12 md:py-0 bg-[var(--ch-offwhite)]">
+        {/* Mobile: Background image with low opacity */}
+        <div className="absolute inset-0 md:hidden w-full h-full pointer-events-none z-0">
+          <Image
+            src="/assets/verify-otp.png"
+            alt="Verify OTP Background"
+            fill
+            style={{ objectFit: "cover", opacity: 0.2 }}
+            priority={false}
+          />
+        </div>
+
+        <div className="w-full md:w-1/2 flex items-center justify-center px-4 md:px-8 py-12 md:py-0 md:bg-[var(--ch-offwhite)] relative z-20 md:z-auto min-h-screen md:min-h-auto">
           <div className="w-full max-w-md">
             <div className="text-center">
               <h1 className="text-2xl font-bold text-[var(--ch-sage-dark)] mb-2">
@@ -104,10 +125,31 @@ export default function VerifyEmailClient() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-white">
-      <AuthLeftSection type="verify" />
+    <div className="flex flex-col md:flex-row min-h-screen bg-white relative">
+      {/* Left Section - Verify OTP Image (Desktop only) */}
+      <div className="hidden md:flex w-full md:w-1/2 items-center justify-center bg-white relative overflow-hidden">
+        <Image
+          src="/assets/verify-otp.png"
+          alt="Verify OTP Background"
+          fill
+          style={{ objectFit: "contain" }}
+          priority
+          className="relative z-10"
+        />
+      </div>
 
-      <div className="w-full md:w-1/2 flex items-center justify-center px-4 md:px-8 py-12 md:py-0 bg-[var(--ch-offwhite)]">
+      {/* Mobile: Background image with low opacity */}
+      <div className="absolute inset-0 md:hidden w-full h-full pointer-events-none z-0">
+        <Image
+          src="/assets/verify-otp.png"
+          alt="Verify OTP Background"
+          fill
+          style={{ objectFit: "cover", opacity: 0.12 }}
+          priority={false}
+        />
+      </div>
+
+      <div className="w-full md:w-1/2 flex items-center justify-center px-4 md:px-8 py-12 md:py-0 md:bg-[var(--ch-offwhite)] relative z-20 md:z-auto min-h-screen md:min-h-auto">
         <div className="w-full max-w-md">
           <div>
             <div className="mb-8 text-center">
@@ -180,7 +222,7 @@ export default function VerifyEmailClient() {
               </Button>
             </div>
 
-            <div className="mt-6 pt-6 border-t border-[var(--ch-taupe)]">
+            <div className="pt-6 ">
               <p className="text-center text-[var(--ch-text)]/70">
                 Already verified?{" "}
                 <Button

@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { HiOutlineEye, HiOutlineEyeOff } from "react-icons/hi";
+import { FaGoogle } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { login } from "@/actions/auth/login";
 import { authClient } from "@/lib/auth-client";
 import { MdMail, MdLock } from "react-icons/md";
-import AuthLeftSection from "@/components/auth/AuthLeftSection";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
+    setIsLoading(true);
     try {
       await authClient.signIn.social({
         provider: "google",
@@ -45,16 +47,38 @@ export default function LoginPage() {
       if (error instanceof Error) {
         toast.error("Google sign-in failed. Please try again.");
       }
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-white">
-      {/* Left Section */}
-      <AuthLeftSection type="login" />
+    <div className="flex flex-col md:flex-row min-h-screen bg-white relative">
+      {/* Left Section - Login Image */}
+      {/* Desktop: Visible on left side */}
+      <div className="hidden md:flex w-full md:w-1/2 items-center justify-center bg-white relative overflow-hidden">
+        <Image
+          src="/assets/login.png"
+          alt="Login Background"
+          fill
+          style={{ objectFit: "contain" }}
+          priority
+          className="relative z-10"
+        />
+      </div>
+
+      {/* Mobile: Background image with low opacity */}
+      <div className="absolute inset-0 md:hidden w-full h-full pointer-events-none z-0">
+        <Image
+          src="/assets/login.png"
+          alt="Login Background"
+          fill
+          style={{ objectFit: "cover", opacity: 0.2 }}
+          priority={false}
+        />
+      </div>
 
       {/* Right Section - Form */}
-      <div className="w-full md:w-1/2 flex items-center justify-center px-6 md:px-12 py-8 md:py-0 bg-[var(--ch-offwhite)]">
+      <div className="w-full md:w-1/2 flex items-center justify-center px-6 md:px-12 py-8 md:py-0 md:bg-[var(--ch-offwhite)] relative z-20 md:z-auto min-h-screen md:min-h-auto">
         <div className="w-full max-w-sm">
           <div>
             {/* Header */}
@@ -142,44 +166,15 @@ export default function LoginPage() {
               type="button"
               variant="outline"
               onClick={handleGoogleLogin}
-              className="w-full flex items-center justify-center gap-2 bg-white border border-[var(--ch-taupe)] hover:bg-[var(--ch-taupe)]/30 text-[var(--ch-text)] font-semibold py-2 rounded-lg text-sm shadow-sm transition"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 bg-white border border-[var(--ch-taupe)] hover:bg-[var(--ch-taupe)]/30 text-[var(--ch-text)] font-semibold py-2 rounded-lg text-sm shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 48 48"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <g clipPath="url(#clip0_17_40)">
-                  <path
-                    d="M47.5 24.5C47.5 22.6 47.3 20.8 47 19H24V29.1H37.4C36.7 32.2 34.7 34.7 31.8 36.4V42.1H39.3C44 38 47.5 31.9 47.5 24.5Z"
-                    fill="#4285F4"
-                  />
-                  <path
-                    d="M24 48C30.6 48 36.1 45.9 39.3 42.1L31.8 36.4C30 37.6 27.7 38.4 24 38.4C17.7 38.4 12.2 34.3 10.4 28.7H2.6V34.6C5.8 41.1 14.1 48 24 48Z"
-                    fill="#34A853"
-                  />
-                  <path
-                    d="M10.4 28.7C9.9 27.5 9.6 26.2 9.6 24.8C9.6 23.4 9.9 22.1 10.4 20.9V15H2.6C1 18.1 0 21.4 0 24.8C0 28.2 1 31.5 2.6 34.6L10.4 28.7Z"
-                    fill="#FBBC05"
-                  />
-                  <path
-                    d="M24 9.6C27.7 9.6 30.6 10.9 32.6 12.7L39.5 6.1C36.1 2.9 30.6 0 24 0C14.1 0 5.8 6.9 2.6 15L10.4 20.9C12.2 15.3 17.7 9.6 24 9.6Z"
-                    fill="#EA4335"
-                  />
-                </g>
-                <defs>
-                  <clipPath id="clip0_17_40">
-                    <rect width="48" height="48" fill="white" />
-                  </clipPath>
-                </defs>
-              </svg>
+              <FaGoogle className="text-lg" />
               Continue with Google
             </Button>
 
             {/* Sign Up Link */}
-            <div className="text-center">
+            <div className="text-center mt-2">
               <p className="text-xs text-[var(--ch-text)]/70">
                 Don&apos;t have an account?{" "}
                 <Link

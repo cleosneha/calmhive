@@ -89,7 +89,7 @@ This document provides comprehensive standards and strategies for coding agents 
 
 ## Icons
 
-- use **react icons** in every case.
+- use **react icons** in every case. Don't use svg anywhere.
 
 ## 🧠 Hooks & Utilities
 

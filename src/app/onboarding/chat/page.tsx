@@ -65,8 +65,18 @@ export default function OnboardingChatPage() {
     const textToSend = messageText || input;
     if (!textToSend.trim()) return;
 
-    setLoading(true);
     setInput("");
+
+    // Add user message to chat immediately
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "user",
+        content: textToSend,
+      },
+    ]);
+
+    setLoading(true);
 
     try {
       const result = await processOnboardingMessage(textToSend);
@@ -154,8 +164,18 @@ export default function OnboardingChatPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-0">
-      <div className="w-full max-w-3xl rounded-t-xl rounded-b-xl shadow-lg p-0 flex flex-col h-[92vh] md:h-[90vh] bg-transparent">
+    <div className="min-h-screen flex items-center justify-center p-0 relative">
+      {/* Background Image (absolute, low opacity) */}
+      <div className="absolute inset-0 w-full h-full pointer-events-none z-0 flex items-center justify-center">
+        <Image
+          src="/assets/onboarding-background.png"
+          alt="Onboarding Background"
+          fill
+          style={{ objectFit: "cover", opacity: 0.1 }}
+          priority={false}
+        />
+      </div>
+      <div className="w-full max-w-3xl rounded-t-xl rounded-b-xl shadow-lg p-0 flex flex-col h-[92vh] md:h-[90vh] bg-transparent relative z-10">
         {/* Chat Header */}
         <div className="px-6 py-4 border-b border-[var(--ch-sage-dark)]/10 flex items-center justify-between rounded-t-xl bg-white">
           <div className="text-left">
