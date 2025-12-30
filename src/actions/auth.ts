@@ -144,11 +144,11 @@ export async function deleteUserAccount() {
     // Delete vector embeddings from Pinecone
     try {
       const pineconeApiKey = process.env.PINECONE_API_KEY;
-      const pineconeIndexHost = process.env.PINECONE_INDEX_HOST;
+      const pineconeIndexName = process.env.PINECONE_INDEX_NAME;
 
-      if (pineconeApiKey && pineconeIndexHost) {
+      if (pineconeApiKey && pineconeIndexName) {
         const response = await fetch(
-          `https://${pineconeIndexHost}/vectors/delete`,
+          `https://${pineconeIndexName}/vectors/delete`,
           {
             method: "POST",
             headers: {
