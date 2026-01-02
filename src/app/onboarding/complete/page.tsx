@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getOnboardingResponses } from "@/actions/onboarding";
-import { ONBOARDING_QUESTIONS } from "@/onboarding/questions";
+import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
 import { Button } from "@/components/ui/button";
 
 export default function OnboardingCompletePage() {
-  const [responses, setResponses] = useState<Record<string, string>>({});
+  const [responses, setResponses] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -52,6 +52,18 @@ export default function OnboardingCompletePage() {
             const answer = responses[question.key];
             if (!answer) return null;
 
+            // Convert answer to displayable string
+            let displayAnswer = "";
+            if (typeof answer === "string") {
+              displayAnswer = answer;
+            } else if (Array.isArray(answer)) {
+              displayAnswer = answer.join(", ");
+            } else if (typeof answer === "object") {
+              displayAnswer = JSON.stringify(answer);
+            } else {
+              displayAnswer = String(answer);
+            }
+
             return (
               <div
                 key={question.key}
@@ -60,7 +72,7 @@ export default function OnboardingCompletePage() {
                 <h3 className="font-semibold text-[var(--ch-sage-dark)] mb-2">
                   {question.text}
                 </h3>
-                <p className="text-[var(--foreground)]/80">{answer}</p>
+                <p className="text-[var(--foreground)]/80">{displayAnswer}</p>
               </div>
             );
           })}

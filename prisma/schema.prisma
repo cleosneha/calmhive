@@ -77,14 +77,20 @@ model Session {
 }
 
 model Onboarding {
-    id            Int       @id @default(autoincrement())
-    user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId        String    @unique
-    responses     Json // Full responses { goals: "...", timeAvailability: "...", ... }
-    termsAccepted Boolean   @default(false)
-    completedAt   DateTime?
-    createdAt     DateTime  @default(now())
-    updatedAt     DateTime  @updatedAt
+    id               Int       @id @default(autoincrement())
+    user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId           String    @unique
+    age              Int
+    goals            String
+    goalSpecificInfo Json
+    timeAvailability Int
+    activities       String[]
+    energeticTime    String
+    additionalNotes  String?
+    termsAccepted    Boolean   @default(false)
+    completedAt      DateTime?
+    createdAt        DateTime  @default(now())
+    updatedAt        DateTime  @updatedAt
 
     @@index([userId])
 }

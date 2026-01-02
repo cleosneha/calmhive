@@ -2,6 +2,22 @@ import type { OnboardingQuestion } from "@/types";
 
 export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
   {
+    key: "readiness",
+    text: "Hey {firstName}! Let's start understanding you for a better experience.\n\nYou can tap an option or type your own.\n\nAre you ready to start?",
+    options: ["Yes, ready to start", "No, not ready yet"],
+    required: true,
+    followUps: {
+      "Yes, ready to start": {
+        text: "",
+        nextKey: "age",
+      },
+      "No, not ready yet": {
+        text: "No pressure at all! Take your time. Please tell me whenever you feel good to go. 🤍",
+        nextKey: "readiness",
+      },
+    },
+  },
+  {
     key: "age",
     text: "Great! So let's start with the first question.\n\nWhat's your age range?",
     options: ["Under 18", "18-24", "25-34", "35-44", "45-54", "55+"],
@@ -44,15 +60,79 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     required: true,
     followUps: {
       "Reduce daily stress and relax more.": {
-        text: "That's really important. I totally understand the need for more calm in your daily routine.\n\nHow much time do you typically have available each day for personal activities?",
-        nextKey: "timeAvailability",
+        text: "That's really important. I totally understand the need for more calm in your daily routine.\n\nWhat aspect of stress would you like to focus on most?",
+        nextKey: "stressAspect",
       },
       "Build better habits and stay productive.": {
-        text: "I love that you're focused on growth! Building consistent habits can really make a difference.\n\nHow much time do you typically have available each day for personal activities?",
-        nextKey: "timeAvailability",
+        text: "I love that you're focused on growth! Building consistent habits can really make a difference.\n\nWhich area would you like to build better habits in?",
+        nextKey: "habitArea",
       },
       "Improve sleep and energy levels.": {
-        text: "Getting quality rest is so important for everything else. I'm glad you're prioritizing that.\n\nHow much time do you typically have available each day for personal activities?",
+        text: "Getting quality rest is so important for everything else. I'm glad you're prioritizing that.\n\nWhat's your biggest challenge with sleep or energy right now?",
+        nextKey: "sleepChallenge",
+      },
+      default: {
+        text: "Thank you for sharing that goal.\n\nTell me more about this goal.",
+        nextKey: "goalSpecificInfo",
+      },
+    },
+  },
+  {
+    key: "stressAspect",
+    text: "What aspect of stress would you like to focus on most?",
+    options: [
+      "Work and career pressure",
+      "Personal relationships",
+      "Daily routines and time management",
+    ],
+    required: true,
+    followUps: {
+      default: {
+        text: "Thank you for sharing. That's really helpful to know.\n\nHow much time do you typically have available each day for personal activities?",
+        nextKey: "timeAvailability",
+      },
+    },
+  },
+  {
+    key: "habitArea",
+    text: "Which area would you like to build better habits in?",
+    options: [
+      "Exercise and physical health",
+      "Work productivity and focus",
+      "Mental health and mindfulness",
+    ],
+    required: true,
+    followUps: {
+      default: {
+        text: "Great choice! That's a wonderful area to focus on.\n\nHow much time do you typically have available each day for personal activities?",
+        nextKey: "timeAvailability",
+      },
+    },
+  },
+  {
+    key: "sleepChallenge",
+    text: "What's your biggest challenge with sleep or energy right now?",
+    options: [
+      "Difficulty falling asleep",
+      "Waking up tired or low energy",
+      "Inconsistent sleep schedule",
+    ],
+    required: true,
+    followUps: {
+      default: {
+        text: "I understand. Let's work on improving that.\n\nHow much time do you typically have available each day for personal activities?",
+        nextKey: "timeAvailability",
+      },
+    },
+  },
+  {
+    key: "goalSpecificInfo",
+    text: "Tell me more about this goal.",
+    options: [],
+    required: true,
+    followUps: {
+      default: {
+        text: "Thank you for sharing that detail. It really helps me understand what matters most to you.\n\nHow much time do you typically have available each day for personal activities?",
         nextKey: "timeAvailability",
       },
     },

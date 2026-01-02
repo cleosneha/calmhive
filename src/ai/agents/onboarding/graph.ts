@@ -4,16 +4,18 @@ import { Pool } from "pg";
 import { OnboardingState, type OnboardingStateType } from "./state";
 import {
   greetNode,
-  reassuranceNode,
   askQuestionNode,
   processResponseNode,
   markCompleteNode,
   completeNode,
 } from "./nodes";
 
-/**
- * Router: Determine entry point based on messages
- */
+// No-op node for when we just want to display current state
+function noopNode(state: OnboardingStateType): OnboardingStateType {
+  return state;
+}
+
+// Determine entry point based on state
 function routeEntry(state: OnboardingStateType): string {
   // If no messages or only AI messages, start with greeting
   const hasUserMessage = state.messages?.some(
@@ -25,14 +27,14 @@ function routeEntry(state: OnboardingStateType): string {
   }
 
   // If page is refreshed (state exists but last message was AI asking a question)
-  // Re-prompt the same question instead of processing
+  // Don't re-ask the question, just display current state
   const lastMessage = state.messages[state.messages.length - 1];
   const lastMessageIsAI = lastMessage?._getType() === "ai";
 
   if (lastMessageIsAI && state.step > 0 && !state.isComplete) {
     // The AI asked a question but user hasn't answered yet
-    // Re-ask the same question
-    return "ask_question";
+    // Just display the current state without adding a new message
+    return "noop";
   }
 
   // If user has sent a message, process it
@@ -48,26 +50,9 @@ function routeOnboardingFlow(state: OnboardingStateType): string {
     return END;
   }
 
-  // If safety redirect is triggered but acknowledged, proceed to next question
-  if (state.needsSafetyRedirect && !state.waitingForSafetyAck) {
-    return "ask_question";
-  }
-
   // If complete, go to completion node
   if (state.isComplete) {
     return "complete";
-  }
-
-  // If last question has been acknowledged, mark as complete
-  if (state.lastQuestionAcknowledged) {
-    return "mark_complete";
-  }
-
-  // If step is still 0 after processing, check if user is ready or not
-  if (state.step === 0) {
-    // If user just processed a message at step 0, they're not ready
-    // Route to reassurance node
-    return "reassurance";
   }
 
   // Check if processResponseNode already added a custom follow-up message
@@ -75,9 +60,11 @@ function routeOnboardingFlow(state: OnboardingStateType): string {
   const lastMessage = state.messages[state.messages.length - 1];
   const lastMessageIsAI = lastMessage?._getType() === "ai";
 
-  // If the last message is AI and we just incremented the step,
-  // it means processResponseNode generated a custom follow-up
-  if (lastMessageIsAI && state.step > 0) {
+  // If the last message is AI, return END to display it
+  // This handles both:
+  // 1. Error messages for irrelevant responses (step unchanged)
+  // 2. Follow-up messages for valid responses (step incremented)
+  if (lastMessageIsAI) {
     return END;
   }
 
@@ -93,22 +80,22 @@ export function createOnboardingGraph() {
   const workflow = new StateGraph(OnboardingState)
     // Add nodes
     .addNode("greet", greetNode)
-    .addNode("reassurance", reassuranceNode)
     .addNode("ask_question", askQuestionNode)
     .addNode("process_response", processResponseNode)
     .addNode("mark_complete", markCompleteNode)
     .addNode("complete", completeNode)
+    .addNode("noop", noopNode)
 
     // Define edges
     .addConditionalEdges(START, routeEntry) // Route to greet or process_response
     .addEdge("greet", END) // Greet returns initial state, client displays it
-    .addEdge("reassurance", END) // Reassurance returns, client displays it
     .addEdge("ask_question", END) // Ask question returns, client displays it
     .addConditionalEdges("process_response", routeOnboardingFlow)
     .addConditionalEdges("mark_complete", (state) =>
       state.isComplete ? "complete" : END
     )
-    .addEdge("complete", END);
+    .addEdge("complete", END)
+    .addEdge("noop", END);
 
   return workflow;
 }
@@ -129,9 +116,7 @@ export async function createCheckpointer() {
   return checkpointer;
 }
 
-/**
- * Compile the onboarding graph with checkpointer
- */
+// Compile the onboarding graph with checkpointer
 export async function compileOnboardingGraph() {
   const workflow = createOnboardingGraph();
   const checkpointer = await createCheckpointer();

@@ -8,7 +8,6 @@ import {
   compileOnboardingGraph,
   createCheckpointer,
 } from "@/ai/agents/onboarding";
-import { storeOnboardingEmbeddings } from "@/ai/utils/onboarding-vectors";
 
 let graphInstance: Awaited<ReturnType<typeof compileOnboardingGraph>> | null =
   null;
@@ -36,6 +35,8 @@ export async function startOnboardingSession() {
     step: result.step,
     isComplete: result.isComplete,
     waitingForSafetyAck: result.waitingForSafetyAck,
+    currentGoalOptions: result.currentGoalOptions || [],
+    firstName: (session.user.name || "there").split(" ")[0],
   };
 }
 
@@ -63,8 +64,8 @@ export async function processOnboardingMessage(userMessage: string) {
     })),
     step: result.step,
     isComplete: result.isComplete,
-    needsSafetyRedirect: result.needsSafetyRedirect,
     waitingForSafetyAck: result.waitingForSafetyAck,
+    currentGoalOptions: result.currentGoalOptions || [],
   };
 }
 
@@ -87,8 +88,8 @@ export async function getOnboardingState() {
     })),
     step: state.values.step,
     isComplete: state.values.isComplete,
-    needsSafetyRedirect: state.values.needsSafetyRedirect,
     waitingForSafetyAck: state.values.waitingForSafetyAck,
+    currentGoalOptions: state.values.currentGoalOptions || [],
   };
 }
 
@@ -106,18 +107,31 @@ export async function completeOnboarding() {
     throw new Error("No onboarding session found");
   }
 
+  const responses = state.values.responses as Record<string, unknown>;
+
+  // Map responses to Onboarding model fields
+  const onboardingData = {
+    age: responses.age ? parseInt(responses.age as string) : 0,
+    goals: (responses.goals as string) || "",
+    goalSpecificInfo: responses.goalSpecificInfo || {},
+    timeAvailability: responses.timeAvailability
+      ? parseInt(responses.timeAvailability as string)
+      : 0,
+    activities: Array.isArray(responses.activities)
+      ? (responses.activities as string[])
+      : [],
+    energeticTime: (responses.energeticTime as string) || "",
+    additionalNotes: (responses.additionalNotes as string) || null,
+    termsAccepted: true,
+    completedAt: new Date(),
+  };
+
   await db.onboarding.upsert({
     where: { userId: session.user.id },
-    update: {
-      responses: state.values.responses,
-      termsAccepted: true,
-      completedAt: new Date(),
-    },
+    update: onboardingData,
     create: {
       userId: session.user.id,
-      responses: state.values.responses,
-      termsAccepted: true,
-      completedAt: new Date(),
+      ...onboardingData,
     },
   });
 
@@ -140,16 +154,8 @@ export async function completeOnboarding() {
     console.error("Failed to update session (non-critical):", error);
   }
 
-  // Store embeddings in Qdrant and Pinecone
-  try {
-    await storeOnboardingEmbeddings(
-      session.user.id,
-      state.values.responses as Record<string, string>
-    );
-  } catch (error) {
-    console.error("Failed to store embeddings (non-critical):", error);
-    // Don't fail the onboarding if vector storage fails
-  }
+  // Embeddings storage disabled by configuration — removed
+  // (Previously stored onboarding responses in Qdrant / Pinecone.)
 
   // Clean up checkpoint thread after onboarding completion
   try {
@@ -190,8 +196,17 @@ export async function getOnboardingResponses() {
     throw new Error("Onboarding data not found");
   }
 
+  // Return as a responses object mapping
   return {
-    responses: onboarding.responses as Record<string, string>,
+    responses: {
+      age: onboarding.age?.toString() || "",
+      goals: onboarding.goals,
+      goalSpecificInfo: onboarding.goalSpecificInfo,
+      timeAvailability: onboarding.timeAvailability?.toString() || "",
+      activities: onboarding.activities,
+      energeticTime: onboarding.energeticTime,
+      additionalNotes: onboarding.additionalNotes || "",
+    },
     completedAt: onboarding.completedAt,
   };
 }

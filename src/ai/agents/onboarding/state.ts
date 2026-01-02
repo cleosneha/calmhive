@@ -1,5 +1,4 @@
 import { Annotation, MessagesAnnotation } from "@langchain/langgraph";
-import type { BaseMessage } from "@langchain/core/messages";
 
 /**
  * Onboarding Agent State
@@ -25,18 +24,8 @@ export const OnboardingState = Annotation.Root({
     default: () => ({}),
   }),
 
-  // Track the last user response for generating contextual follow-ups
-  lastUserResponse: Annotation<string | undefined>({
-    reducer: (_, value) => value,
-    default: () => undefined,
-  }),
-
   // Flags
   isComplete: Annotation<boolean>({
-    reducer: (_, value) => value,
-    default: () => false,
-  }),
-  needsSafetyRedirect: Annotation<boolean>({
     reducer: (_, value) => value,
     default: () => false,
   }),
@@ -44,9 +33,11 @@ export const OnboardingState = Annotation.Root({
     reducer: (_, value) => value,
     default: () => false,
   }),
-  lastQuestionAcknowledged: Annotation<boolean>({
+
+  // Store answer options for the goal-specific question
+  currentGoalOptions: Annotation<string[]>({
     reducer: (_, value) => value,
-    default: () => false,
+    default: () => [],
   }),
 });
 
