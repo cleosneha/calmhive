@@ -157,7 +157,6 @@ export async function deleteUserAccount() {
       where: { id: userId },
     });
 
-    console.log(`✓ Deleted user account: ${userId}`);
     return apiResponse({ success: true }, "Account deleted successfully");
   } catch (error) {
     console.error("Error deleting user account:", error);

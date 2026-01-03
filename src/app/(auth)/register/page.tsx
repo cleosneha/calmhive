@@ -36,7 +36,6 @@ export default function RegisterPage() {
         password,
         confirmPassword,
       });
-      console.log("Register result:", result);
       if ("error" in result) {
         toast.error(result.error || "Registration failed. Please try again.");
       } else {

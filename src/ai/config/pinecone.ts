@@ -29,7 +29,6 @@ export async function initPineconeIndex() {
           },
         },
       });
-      console.log(`✓ Pinecone index "${PINECONE_INDEX_NAME}" created`);
     }
   } catch (error) {
     console.error("Failed to initialize Pinecone index:", error);

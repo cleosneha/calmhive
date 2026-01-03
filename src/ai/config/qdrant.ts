@@ -25,7 +25,6 @@ export async function initQdrantCollection() {
           distance: "Cosine",
         },
       });
-      console.log(`✓ Qdrant collection "${QDRANT_COLLECTION_NAME}" created`);
     }
   } catch (error) {
     console.error("Failed to initialize Qdrant collection:", error);

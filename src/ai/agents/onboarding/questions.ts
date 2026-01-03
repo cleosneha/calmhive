@@ -19,32 +19,42 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
   },
   {
     key: "age",
-    text: "Great! So let's start with the first question.\n\nWhat's your age range?",
-    options: ["Under 18", "18-24", "25-34", "35-44", "45-54", "55+"],
+    text: "Great! So let's start with the first question.\n\nWhat's your age?",
+    options: [], // No options, user should type a number
     required: true,
+    /**
+     * The followUps for age are now dynamic. The code that handles onboarding should:
+     * 1. Use mapAgeToRange from utils/age-mapper.ts to map the user's input to a range.
+     * 2. Use the followUps below to select the right message for that range.
+     * 3. If no match, use the 'default'.
+     */
     followUps: {
       "Under 18": {
-        text: "Thank you for sharing! It's great that you're starting your wellness journey early.\n\nWhat are your main goals for using CalmHive?",
+        text: "That's a wonderful age to start building healthy habits early!\n\nWhat are your main goals for using CalmHive?",
         nextKey: "goals",
       },
       "18-24": {
-        text: "Thanks! This is such a formative time in life. Let's make it a healthy one.\n\nWhat are your main goals for using CalmHive?",
+        text: "Your early adulthood is a time of growth and new experiences. It's great you're focusing on your well-being!\n\nWhat are your main goals for using CalmHive?",
         nextKey: "goals",
       },
       "25-34": {
-        text: "Got it! This is often a busy time balancing many things. Let's help you find your rhythm.\n\nWhat are your main goals for using CalmHive?",
+        text: "That's a great age, but balancing everything can be a challenge. Let's make sure you find time for yourself!\n\nWhat are your main goals for using CalmHive?",
         nextKey: "goals",
       },
       "35-44": {
-        text: "Thank you! With all the responsibilities at this stage, self-care becomes even more important.\n\nWhat are your main goals for using CalmHive?",
+        text: "This is a busy stage of life for many. Prioritizing your well-being is so important!\n\nWhat are your main goals for using CalmHive?",
         nextKey: "goals",
       },
       "45-54": {
-        text: "Wonderful! It's never too late to prioritize your wellbeing.\n\nWhat are your main goals for using CalmHive?",
+        text: "Taking care of yourself at this age can make a huge difference in your quality of life.\n\nWhat are your main goals for using CalmHive?",
         nextKey: "goals",
       },
       "55+": {
-        text: "Thank you for sharing! Wellness at every age is important, and we're here to support you.\n\nWhat are your main goals for using CalmHive?",
+        text: "It's inspiring to see you investing in your well-being. Every age is the right age to feel your best!\n\nWhat are your main goals for using CalmHive?",
+        nextKey: "goals",
+      },
+      default: {
+        text: "Thank you for sharing! Let's help you find what works best for you.\n\nWhat are your main goals for using CalmHive?",
         nextKey: "goals",
       },
     },
@@ -87,6 +97,18 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     ],
     required: true,
     followUps: {
+      "Work and career pressure": {
+        text: "Work stress is so common, and addressing it can make a huge difference in your overall well-being. Let's create strategies to help you manage that pressure better.\n\nHow much time do you typically have available each day for personal activities?",
+        nextKey: "timeAvailability",
+      },
+      "Personal relationships": {
+        text: "Relationships are so important, and taking care of the stress they might create is valuable self-care. We'll help you navigate this more smoothly.\n\nHow much time do you typically have available each day for personal activities?",
+        nextKey: "timeAvailability",
+      },
+      "Daily routines and time management": {
+        text: "Getting your daily routines and time in order can be truly transformative. Better time management often leads to less stress overall.\n\nHow much time do you typically have available each day for personal activities?",
+        nextKey: "timeAvailability",
+      },
       default: {
         text: "Thank you for sharing. That's really helpful to know.\n\nHow much time do you typically have available each day for personal activities?",
         nextKey: "timeAvailability",
@@ -103,6 +125,18 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     ],
     required: true,
     followUps: {
+      "Exercise and physical health": {
+        text: "That's fantastic! Building exercise into your routine is one of the most impactful things you can do for your health. Even small, consistent movements can transform how you feel.\n\nHow much time do you typically have available each day for personal activities?",
+        nextKey: "timeAvailability",
+      },
+      "Work productivity and focus": {
+        text: "Great focus! Building better work habits can help you achieve more while feeling less overwhelmed. We'll help you create sustainable routines that boost your productivity.\n\nHow much time do you typically have available each day for personal activities?",
+        nextKey: "timeAvailability",
+      },
+      "Mental health and mindfulness": {
+        text: "Wonderful choice! Investing in your mental health through mindfulness is one of the greatest gifts you can give yourself. These habits create lasting positive changes.\n\nHow much time do you typically have available each day for personal activities?",
+        nextKey: "timeAvailability",
+      },
       default: {
         text: "Great choice! That's a wonderful area to focus on.\n\nHow much time do you typically have available each day for personal activities?",
         nextKey: "timeAvailability",
@@ -119,6 +153,18 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     ],
     required: true,
     followUps: {
+      "Difficulty falling asleep": {
+        text: "Falling asleep can be frustrating when your mind won't settle down. CalmHive has wonderful tools to help you wind down and drift off more easily.\n\nHow much time do you typically have available each day for personal activities?",
+        nextKey: "timeAvailability",
+      },
+      "Waking up tired or low energy": {
+        text: "Waking up refreshed makes such a difference for your entire day. Let's work on improving your sleep quality and morning energy.\n\nHow much time do you typically have available each day for personal activities?",
+        nextKey: "timeAvailability",
+      },
+      "Inconsistent sleep schedule": {
+        text: "An inconsistent sleep schedule can really throw off your body and mind. Creating a more regular routine can transform how you feel.\n\nHow much time do you typically have available each day for personal activities?",
+        nextKey: "timeAvailability",
+      },
       default: {
         text: "I understand. Let's work on improving that.\n\nHow much time do you typically have available each day for personal activities?",
         nextKey: "timeAvailability",

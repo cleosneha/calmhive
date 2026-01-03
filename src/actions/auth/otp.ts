@@ -31,7 +31,6 @@ export async function createOTP(email: string) {
       },
     });
 
-    console.log(`✅ OTP created for ${email}: ${otp}`);
     return apiResponse({ otp });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -121,7 +120,6 @@ export async function verifyOTP(email: string, otp: string) {
       },
     });
 
-    console.log(`✅ Email verified for ${email}`);
     return apiResponse(
       {
         id: user.id,

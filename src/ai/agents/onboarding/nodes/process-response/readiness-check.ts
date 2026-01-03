@@ -2,6 +2,7 @@ import { AIMessage } from "@langchain/core/messages";
 import type { OnboardingStateType } from "../../state";
 import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
 import { validateUserResponse } from "../../tools/validation";
+import { HARD_CODED_MESSAGES } from "../../utils/hardcoded-messages";
 
 /**
  * Handle readiness check using unified validation (including LLM)
@@ -22,32 +23,26 @@ export async function handleReadinessCheck(
 
     // PRIORITY 1: Check for safety issues FIRST
     if (validationResult.hasSafetyIssue) {
-      const safetyMsg =
-        "I appreciate you sharing that, but I want to make sure we're aligned. 🤍\n\n" +
-        "It sounds like you might be going through something really difficult right now. Your safety and well-being are incredibly important to us.\n\n" +
-        "There are people who genuinely care and want to help. You don't have to go through this alone. Please take that first step and reach out to someone today. 🤍" +
-        "CalmHive is designed to support well-being and healthy habits. " +
-        "Could you please share a goal that aligns with what CalmHive can support you with?";
-
       return {
-        messages: [new AIMessage(safetyMsg)],
+        messages: [new AIMessage(HARD_CODED_MESSAGES.SAFETY_LONG)],
         step: 0,
+        waitingForSafetyAck: true,
       };
     }
 
+    // PRIORITY 2: Check readiness
     if (validationResult.readiness === "yes") {
       return { step: 1 };
     }
 
     if (validationResult.readiness === "no") {
-      const msg =
-        validationResult.followUpText ||
-        ONBOARDING_QUESTIONS[0].followUps?.["No, not ready yet"]?.text ||
-        "No pressure at all — take your time. Tell me 'ready to start' whenever you're good to go. 🤍";
-
-      return { step: 0, messages: [new AIMessage(msg)] };
+      return {
+        step: 0,
+        messages: [new AIMessage(HARD_CODED_MESSAGES.READINESS_NOT_READY)],
+      };
     }
 
+    // PRIORITY 3: Check relevance
     if (!validationResult.isRelevant) {
       return {
         messages: [

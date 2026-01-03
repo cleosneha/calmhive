@@ -1,10 +1,11 @@
 /**
  * Validate time availability response
- * Ensures realistic time values (between 1 minute and 24 hours)
+ * Ensures realistic time values (between 15 minutes and 5 hours)
  */
 export function validateTimeResponse(response: string): {
   isValid: boolean;
   errorMessage?: string;
+  mappedRange?: string; // "Less than 30 minutes.", "30-60 minutes.", or "More than 60 minutes."
 } {
   // Check if response contains digits
   if (!/\d/.test(response)) {
@@ -19,16 +20,26 @@ export function validateTimeResponse(response: string): {
   if (hoursMatch) totalMins += parseInt(hoursMatch[1], 10) * 60;
   if (minsMatch) totalMins += parseInt(minsMatch[1], 10);
 
-  // Reject negative or zero time, or time greater than 24 hours
-  if (totalMins > 1440 || totalMins <= 0) {
+  // Stricter validation: 15 mins to 5 hours (300 mins)
+  if (totalMins < 15 || totalMins > 300) {
     return {
       isValid: false,
       errorMessage:
-        "Please enter a realistic time (between 1 minute and 24 hours).",
+        "Please enter a realistic time between 15 minutes and 5 hours.",
     };
   }
 
-  return { isValid: true };
+  // Map to range
+  let mappedRange: string;
+  if (totalMins < 30) {
+    mappedRange = "Less than 30 minutes.";
+  } else if (totalMins <= 60) {
+    mappedRange = "30-60 minutes.";
+  } else {
+    mappedRange = "More than 60 minutes.";
+  }
+
+  return { isValid: true, mappedRange };
 }
 
 /**

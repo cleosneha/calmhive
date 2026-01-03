@@ -84,7 +84,7 @@ model Onboarding {
     goals            String
     goalSpecificInfo Json
     timeAvailability Int
-    activities       String[]
+    activities       String
     energeticTime    String
     additionalNotes  String?
     termsAccepted    Boolean   @default(false)

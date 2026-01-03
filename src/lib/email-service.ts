@@ -31,7 +31,7 @@ export async function sendOTPEmail(
     logEmailSuccess(email, "OTP");
     return { success: true };
   } catch (error) {
-    logEmailError(error, "OTP");
+    logEmailError(email, "OTP", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : String(error),

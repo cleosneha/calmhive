@@ -100,7 +100,6 @@ export function useOnboardingSession() {
           typeof (error as { message?: string }).message === "string" &&
           (error as { message: string }).message.includes("SESSION_EXPIRED")
         ) {
-          console.log("Session expired, restarting onboarding...");
           try {
             const result = await startOnboardingSession();
             setState((prev) => ({

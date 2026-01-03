@@ -1,6 +1,6 @@
-import { mapAgeToRange, isAgeQuestion } from "../utils/age-mapper";
 import { validateTimeResponse, isTimeQuestion } from "../utils/time-validator";
 import { performLLMValidation } from "../utils/llm-validator";
+import { HARD_CODED_MESSAGES } from "../utils/hardcoded-messages";
 
 /**
  * Unified validation result interface
@@ -11,6 +11,9 @@ export interface ValidationResult {
   hasSafetyIssue: boolean;
   wantsToModify?: boolean;
   userWantsToSkip?: boolean; // User wants to skip (checked against required status)
+  modificationRequired?: boolean; // User wants to modify a previous response
+  modifiedField?: string; // Which field to modify
+  modifiedValue?: string; // New value for the field
   mappedResponse?: string; // For age mapping or other auto-corrections
   safetyMessage?: string;
   followUpText?: string;
@@ -34,26 +37,6 @@ export async function validateUserResponse(
 ): Promise<ValidationResult> {
   const trimmedResponse = userResponse.trim();
 
-  // ===== STEP 1: Age validation and mapping =====
-  if (isAgeQuestion(currentQuestionText)) {
-    const mappedAge = mapAgeToRange(trimmedResponse);
-    if (mappedAge) {
-      return {
-        isValid: true,
-        isRelevant: true,
-        hasSafetyIssue: false,
-        mappedResponse: mappedAge,
-      };
-    }
-    return {
-      isValid: false,
-      isRelevant: false,
-      hasSafetyIssue: false,
-      errorMessage:
-        "Please enter a valid, positive age or select an age range.",
-    };
-  }
-
   // ===== STEP 6: Time validation =====
   if (isTimeQuestion(currentQuestionText)) {
     const timeValidation = validateTimeResponse(trimmedResponse);
@@ -75,15 +58,25 @@ export async function validateUserResponse(
       nextQuestionText
     );
 
-    console.log("LLM Validation Result:", {
-      hasSafetyIssue: llmResult.hasSafetyIssue,
-      isRelevant: llmResult.isRelevant,
-      mismatchMessage: llmResult.mismatchMessage,
-    });
+    // PRIORITY 0: Check modification FIRST - user wants to update a previous answer
+    if (
+      llmResult.modificationRequired &&
+      llmResult.modifiedField &&
+      llmResult.modifiedValue
+    ) {
+      return {
+        isValid: true,
+        isRelevant: true,
+        hasSafetyIssue: false,
+        modificationRequired: true,
+        modifiedField: llmResult.modifiedField,
+        modifiedValue: llmResult.modifiedValue,
+        followUpText: HARD_CODED_MESSAGES.MODIFICATION_ACK,
+      };
+    }
 
     // PRIORITY 1: Check safety FIRST - safety is the highest priority
     if (llmResult.hasSafetyIssue) {
-      console.log("🚨 SAFETY ISSUE DETECTED - Returning safety response");
       // Use LLM-generated safety message if available (from MISMATCH_MESSAGE field when safety issue detected)
       const safetyMsg = llmResult.mismatchMessage;
 
@@ -112,6 +105,18 @@ export async function validateUserResponse(
         llmResult.mismatchMessage && llmResult.mismatchMessage !== "none"
           ? llmResult.mismatchMessage
           : "That answer seems a bit weird or not what we're expecting. Could you share something more else that fits the question better?";
+
+      // If this is a readiness question and user said no, return readiness info
+      if (llmResult.readiness === "no") {
+        return {
+          isValid: false,
+          isRelevant: true,
+          hasSafetyIssue: false,
+          readiness: "no",
+          followUpText: errorMessage,
+        };
+      }
+
       return {
         isValid: false,
         isRelevant: true,

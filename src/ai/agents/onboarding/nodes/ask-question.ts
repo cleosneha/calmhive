@@ -30,9 +30,9 @@ export async function askQuestionNode(state: OnboardingStateType) {
 
       if (followUp && followUp.nextKey === question.key) {
         // Use the predefined follow-up text if it exists and is not empty
-        // followUp.text already includes the question, so don't append question.text
+        // Replace {response} with the user's previous response
         if (followUp.text && followUp.text.trim() !== "") {
-          prompt = followUp.text;
+          prompt = followUp.text.replace("{response}", previousResponse);
         } else {
           // If follow-up text is empty, just show the question
           prompt = question.text;

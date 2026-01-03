@@ -8,6 +8,9 @@ export interface LLMValidationResult {
   hasSafetyIssue: boolean;
   hasExpectationMismatch: boolean;
   userWantsToSkip: boolean; // User explicitly wants to skip this question
+  modificationRequired: boolean; // User wants to modify a previous response
+  modifiedField?: string; // Which field user wants to modify (e.g., "age", "goals")
+  modifiedValue?: string; // The new value for the field
   mismatchMessage?: string;
   suggestBestTime?: string;
   followUpText?: string;
@@ -37,13 +40,20 @@ export async function performLLMValidation(
     .toLowerCase()
     .includes("main goals");
 
+  // Check if this is a goal-specific info question
+  const isGoalSpecificInfoQuestion = currentQuestionText
+    .toLowerCase()
+    .includes("tell me more about this goal");
+
   const prompt = isMainGoalsQuestion
     ? `You are CalmHive's onboarding assistant. The user just shared their main goal. Generate a specific follow-up question and 3 relevant answer options based on their goal.
 
 User's Goal: "${userResponse}"
 
 Reply in this format:
-MODIFICATION: [yes/no]
+MODIFICATION_REQUIRED: [yes/no]
+MODIFIED_FIELD: [field name or "none"]
+MODIFIED_VALUE: [new value or "none"]
 RELEVANCE: [yes/no]
 SAFETY: [safe/concern]
 EXPECTATION_MISMATCH: [yes/no]
@@ -54,13 +64,46 @@ GOAL_OPTIONS: [3 comma-separated concrete answer options for the question, e.g.,
 FOLLOW_UP: [Brief warm acknowledgment of their goal]
 
 Guidelines:
+- MODIFICATION_REQUIRED: yes if user is trying to correct/change a previous answer (e.g., "my age is actually 40", "I meant to say..."). Otherwise no.
+- MODIFIED_FIELD: If MODIFICATION_REQUIRED=yes, identify which field (age, goals, activities, timeAvailability, energeticTime). Otherwise "none".
+- MODIFIED_VALUE: If MODIFICATION_REQUIRED=yes, extract the new value. Otherwise "none".
 - GOAL_SPECIFIC_QUESTION: Must be a specific, actionable question related to their stated goal. Not generic.
 - GOAL_OPTIONS: Each option should be a specific, concrete scenario or situation related to their goal that they can select as an answer.
 - USER_WANTS_TO_SKIP: yes if user explicitly wants to skip this question or pass. Otherwise no.
 - FOLLOW_UP: Just acknowledge, don't repeat the question.`
+    : isGoalSpecificInfoQuestion
+    ? `You are CalmHive's onboarding assistant. The user is answering a goal-specific follow-up question. Analyze their response carefully.
+
+Current Question (Goal-Specific Info): "${currentQuestionText}"
+User Response: "${userResponse}"
+
+Reply in this format:
+MODIFICATION_REQUIRED: [yes/no]
+MODIFIED_FIELD: [field name or "none"]
+MODIFIED_VALUE: [new value or "none"]
+RELEVANCE: [yes/no]
+SAFETY: [safe/concern]
+EXPECTATION_MISMATCH: [yes/no]
+MISMATCH_MESSAGE: [custom error message or "none"]
+USER_WANTS_TO_SKIP: [yes/no]
+SUGGEST_BEST_TIME: [suggestion or "none"]
+FOLLOW_UP: [acknowledgment]
+READINESS: [yes/no]
+
+Guidelines:
+- MODIFICATION_REQUIRED: yes if user is trying to change their original goal (e.g., "actually, I want to change my goal to reduce stress instead", "sorry I meant something different"). Otherwise no.
+- MODIFIED_FIELD: If user wants to change their original goal, set to "goals". Otherwise "none".
+- MODIFIED_VALUE: If MODIFICATION_REQUIRED=yes and MODIFIED_FIELD="goals", extract what goal they want to switch to. Otherwise "none".
+- RELEVANCE: yes if user properly answers the goal-specific question, no if off-topic/spam.
+- SAFETY: concern only for crisis/extreme cases. Otherwise safe.
+- EXPECTATION_MISMATCH: yes if the response is negative or non-constructive about their goal. Otherwise no.
+- USER_WANTS_TO_SKIP: yes if user explicitly wants to skip. Otherwise no.
+- FOLLOW_UP: Brief warm acknowledgment of their answer.`
     : `You are CalmHive's onboarding assistant. Analyze the user's response for the current onboarding question and reply in this format:
 
-MODIFICATION: [yes/no]
+MODIFICATION_REQUIRED: [yes/no]
+MODIFIED_FIELD: [field name or "none"]
+MODIFIED_VALUE: [new value or "none"]
 RELEVANCE: [yes/no]
 SAFETY: [safe/concern]
 EXPECTATION_MISMATCH: [yes/no]
@@ -75,18 +118,19 @@ User Response: "${userResponse}"
 Next Question: "${nextQuestionText}"
 
 Guidelines:
+- MODIFICATION_REQUIRED: yes if user is trying to correct/change a previous answer (e.g., "my age is actually 40", "sorry, I meant reduce stress not anxiety"). Otherwise no.
+- MODIFIED_FIELD: If MODIFICATION_REQUIRED=yes, identify which field they're modifying (age, goals, activities, timeAvailability, energeticTime). Otherwise "none".
+- MODIFIED_VALUE: If MODIFICATION_REQUIRED=yes, extract the new value they want to set. Otherwise "none".
 - RELEVANCE: yes if user answers the question, no if off-topic/spam/gibberish.
 - SAFETY: concern only for crisis/extreme cases. Otherwise safe.
 - EXPECTATION_MISMATCH: yes if the response is negative, dismissive, or non-constructive. Otherwise no.
 - USER_WANTS_TO_SKIP: yes if user explicitly expresses intent to skip this question (e.g., "I want to skip", "can I pass"). Otherwise no.
 - SUGGEST_BEST_TIME: If question is about energy and user says "never", suggest morning/afternoon/evening. Otherwise "none".
-- FOLLOW_UP: Only if RELEVANCE=yes, SAFETY=safe, EXPECTATION_MISMATCH=no, MODIFICATION=no, USER_WANTS_TO_SKIP=no. Brief warm acknowledgment.`;
+- FOLLOW_UP: Only if RELEVANCE=yes, SAFETY=safe, EXPECTATION_MISMATCH=no, MODIFICATION_REQUIRED=no, USER_WANTS_TO_SKIP=no. Brief warm acknowledgment.`;
 
   const response = await llm.invoke(prompt);
   const content =
     typeof response.content === "string" ? response.content.trim() : "";
-  console.log("LLM Validator Response:", content);
-  console.log("=".repeat(50));
 
   const relevanceMatch = content.match(/^RELEVANCE:\s*(yes|no)/im);
   const safetyMatch = content.match(/^SAFETY:\s*(safe|concern)/im);
@@ -94,11 +138,6 @@ Guidelines:
     /^EXPECTATION_MISMATCH:\s*(yes|no)/im
   );
 
-  console.log("Parsed Safety Match:", {
-    safetyMatch: safetyMatch?.[0],
-    safetyValue: safetyMatch?.[1],
-    hasSafetyIssue: safetyMatch?.[1]?.toLowerCase() === "concern",
-  });
   const mismatchMessageMatch = content.match(
     /^MISMATCH_MESSAGE:\s*["']?(.+?)["']?\s*(?=\n[A-Z_]+:|$)/im
   );
@@ -112,6 +151,15 @@ Guidelines:
   const followUpMatch = content.match(/^FOLLOW_UP:\s*(.+)/im);
   const skipMatch = content.match(/^USER_WANTS_TO_SKIP:\s*(yes|no)/im);
   const readinessMatch = content.match(/^READINESS:\s*(yes|no)/im);
+  const modificationRequiredMatch = content.match(
+    /^MODIFICATION_REQUIRED:\s*(yes|no)/im
+  );
+  const modifiedFieldMatch = content.match(
+    /^MODIFIED_FIELD:\s*(.+?)(?=\n[A-Z_]+:|$)/im
+  );
+  const modifiedValueMatch = content.match(
+    /^MODIFIED_VALUE:\s*(.+?)(?=\n[A-Z_]+:|$)/im
+  );
 
   // Parse goal options
   let goalOptions: string[] | undefined;
@@ -119,6 +167,7 @@ Guidelines:
     goalOptions = goalOptionsMatch[1]
       .split(",")
       .map((s) => s.trim())
+      .map((s) => s.replace(/^["']|["']$/g, "")) // Strip surrounding quotes
       .filter((s) => s.length > 0)
       .slice(0, 3);
   }
@@ -136,6 +185,16 @@ Guidelines:
     hasExpectationMismatch:
       expectationMismatchMatch?.[1]?.toLowerCase() === "yes",
     userWantsToSkip: skipMatch?.[1]?.toLowerCase() === "yes",
+    modificationRequired:
+      modificationRequiredMatch?.[1]?.toLowerCase() === "yes",
+    modifiedField:
+      modifiedFieldMatch?.[1]?.trim() !== "none"
+        ? modifiedFieldMatch?.[1]?.trim()
+        : undefined,
+    modifiedValue:
+      modifiedValueMatch?.[1]?.trim() !== "none"
+        ? modifiedValueMatch?.[1]?.trim()
+        : undefined,
     mismatchMessage: mismatchMessageMatch
       ? mismatchMessageMatch[1]
           .trim()

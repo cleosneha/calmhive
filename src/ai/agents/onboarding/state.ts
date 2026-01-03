@@ -39,6 +39,12 @@ export const OnboardingState = Annotation.Root({
     reducer: (_, value) => value,
     default: () => [],
   }),
+
+  // Store the current goal-specific question text
+  currentGoalSpecificQuestion: Annotation<string>({
+    reducer: (_, value) => value,
+    default: () => "",
+  }),
 });
 
 export type OnboardingStateType = typeof OnboardingState.State;

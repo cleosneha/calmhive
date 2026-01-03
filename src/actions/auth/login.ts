@@ -39,7 +39,6 @@ export async function login({
 
     // Handle authentication errors
     const data = await response.json();
-    console.log(data);
     const errorMessage = data.error?.message || "";
     const errorCode = data.error?.code || "";
 
@@ -61,23 +60,16 @@ export async function login({
         },
       });
 
-      console.log("User found:", user);
-      console.log("User accounts:", user?.accounts);
-
       if (user && user.accounts.length > 0) {
         // Check if user has only OAuth accounts (no credential/password account)
         const hasCredentialAccount = user.accounts.some(
           (acc) => acc.providerId === "credential"
         );
 
-        console.log("Has credential account:", hasCredentialAccount);
-
         if (!hasCredentialAccount) {
           const providers = user.accounts
             .filter((acc) => acc.providerId !== "credential")
             .map((acc) => acc.providerId);
-
-          console.log("OAuth providers found:", providers);
 
           const providerNames = providers
             .map((p) => {

@@ -185,3 +185,4 @@ With minimal user effort and AI handling most of the work.
 
 - for local development
   pnpm prisma migrate dev --name init
+  pnpm prisma migrate dev --name change_activities_to_string
