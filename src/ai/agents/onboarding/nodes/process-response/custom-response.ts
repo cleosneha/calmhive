@@ -150,7 +150,6 @@ export async function handleCustomResponse(
       question: _state.currentGoalSpecificQuestion,
       answer: userInput,
     };
-    console.log("📝 Storing goalSpecificInfo:", goalSpecificData);
     newResponses = {
       [question.key]: JSON.stringify(goalSpecificData),
     };
@@ -159,13 +158,11 @@ export async function handleCustomResponse(
     if (question.followUps && question.followUps.default) {
       followUpText = question.followUps.default.text;
       nextKey = question.followUps.default.nextKey;
-      console.log("⏭️ goalSpecificInfo nextKey set to:", nextKey);
     } else {
       console.warn("⚠️ goalSpecificInfo followUps.default not found!");
     }
   } else if (question.key === "activities") {
     // Store activities as plain string (not parsed into array)
-    console.log("📝 Storing activities as string:", userInput);
     newResponses = {
       [question.key]: userInput,
     };
@@ -178,12 +175,6 @@ export async function handleCustomResponse(
   const stateUpdate: Partial<OnboardingStateType> = {
     responses: newResponses,
   };
-
-  console.log("📦 State update being returned:", {
-    questionKey: question.key,
-    responses: newResponses,
-    step,
-  });
 
   // Store goal options if available
   if (validationResult.goalOptions && validationResult.goalOptions.length > 0) {
@@ -200,13 +191,6 @@ export async function handleCustomResponse(
 
   // For goalSpecificInfo with custom response, advance to next question (timeAvailability)
   if (question.key === "goalSpecificInfo") {
-    console.log(
-      "🔍 goalSpecificInfo handler check - followUpText:",
-      followUpText,
-      "nextKey:",
-      nextKey
-    );
-
     if (followUpText && nextKey) {
       const nextQuestionIndex = getQuestionIndexByKey(nextKey);
       const nextQuestion =
@@ -225,13 +209,6 @@ export async function handleCustomResponse(
       if (nextQuestion && nextQuestion.text) {
         fullMessage += `\n\n${nextQuestion.text}`;
       }
-
-      console.log(
-        "✅ goalSpecificInfo advancing to:",
-        nextKey,
-        "at step",
-        nextQuestionIndex
-      );
 
       stateUpdate.step =
         nextQuestionIndex !== -1 ? nextQuestionIndex : step + 1;
@@ -256,7 +233,6 @@ export async function handleCustomResponse(
       const optionFollowUp = question.followUps?.[selectedOption];
 
       if (optionFollowUp) {
-        console.log("📍 Goals - hardcoded option selected:", selectedOption);
         const nextQuestionIndex = getQuestionIndexByKey(optionFollowUp.nextKey);
         const nextQuestion =
           nextQuestionIndex !== -1
@@ -278,7 +254,6 @@ export async function handleCustomResponse(
       validationResult.goalOptions.length > 0
     ) {
       // Custom text - extract goals and show goalSpecificInfo
-      console.log("📍 Goals - custom text provided:", userInput);
       const followUpMsg =
         validationResult.followUpText || `Thank you for sharing that goal.`;
 
@@ -326,11 +301,9 @@ export async function handleCustomResponse(
     if (selectedOption && question.followUps[selectedOption]) {
       // Hardcoded option selected
       followUpToUse = question.followUps[selectedOption];
-      console.log(`📍 ${question.key} - hardcoded option:`, selectedOption);
     } else if (question.followUps.default) {
       // Custom text provided - use default followUp
       followUpToUse = question.followUps.default;
-      console.log(`📍 ${question.key} - custom text, using default followUp`);
     }
 
     if (followUpToUse) {
@@ -344,13 +317,6 @@ export async function handleCustomResponse(
       if (followUpToUse.text) {
         fullMessage += `\n\n${followUpToUse.text}`;
       }
-
-      console.log(
-        `✅ ${question.key} advancing to:`,
-        followUpToUse.nextKey,
-        "at step",
-        nextQuestionIndex
-      );
 
       stateUpdate.step =
         nextQuestionIndex !== -1 ? nextQuestionIndex : step + 1;
@@ -370,7 +336,6 @@ export async function handleCustomResponse(
   // Special handling for time availability question: map to range and get appropriate follow-up
   if (question.key === "timeAvailability") {
     const timeValidation = validateTimeResponse(userInput);
-    console.log("⏱️ Time validation result:", timeValidation);
 
     if (timeValidation.mappedRange) {
       // Get the follow-up for this time range
@@ -386,8 +351,6 @@ export async function handleCustomResponse(
         let totalMins = 0;
         if (hoursMatch) totalMins += parseInt(hoursMatch[1], 10) * 60;
         if (minsMatch) totalMins += parseInt(minsMatch[1], 10);
-
-        console.log("📝 Storing timeAvailability:", totalMins, "minutes");
 
         // Build message: LLM acknowledgment + follow-up from questions.ts (which already includes next question)
         let fullMessage =

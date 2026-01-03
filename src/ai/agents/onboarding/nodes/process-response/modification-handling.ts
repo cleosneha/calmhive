@@ -114,11 +114,6 @@ async function handleGoalsModification(
   updatedResponses: Record<string, string>,
   acknowledgmentMsg: string
 ): Promise<Partial<OnboardingStateType>> {
-  console.log(
-    "🔄 Goals modification detected, regenerating goal-specific question..."
-  );
-  console.log("📝 Modified goal value:", validationResult.modifiedValue);
-
   // Re-validate goals to get new goal-specific question
   // Use the goals question text to ensure proper goal extraction
   const goalsQuestion = ONBOARDING_QUESTIONS.find((q) => q.key === "goals");
@@ -127,11 +122,6 @@ async function handleGoalsModification(
     goalsQuestion?.text ?? "What are your main goals for using CalmHive?",
     "Tell me more about this goal." // Next question context
   );
-
-  console.log("✅ Goal revalidation result:", {
-    goalSpecificQuestion: goalRevalidation.goalSpecificQuestion,
-    goalOptions: goalRevalidation.goalOptions,
-  });
 
   // Build acknowledgment message
   let fullMessage = acknowledgmentMsg;
@@ -143,11 +133,6 @@ async function handleGoalsModification(
     // Jump to goalSpecificInfo step to show the new dynamic options
     const goalSpecificInfoIndex = getQuestionIndexByKey("goalSpecificInfo");
 
-    console.log(
-      "🎯 Jumping to goalSpecificInfo step with new question and options:",
-      goalRevalidation.goalOptions
-    );
-
     return {
       responses: updatedResponses,
       messages: [new AIMessage(fullMessage)],
@@ -158,9 +143,7 @@ async function handleGoalsModification(
   }
 
   // No new goal-specific question, just acknowledge and stay
-  console.log(
-    "⚠️ No goal-specific question generated, staying on current step"
-  );
+
   return {
     responses: updatedResponses,
     messages: [new AIMessage(fullMessage)],

@@ -32,10 +32,6 @@ export function handlePredefinedOptionStorage(
       question: state.currentGoalSpecificQuestion,
       answer: userInput,
     };
-    console.log(
-      "📝 [OPTION-STORAGE] Storing goalSpecificInfo:",
-      goalSpecificData
-    );
     newResponses = {
       [question.key]: JSON.stringify(goalSpecificData),
     };

@@ -38,10 +38,6 @@ export async function performLLMValidation(
   const content =
     typeof response.content === "string" ? response.content.trim() : "";
 
-  console.log("🤖 LLM Validation Response:", content);
-
-  console.log("🤖 LLM Validation Response:", content);
-
   const relevanceMatch = content.match(/^RELEVANCE:\s*(yes|no)/im);
   const safetyMatch = content.match(/^SAFETY:\s*(safe|concern)/im);
   const expectationMismatchMatch = content.match(
