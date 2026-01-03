@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getOnboardingResponses } from "@/actions/onboarding";
+import { getOnboardingResponses } from "@/actions/onboarding/onboarding";
 import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
 import { Button } from "@/components/ui/button";
 

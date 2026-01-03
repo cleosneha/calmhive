@@ -47,7 +47,10 @@ export async function handleCustomResponse(
 
   if (!nextQuestionText) return null;
 
-  const validationResult = await validateUserResponse(
+  type ValidationResult = Awaited<ReturnType<typeof validateUserResponse>> & {
+    mappedResponse?: string;
+  };
+  const validationResult: ValidationResult = await validateUserResponse(
     userInput,
     question.text,
     nextQuestionText
@@ -114,13 +117,28 @@ export async function handleCustomResponse(
   let nextKey: string | undefined;
 
   if (question.key === "age") {
-    const mappedRange = mapAgeToRange(userInput);
-    // Store the original user input, but use mapped range for followUp
+    // Prefer mappedResponse from validation if present to avoid extra mapping
+    const mappedRange =
+      (validationResult && validationResult.mappedResponse) ||
+      mapAgeToRange(userInput);
+
+    // Store the original user input
     newResponses = { [question.key]: userInput };
+
+    // If mapping failed (defensive), ask user to re-enter — do not advance
+    if (!mappedRange) {
+      return {
+        messages: [new AIMessage(HARD_CODED_MESSAGES.AGE_INVALID)],
+        step,
+      };
+    }
+
+    // Use mapped range followUp if available
     if (mappedRange && question.followUps && question.followUps[mappedRange]) {
       followUpText = question.followUps[mappedRange].text;
       nextKey = question.followUps[mappedRange].nextKey;
     } else if (question.followUps && question.followUps.default) {
+      // Fallback to default followUp (should be rare for age since followUps map ranges)
       followUpText = question.followUps.default.text;
       nextKey = question.followUps.default.nextKey;
     }
@@ -136,6 +154,15 @@ export async function handleCustomResponse(
     newResponses = {
       [question.key]: JSON.stringify(goalSpecificData),
     };
+
+    // Get next question from followUps (should be timeAvailability)
+    if (question.followUps && question.followUps.default) {
+      followUpText = question.followUps.default.text;
+      nextKey = question.followUps.default.nextKey;
+      console.log("⏭️ goalSpecificInfo nextKey set to:", nextKey);
+    } else {
+      console.warn("⚠️ goalSpecificInfo followUps.default not found!");
+    }
   } else if (question.key === "activities") {
     // Store activities as plain string (not parsed into array)
     console.log("📝 Storing activities as string:", userInput);
@@ -171,42 +198,165 @@ export async function handleCustomResponse(
     return stateUpdate;
   }
 
-  // For goal questions with options, use default followUp to get nextKey and move accordingly
-  if (
-    question.key === "goals" &&
-    validationResult.goalOptions &&
-    validationResult.goalOptions.length > 0
-  ) {
-    const followUpMsg =
-      validationResult.followUpText || `Thank you for sharing that goal.`;
+  // For goalSpecificInfo with custom response, advance to next question (timeAvailability)
+  if (question.key === "goalSpecificInfo") {
+    console.log(
+      "🔍 goalSpecificInfo handler check - followUpText:",
+      followUpText,
+      "nextKey:",
+      nextKey
+    );
 
-    // Append goal-specific question if available
-    let fullMessage = followUpMsg;
-    if (validationResult.goalSpecificQuestion) {
-      fullMessage += `\n\n${validationResult.goalSpecificQuestion}`;
-    }
+    if (followUpText && nextKey) {
+      const nextQuestionIndex = getQuestionIndexByKey(nextKey);
+      const nextQuestion =
+        nextQuestionIndex !== -1
+          ? ONBOARDING_QUESTIONS[nextQuestionIndex]
+          : null;
 
-    // Get the default followUp to find the nextKey
-    const defaultFollowUp = question.followUps?.["default"];
-    let nextStep = step + 1; // Default: linear progression
+      // Build message: LLM acknowledgment + followUp from questions.ts (which includes next question)
+      let fullMessage =
+        validationResult.followUpText || "Thank you for sharing!";
 
-    if (defaultFollowUp && defaultFollowUp.nextKey) {
-      const nextQuestionIndex = getQuestionIndexByKey(defaultFollowUp.nextKey);
-      if (nextQuestionIndex !== -1) {
-        nextStep = nextQuestionIndex;
+      if (followUpText) {
+        fullMessage += `\n\n${followUpText}`;
       }
+
+      if (nextQuestion && nextQuestion.text) {
+        fullMessage += `\n\n${nextQuestion.text}`;
+      }
+
+      console.log(
+        "✅ goalSpecificInfo advancing to:",
+        nextKey,
+        "at step",
+        nextQuestionIndex
+      );
+
+      stateUpdate.step =
+        nextQuestionIndex !== -1 ? nextQuestionIndex : step + 1;
+      stateUpdate.messages = [new AIMessage(fullMessage)];
+      return stateUpdate;
+    } else {
+      console.warn(
+        "⚠️ goalSpecificInfo - missing followUpText or nextKey, falling through"
+      );
+    }
+  }
+
+  // For goal questions: check if user selected hardcoded option or typed custom text
+  if (question.key === "goals") {
+    // Check if user selected a hardcoded option
+    const selectedOption = question.options?.find(
+      (opt) => opt.toLowerCase() === userInput.toLowerCase()
+    );
+
+    if (selectedOption) {
+      // Hardcoded option selected - use its specific followUp
+      const optionFollowUp = question.followUps?.[selectedOption];
+
+      if (optionFollowUp) {
+        console.log("📍 Goals - hardcoded option selected:", selectedOption);
+        const nextQuestionIndex = getQuestionIndexByKey(optionFollowUp.nextKey);
+        const nextQuestion =
+          nextQuestionIndex !== -1
+            ? ONBOARDING_QUESTIONS[nextQuestionIndex]
+            : null;
+
+        let fullMessage = optionFollowUp.text;
+        if (nextQuestion && nextQuestion.text) {
+          fullMessage += `\n\n${nextQuestion.text}`;
+        }
+
+        stateUpdate.step =
+          nextQuestionIndex !== -1 ? nextQuestionIndex : step + 1;
+        stateUpdate.messages = [new AIMessage(fullMessage)];
+        return stateUpdate;
+      }
+    } else if (
+      validationResult.goalOptions &&
+      validationResult.goalOptions.length > 0
+    ) {
+      // Custom text - extract goals and show goalSpecificInfo
+      console.log("📍 Goals - custom text provided:", userInput);
+      const followUpMsg =
+        validationResult.followUpText || `Thank you for sharing that goal.`;
+
+      // Append goal-specific question if available
+      let fullMessage = followUpMsg;
+      if (validationResult.goalSpecificQuestion) {
+        fullMessage += `\n\n${validationResult.goalSpecificQuestion}`;
+      }
+
+      // Get the default followUp to find the nextKey (should be goalSpecificInfo)
+      const defaultFollowUp = question.followUps?.["default"];
+      let nextStep = step + 1;
+
+      if (defaultFollowUp && defaultFollowUp.nextKey) {
+        const nextQuestionIndex = getQuestionIndexByKey(
+          defaultFollowUp.nextKey
+        );
+        if (nextQuestionIndex !== -1) {
+          nextStep = nextQuestionIndex;
+        }
+      }
+
+      stateUpdate.step = nextStep;
+      stateUpdate.messages = [new AIMessage(fullMessage)];
+
+      // Store the goal-specific question for later reference
+      if (validationResult.goalSpecificQuestion) {
+        stateUpdate.currentGoalSpecificQuestion =
+          validationResult.goalSpecificQuestion;
+      }
+
+      return stateUpdate;
+    }
+  }
+
+  // General handler for questions with followUps (e.g., stressAspect, habitArea, sleepChallenge)
+  // This handles both hardcoded options and custom text
+  if (question.followUps && Object.keys(question.followUps).length > 0) {
+    // Check if user selected a hardcoded option
+    const selectedOption = question.options?.find(
+      (opt) => opt.toLowerCase() === userInput.toLowerCase()
+    );
+
+    let followUpToUse;
+    if (selectedOption && question.followUps[selectedOption]) {
+      // Hardcoded option selected
+      followUpToUse = question.followUps[selectedOption];
+      console.log(`📍 ${question.key} - hardcoded option:`, selectedOption);
+    } else if (question.followUps.default) {
+      // Custom text provided - use default followUp
+      followUpToUse = question.followUps.default;
+      console.log(`📍 ${question.key} - custom text, using default followUp`);
     }
 
-    stateUpdate.step = nextStep;
-    stateUpdate.messages = [new AIMessage(fullMessage)];
+    if (followUpToUse) {
+      const nextQuestionIndex = getQuestionIndexByKey(followUpToUse.nextKey);
 
-    // Store the goal-specific question for later reference
-    if (validationResult.goalSpecificQuestion) {
-      stateUpdate.currentGoalSpecificQuestion =
-        validationResult.goalSpecificQuestion;
+      // Build message: LLM acknowledgment + followUp text
+      // Note: followUpToUse.text already includes the next question, so don't append it again
+      let fullMessage =
+        validationResult.followUpText || "Thank you for sharing!";
+
+      if (followUpToUse.text) {
+        fullMessage += `\n\n${followUpToUse.text}`;
+      }
+
+      console.log(
+        `✅ ${question.key} advancing to:`,
+        followUpToUse.nextKey,
+        "at step",
+        nextQuestionIndex
+      );
+
+      stateUpdate.step =
+        nextQuestionIndex !== -1 ? nextQuestionIndex : step + 1;
+      stateUpdate.messages = [new AIMessage(fullMessage)];
+      return stateUpdate;
     }
-
-    return stateUpdate;
   }
 
   // Handle last question

@@ -11,14 +11,23 @@ export function mapAgeToRange(input: string): string | null {
     return input.trim();
   }
 
-  // Try to extract numeric age
-  const ageMatch = input.match(/-?\d{1,3}/); // allow negative for explicit check
+  // Try to extract numeric age (allow optional sign and detect negatives)
+  // Reject explicit negative mentions like "-5" or "minus 5"
+  if (/\bminus\b|\bnegative\b|[-−]\d+/i.test(trimmed)) {
+    return null;
+  }
+
+  const ageMatch = input.match(/-?\d{1,3}/);
   if (!ageMatch) return null;
 
-  const age = parseInt(ageMatch[0], 10);
+  const rawAge = ageMatch[0];
+  // Reject if the matched value has a negative sign
+  if (rawAge.startsWith("-") || rawAge.startsWith("−")) return null;
 
-  // Reject negative or zero ages
-  if (isNaN(age) || age <= 0) return null;
+  const age = parseInt(rawAge, 10);
+
+  // Accept only realistic human ages between 4 and 110
+  if (isNaN(age) || age < 4 || age > 110) return null;
 
   // Map numeric age to range
   if (age < 18) return "Under 18";

@@ -63,9 +63,15 @@ export async function handleModificationRequest(
     };
   }
 
+  // Normalize field name: "main goal" -> "goals"
+  const normalizedField =
+    validationResult.modifiedField === "main goal"
+      ? "goals"
+      : validationResult.modifiedField;
+
   // Valid modification - update the response and acknowledge
   const updatedResponses = {
-    [validationResult.modifiedField]: validationResult.modifiedValue,
+    [normalizedField]: validationResult.modifiedValue,
   };
 
   const acknowledgmentMsg =
@@ -73,7 +79,7 @@ export async function handleModificationRequest(
     "Got it! Your response has been updated. 🤍";
 
   // Special handling for goals modification: regenerate goal-specific question
-  if (validationResult.modifiedField === "goals") {
+  if (normalizedField === "goals") {
     return handleGoalsModification(
       validationResult,
       modifiedValidation,
@@ -108,14 +114,27 @@ async function handleGoalsModification(
   updatedResponses: Record<string, string>,
   acknowledgmentMsg: string
 ): Promise<Partial<OnboardingStateType>> {
+  console.log(
+    "🔄 Goals modification detected, regenerating goal-specific question..."
+  );
+  console.log("📝 Modified goal value:", validationResult.modifiedValue);
+
   // Re-validate goals to get new goal-specific question
+  // Use the goals question text to ensure proper goal extraction
+  const goalsQuestion = ONBOARDING_QUESTIONS.find((q) => q.key === "goals");
   const goalRevalidation = await validateUserResponse(
     validationResult.modifiedValue ?? "",
-    modifiedQuestion.text,
-    currentQuestion.text
+    goalsQuestion?.text ?? "What are your main goals for using CalmHive?",
+    "Tell me more about this goal." // Next question context
   );
 
-  let fullMessage = `${acknowledgmentMsg}`;
+  console.log("✅ Goal revalidation result:", {
+    goalSpecificQuestion: goalRevalidation.goalSpecificQuestion,
+    goalOptions: goalRevalidation.goalOptions,
+  });
+
+  // Build acknowledgment message
+  let fullMessage = acknowledgmentMsg;
 
   // If new goal-specific question is available, ask it
   if (goalRevalidation.goalSpecificQuestion) {
@@ -123,6 +142,11 @@ async function handleGoalsModification(
 
     // Jump to goalSpecificInfo step to show the new dynamic options
     const goalSpecificInfoIndex = getQuestionIndexByKey("goalSpecificInfo");
+
+    console.log(
+      "🎯 Jumping to goalSpecificInfo step with new question and options:",
+      goalRevalidation.goalOptions
+    );
 
     return {
       responses: updatedResponses,
@@ -134,6 +158,9 @@ async function handleGoalsModification(
   }
 
   // No new goal-specific question, just acknowledge and stay
+  console.log(
+    "⚠️ No goal-specific question generated, staying on current step"
+  );
   return {
     responses: updatedResponses,
     messages: [new AIMessage(fullMessage)],

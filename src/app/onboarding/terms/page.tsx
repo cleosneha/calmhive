@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { completeOnboarding } from "@/actions/onboarding";
+import { completeOnboarding } from "@/actions/onboarding/onboarding";
 
 export default function TermsAndConditionsPage() {
   const [accepted, setAccepted] = useState(false);

@@ -22,4 +22,7 @@ export const HARD_CODED_MESSAGES = {
 
   READINESS_NOT_READY:
     "No pressure at all. Take your time, please tell me when you are ready to start. 🤍",
+
+  AGE_INVALID:
+    "Please enter a valid age between 4 and 110 (e.g., 25). Avoid negative numbers or non-numeric characters.",
 };

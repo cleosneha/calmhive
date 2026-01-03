@@ -50,6 +50,37 @@ export async function validateUserResponse(
     }
   }
 
+  // ===== STEP 6.5: Age validation (rule-based, no LLM) =====
+  // If question asks for age, verify numeric age is in [4, 110]
+  // and map to an age range. If invalid, prompt user to re-enter.
+  try {
+    const { mapAgeToRange, isAgeQuestion } = await import(
+      "../utils/age-mapper"
+    );
+    if (isAgeQuestion(currentQuestionText)) {
+      const mapped = mapAgeToRange(trimmedResponse);
+      if (!mapped) {
+        return {
+          isValid: false,
+          isRelevant: false,
+          hasSafetyIssue: false,
+          errorMessage: HARD_CODED_MESSAGES.AGE_INVALID,
+        };
+      }
+
+      // Valid age input — return early with mapped response to skip LLM
+      return {
+        isValid: true,
+        isRelevant: true,
+        hasSafetyIssue: false,
+        mappedResponse: mapped,
+      };
+    }
+  } catch (err) {
+    console.warn("Age validation helper failed:", err);
+    // Fall through to LLM validation if helper import fails
+  }
+
   // ===== STEP 7: LLM unified validation (intelligently detects expectation mismatches for goals, activities, and any positive/negative expectations) =====
   try {
     const llmResult = await performLLMValidation(

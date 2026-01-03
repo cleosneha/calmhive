@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import {
   startOnboardingSession,
   processOnboardingMessage,
-} from "@/actions/onboarding";
+} from "@/actions/onboarding/onboarding";
 import type { OnboardingMessage } from "@/types";
 
 interface OnboardingSessionState {
