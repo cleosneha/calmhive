@@ -38,10 +38,10 @@ import { toast } from "sonner";
 
 const navLinks = [
   { href: "/user", icon: <FiHome />, label: "Home" },
-  { href: "/journal", icon: <FiBook />, label: "Journal" },
-  { href: "/plan", icon: <FiCalendar />, label: "Plan" },
-  { href: "/insights", icon: <FiBarChart2 />, label: "Insights" },
-  { href: "/settings", icon: <FiSettings />, label: "Settings" },
+  { href: "/user/journal", icon: <FiBook />, label: "Journal" },
+  { href: "/user/plan", icon: <FiCalendar />, label: "Plan" },
+  { href: "/user/insights", icon: <FiBarChart2 />, label: "Insights" },
+  { href: "/user/settings", icon: <FiSettings />, label: "Settings" },
 ];
 
 function getInitials(name?: string | null) {
