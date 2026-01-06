@@ -186,23 +186,23 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
   {
     key: "timeAvailability",
     text: "How much time do you typically have available each day for personal activities?",
-    options: [
-      "Less than 30 minutes.",
-      "30-60 minutes.",
-      "More than 60 minutes.",
-    ],
+    options: ["30 minutes.", "45 minutes.", "90 minutes."],
     required: true,
     followUps: {
-      "Less than 30 minutes.": {
+      "30 minutes.": {
         text: "That's perfectly fine! Even short moments can make a real impact when used intentionally.\n\nWhat types of activities help you feel more balanced?",
         nextKey: "activities",
       },
-      "30-60 minutes.": {
+      "45 minutes.": {
         text: "That's a great amount of time to work with! We can create some meaningful routines for you.\n\nWhat types of activities help you feel more balanced?",
         nextKey: "activities",
       },
-      "More than 60 minutes.": {
+      "90 minutes.": {
         text: "Wonderful! Having more time gives us lots of flexibility to explore different activities.\n\nWhat types of activities help you feel more balanced?",
+        nextKey: "activities",
+      },
+      default: {
+        text: "Thanks for sharing—any amount of time can be helpful when used consistently.\n\nWhat types of activities help you feel more balanced?",
         nextKey: "activities",
       },
     },
