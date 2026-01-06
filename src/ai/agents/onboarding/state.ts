@@ -45,6 +45,16 @@ export const OnboardingState = Annotation.Root({
     reducer: (_, value) => value,
     default: () => "",
   }),
+
+  // Multi-select handling for days off
+  selectedDays: Annotation<string[]>({
+    reducer: (_, value) => value,
+    default: () => [],
+  }),
+  isMultiSelectMode: Annotation<boolean>({
+    reducer: (_, value) => value,
+    default: () => false,
+  }),
 });
 
 export type OnboardingStateType = typeof OnboardingState.State;

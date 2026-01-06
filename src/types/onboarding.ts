@@ -10,6 +10,7 @@ export interface OnboardingQuestion {
   text: string;
   options: string[];
   required: boolean;
+  multiSelect?: boolean;
   followUps?: {
     [optionText: string]: {
       text: string;
@@ -69,6 +70,7 @@ export interface OnboardingSessionResponse {
      timeAvailability: string;
      activities: string;
      energeticTime: string;
+     daysOff: string[];
      additionalNotes: string;
    };
    completedAt: Date | null;

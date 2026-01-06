@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import ChatMessages from "@/components/onboarding/chat-messages";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import ChatSkeleton from "@/components/onboarding/chat-skeleton";
+import DaySelector from "@/components/onboarding/day-selector";
 
 export default function OnboardingChatPage() {
   const {
@@ -21,9 +22,12 @@ export default function OnboardingChatPage() {
     currentStep,
     currentGoalOptions,
     firstName,
+    selectedDays,
+    isMultiSelectMode,
     handleSend,
     handleInputKeyDown,
     setInput,
+    handleToggleDay,
   } = useOnboardingSession();
 
   const chatEndRef = useRef<HTMLDivElement>(
@@ -57,6 +61,32 @@ export default function OnboardingChatPage() {
     handleSend(option);
   };
 
+  const handleDaysSend = () => {
+    if (selectedDays.length === 0) return;
+
+    // Validate: Cannot select all 7 days as off
+    const allDays = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
+    const selectedDaysWithoutNone = selectedDays.filter((d) => d !== "None");
+    if (selectedDaysWithoutNone.length === allDays.length) {
+      return;
+    }
+
+    const daysText =
+      selectedDays.includes("None") || selectedDays.length === 0
+        ? "None"
+        : selectedDays.join(", ");
+
+    handleSend(daysText);
+  };
+
   // Show continue button for safety acknowledgment
   const showSafetyContinue = waitingForSafetyAck;
 
@@ -69,10 +99,14 @@ export default function OnboardingChatPage() {
     !showSafetyContinue &&
     !showProceedButton &&
     !loading &&
+    !isMultiSelectMode &&
     (currentQuestion.options.length > 0 ||
       (currentQuestion.key === "goalSpecificInfo" &&
         currentGoalOptions.length > 0))
   );
+
+  // Show day selector for multi-select mode
+  const showDaySelector = isMultiSelectMode && currentQuestion && !loading;
 
   // Get the options to display (use goalOptions for goalSpecificInfo, otherwise use question options)
   const optionsToDisplay =
@@ -179,20 +213,35 @@ export default function OnboardingChatPage() {
               </div>
             )}
 
-            {/* Suggestions (vertical, above input) */}
+            {/* Day Selector for multi-select (horizontal) */}
+            {showDaySelector && (
+              <div className="flex flex-row items-start gap-2 mb-1">
+                <span className="mt-0.5 text-[var(--ch-sage-dark)]">
+                  <VscWand className="w-4 h-4 inline-block align-middle" />
+                </span>
+                <DaySelector
+                  options={currentQuestion.options}
+                  selectedDays={selectedDays}
+                  onToggleDay={handleToggleDay}
+                  disabled={loading}
+                />
+              </div>
+            )}
+
+            {/* Suggestions (wrap on small screens) */}
             {showSuggestions && (
               <div className="flex flex-row items-start gap-2 mb-1">
                 <span className="mt-0.5 text-[var(--ch-sage-dark)]">
                   <VscWand className="w-4 h-4 inline-block align-middle" />
                 </span>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-row flex-wrap gap-2">
                   {optionsToDisplay.map((option, idx) => (
                     <Button
                       key={idx}
                       type="button"
                       onClick={() => handleOptionClick(option)}
                       disabled={loading}
-                      className="text-xs lg:text-sm font-normal bg-[var(--ch-sage-light)] text-black px-2 py-1 lg:px-3 lg:py-1.5 mb-1 rounded-lg hover:bg-[var(--ch-sage-dark)] hover:text-white transition disabled:opacity-50 flex items-center text-left shadow-none border border-[var(--ch-sage-dark)]/10"
+                      className="text-xs lg:text-sm font-normal bg-[var(--ch-sage-light)] text-black px-2 py-1 lg:px-3 lg:py-1.5 rounded-lg hover:bg-[var(--ch-sage-dark)] hover:text-white transition disabled:opacity-50 flex items-center text-left shadow-none border border-[var(--ch-sage-dark)]/10 whitespace-normal break-words max-w-full"
                       style={{
                         minHeight: 0,
                         height: "auto",
@@ -221,14 +270,27 @@ export default function OnboardingChatPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleInputKeyDown}
-              disabled={loading || waitingForSafetyAck}
-              autoFocus={!waitingForSafetyAck}
+              disabled={loading || waitingForSafetyAck || isMultiSelectMode}
+              autoFocus={!waitingForSafetyAck && !isMultiSelectMode}
             />
             <Button
               type="button"
-              onClick={() => handleSend()}
-              disabled={loading || !input.trim() || waitingForSafetyAck}
-              aria-label="Send"
+              onClick={() => {
+                if (isMultiSelectMode) {
+                  handleDaysSend();
+                } else {
+                  handleSend();
+                }
+              }}
+              disabled={
+                loading ||
+                waitingForSafetyAck ||
+                (isMultiSelectMode ? selectedDays.length === 0 : !input.trim())
+              }
+              aria-label={isMultiSelectMode ? "Send selected days" : "Send"}
+              title={
+                isMultiSelectMode ? "Send selected rest days" : "Send message"
+              }
               className="bg-[var(--ch-sage-dark)] text-white rounded-xl flex items-center justify-center hover:bg-[var(--ch-sage-dark)]/90 transition disabled:opacity-50 cursor-pointer w-9 h-9 lg:w-11 lg:h-11 min-w-[36px] min-h-[36px] lg:min-w-[44px] lg:min-h-[44px] p-0"
             >
               <FiSend className="text-base lg:text-lg" />

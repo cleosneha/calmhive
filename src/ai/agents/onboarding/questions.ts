@@ -242,15 +242,37 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     required: true,
     followUps: {
       "Morning (before noon).": {
-        text: "Great! Morning energy is perfect for setting a positive tone for the day.\n\nIs there anything else you'd like to share to personalize your experience? (Totally optional.)",
-        nextKey: "anythingElse",
+        text: "Great! Morning energy is perfect for setting a positive tone for the day.\n\nIs there any day you want a day off of?",
+        nextKey: "daysOff",
       },
       "Afternoon (noon to evening).": {
-        text: "Nice! The afternoon can be a great time to refresh and recharge.\n\nIs there anything else you'd like to share to personalize your experience? (Totally optional.)",
-        nextKey: "anythingElse",
+        text: "Nice! The afternoon can be a great time to refresh and recharge.\n\nIs there any day you want a day off of?",
+        nextKey: "daysOff",
       },
       "Evening (after work/school).": {
-        text: "Perfect! Evening activities can help you unwind and transition into a restful night.\n\nIs there anything else you'd like to share to personalize your experience? (Totally optional.)",
+        text: "Perfect! Evening activities can help you unwind and transition into a restful night.\n\nIs there any day you want a day off of?",
+        nextKey: "daysOff",
+      },
+    },
+  },
+  {
+    key: "daysOff",
+    text: "Is there any day you want a day off of?",
+    options: [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+      "None",
+    ],
+    required: true,
+    multiSelect: true,
+    followUps: {
+      default: {
+        text: "Perfect! We'll make sure to respect your rest days while planning activities.\n\nIs there anything else you'd like to share to personalize your experience? (Totally optional.)",
         nextKey: "anythingElse",
       },
     },

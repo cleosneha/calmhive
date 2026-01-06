@@ -86,6 +86,7 @@ model Onboarding {
     timeAvailability Int
     activities       String
     energeticTime    String
+    daysOff          String[]  @default([])
     additionalNotes  String?
     termsAccepted    Boolean   @default(false)
     completedAt      DateTime?

@@ -35,5 +35,7 @@ export async function startOnboardingSession() {
     currentGoalOptions: result.currentGoalOptions || [],
     currentGoalSpecificQuestion: result.currentGoalSpecificQuestion || "",
     firstName: (session.user.name || "there").split(" ")[0],
+    selectedDays: result.selectedDays || [],
+    isMultiSelectMode: result.isMultiSelectMode || false,
   };
 }

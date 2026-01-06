@@ -36,5 +36,7 @@ export async function processOnboardingMessage(userMessage: string) {
     waitingForSafetyAck: result.waitingForSafetyAck,
     currentGoalOptions: result.currentGoalOptions || [],
     currentGoalSpecificQuestion: result.currentGoalSpecificQuestion || "",
+    selectedDays: result.selectedDays || [],
+    isMultiSelectMode: result.isMultiSelectMode || false,
   };
 }

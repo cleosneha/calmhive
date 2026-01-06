@@ -1,9 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
 import type { GoalSpecificInfo } from "@/types/onboarding";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 
 interface Props {
   responses: {
@@ -13,82 +25,182 @@ interface Props {
     timeAvailability: string;
     activities: string;
     energeticTime: string;
+    daysOff: string[];
     additionalNotes: string;
   };
 }
 
 export default function OnboardingCompleteClient({ responses }: Props) {
   const router = useRouter();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selected, setSelected] = useState<{
+    question: string;
+    answer: string;
+  } | null>(null);
+
+  const openDialog = (question: string, answer: string) => {
+    setSelected({ question, answer });
+    setDialogOpen(true);
+  };
 
   return (
     <div className="min-h-screen  p-4 md:p-8 flex items-center justify-center">
-      <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 md:p-12  w-full">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-[var(--ch-sage-dark)] mb-2">
-            You&apos;re All Set!
+      <div className=" backdrop-blur-sm  ">
+        <div className="text-center mb-6">
+          <h1 className="text-xl md:text-4xl font-bold text-[var(--ch-sage-dark)] mb-1">
+            This is you till now
           </h1>
-          <p className="text-[var(--foreground)]/70 text-lg">
-            Thank you for completing your onboarding. Here&apos;s what you
-            shared with us:
-          </p>
         </div>
 
-        <div className="space-y-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {ONBOARDING_QUESTIONS.map((question) => {
             // Special handling for goalSpecificInfo
             if (question.key === "goalSpecificInfo") {
               const goalInfo = responses.goalSpecificInfo;
               if (!goalInfo) return null;
+              const fullAnswer = goalInfo.answer;
               return (
-                <div
+                <Card
                   key={question.key}
-                  className="bg-[var(--ch-sage-light)]/30 rounded-2xl p-4 md:p-6"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Open details for: ${goalInfo.question}`}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      openDialog(goalInfo.question, goalInfo.answer);
+                    }
+                  }}
+                  onClick={() => openDialog(goalInfo.question, goalInfo.answer)}
+                  className="group relative cursor-pointer hover:shadow-lg transition-transform bg-[var(--ch-sage-light)]/30 gap-2 overflow-hidden"
                 >
-                  <h3 className="font-semibold text-[var(--ch-sage-dark)] mb-2">
-                    {goalInfo.question}
-                  </h3>
-                  <p className="text-[var(--foreground)]/80">
-                    {goalInfo.answer}
-                  </p>
-                </div>
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-150 flex items-center justify-center pointer-events-none">
+                    <span className="text-white font-medium text-sm md:text-base">
+                      View More
+                    </span>
+                  </div>
+
+                  <CardHeader>
+                    <CardTitle className="text-[var(--ch-sage-dark)] leading-relaxed mb-1">
+                      {goalInfo.question}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex-1 pt-1">
+                    <p
+                      className="text-[var(--foreground)]/80"
+                      style={{
+                        display: "-webkit-box",
+                        WebkitLineClamp: 5,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {fullAnswer}
+                    </p>
+                  </CardContent>
+                </Card>
               );
             }
 
             const key = question.key as keyof typeof responses;
-            const answer = responses[key];
-            if (!answer) return null;
+            const answerAny = responses[key];
+            if (!answerAny) return null;
 
-            let displayAnswer = "";
-            if (typeof answer === "string") {
-              displayAnswer = answer;
-            } else if (Array.isArray(answer)) {
-              displayAnswer = answer.join(", ");
-            } else {
-              displayAnswer = String(answer);
-            }
+            const answer = Array.isArray(answerAny)
+              ? answerAny.join(", ")
+              : String(answerAny);
+
+            const fullAnswer = answer;
 
             return (
-              <div
+              <Card
                 key={question.key}
-                className="bg-[var(--ch-sage-light)]/30 rounded-2xl p-4 md:p-6"
+                role="button"
+                tabIndex={0}
+                aria-label={`Open details for: ${question.text}`}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    openDialog(question.text, answer);
+                  }
+                }}
+                onClick={() => openDialog(question.text, answer)}
+                className="group relative cursor-pointer hover:shadow-lg transition-transform bg-[var(--ch-sage-light)]/30 gap-2 overflow-hidden"
               >
-                <h3 className="font-semibold text-[var(--ch-sage-dark)] mb-2">
-                  {question.text}
-                </h3>
-                <p className="text-[var(--foreground)]/80">{displayAnswer}</p>
-              </div>
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-150 flex items-center justify-center pointer-events-none">
+                  <span className="text-white font-medium text-sm md:text-base">
+                    View More
+                  </span>
+                </div>
+
+                <CardHeader>
+                  <CardTitle className="text-[var(--ch-sage-dark)] leading-relaxed mb-1">
+                    {question.text}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 pt-1">
+                  <p
+                    className="text-[var(--foreground)]/80"
+                    style={{
+                      display: "-webkit-box",
+                      WebkitLineClamp: 5,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {fullAnswer}
+                  </p>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
 
-        <div className="text-center">
-          <Button
-            onClick={() => router.push("/user")}
-            className="bg-[var(--ch-sage-dark)] text-white px-8 py-3 rounded-xl hover:bg-[var(--ch-sage-dark)]/90 transition text-lg"
-          >
-            Go to Dashboard
-          </Button>
+        <div className="bg-white p-4 md:p-6 rounded-xl shadow-md">
+          <div className="flex items-center justify-between gap-4">
+            {/* Left: CalmHive logo */}
+            <div className="flex-shrink-0 flex items-center">
+              <Image
+                src="/calmhive.png"
+                alt="CalmHive Logo"
+                width={64}
+                height={64}
+                className="rounded-md"
+                priority
+              />
+            </div>
+
+            {/* Right: Text + CTA in a vertical column aligned right */}
+            <div className="flex-1 flex items-center justify-end">
+              <div className="flex flex-col items-end gap-3">
+                <p className="text-lg text-[var(--ch-sage-dark)] font-medium text-right">
+                  Ready to transform
+                </p>
+                <Button
+                  onClick={() => router.push("/user")}
+                  className="bg-[var(--ch-sage-dark)] text-white px-6 py-2 rounded-xl hover:bg-[var(--ch-sage-dark)]/90 transition text-base"
+                >
+                  Continue your journey
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Read More dialog */}
+        <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{selected?.question}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {selected?.answer}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Close</AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

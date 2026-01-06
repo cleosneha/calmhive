@@ -59,6 +59,21 @@ export async function completeOnboarding() {
     return String(value);
   }
 
+  function parseDaysOff(value: unknown): string[] {
+    if (!value) return [];
+    if (typeof value === "string") {
+      // Handle comma-separated string like "Monday, Tuesday, Wednesday"
+      const days = value.split(",").map((d) => d.trim());
+      // Filter out "None" if it exists
+      return days.filter((d) => d && d !== "None");
+    }
+    if (Array.isArray(value)) {
+      // Filter out "None" if it exists
+      return value.filter((d) => typeof d === "string" && d !== "None");
+    }
+    return [];
+  }
+
   function parseGoalSpecificInfo(
     responses: Record<string, unknown>,
     currentGoalQuestion: string
@@ -87,6 +102,7 @@ export async function completeOnboarding() {
           "timeAvailability",
           "activities",
           "energeticTime",
+          "daysOff",
           "anythingElse",
           "readiness",
           "age",
@@ -107,6 +123,8 @@ export async function completeOnboarding() {
     return {} as Prisma.InputJsonValue;
   }
 
+  const parsedDaysOff = parseDaysOff(responses.daysOff);
+
   const onboardingData = {
     age: responses.age ? parseInt(String(responses.age), 10) : 0,
     goals: String(responses.goals || ""),
@@ -119,6 +137,7 @@ export async function completeOnboarding() {
     })(),
     activities: parseActivities(responses.activities),
     energeticTime: String(responses.energeticTime || ""),
+    // daysOff will be applied explicitly in update/create using proper Prisma array syntax
     additionalNotes: responses.additionalNotes
       ? String(responses.additionalNotes)
       : null,
@@ -132,10 +151,16 @@ export async function completeOnboarding() {
 
   await db.onboarding.upsert({
     where: { userId: session.user.id },
-    update: onboardingData,
+    update: {
+      ...onboardingData,
+      // For list fields, Prisma expects the set syntax on update
+      daysOff: { set: parsedDaysOff },
+    },
     create: {
       userId: session.user.id,
       ...onboardingData,
+      // For create, we can directly pass the array
+      daysOff: parsedDaysOff,
     },
   });
 

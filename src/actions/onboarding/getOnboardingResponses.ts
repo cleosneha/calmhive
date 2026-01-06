@@ -55,6 +55,7 @@ export async function getOnboardingResponses(): Promise<OnboardingResponses> {
       timeAvailability: onboarding.timeAvailability?.toString() || "",
       activities: onboarding.activities,
       energeticTime: onboarding.energeticTime,
+      daysOff: Array.isArray(onboarding.daysOff) ? onboarding.daysOff : [],
       additionalNotes: onboarding.additionalNotes || "",
     },
     completedAt: onboarding.completedAt,
