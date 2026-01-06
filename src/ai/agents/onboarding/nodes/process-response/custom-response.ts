@@ -9,22 +9,6 @@ import { handleModificationRequest } from "./modification-handling";
 import { HARD_CODED_MESSAGES } from "../../utils/hardcoded-messages";
 
 /**
- * Helper: Parse activities string into array
- * Handles comma-separated and conjunction-separated lists
- */
-function parseActivities(input: string): string[] {
-  if (!input) return [];
-
-  // Split by commas, "and", "&", "or", etc.
-  const activities = input
-    .split(/[,&]|(?:\s+and\s+)|(?:\s+or\s+)/i)
-    .map((activity) => activity.trim())
-    .filter((activity) => activity.length > 0);
-
-  return activities;
-}
-
-/**
  * Helper: Get question index by key
  */
 function getQuestionIndexByKey(key: string): number {
