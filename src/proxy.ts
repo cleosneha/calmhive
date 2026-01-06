@@ -127,7 +127,12 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL("/user", request.url));
     }
 
-    // Redirect away from onboarding
+    // Allow access to the onboarding complete page even if already onboarded (so users land on the completion page after accepting T&C)
+    if (pathname === "/onboarding/complete") {
+      return NextResponse.next();
+    }
+
+    // Redirect away from other onboarding routes
     if (pathname === "/onboarding" || pathname.startsWith("/onboarding/")) {
       return NextResponse.redirect(new URL("/user", request.url));
     }

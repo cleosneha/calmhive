@@ -51,8 +51,27 @@ export interface OnboardingSessionResponse {
 }
 
 /**
- * Onboarding layout props
- */
-export interface OnboardingLayoutProps {
-  children: React.ReactNode;
-}
+  * Goal-specific info stored in onboarding
+  */
+ export interface GoalSpecificInfo {
+   question: string;
+   answer: string;
+ }
+ 
+ /**
+  * Onboarding responses object returned by the server
+  */
+ export interface OnboardingResponses {
+   responses: {
+     age: string;
+     goals: string;
+     goalSpecificInfo: GoalSpecificInfo | null;
+     timeAvailability: string;
+     activities: string;
+     energeticTime: string;
+     additionalNotes: string;
+   };
+   completedAt: Date | null;
+ }
+ 
+ /**
