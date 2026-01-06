@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 /**
  * Onboarding-related types for CalmHive
  */
@@ -52,28 +54,31 @@ export interface OnboardingSessionResponse {
 }
 
 /**
-  * Goal-specific info stored in onboarding
-  */
- export interface GoalSpecificInfo {
-   question: string;
-   answer: string;
- }
- 
- /**
-  * Onboarding responses object returned by the server
-  */
- export interface OnboardingResponses {
-   responses: {
-     age: string;
-     goals: string;
-     goalSpecificInfo: GoalSpecificInfo | null;
-     timeAvailability: string;
-     activities: string;
-     energeticTime: string;
-     daysOff: string[];
-     additionalNotes: string;
-   };
-   completedAt: Date | null;
- }
- 
- /**
+ * Goal-specific info stored in onboarding
+ */
+export interface GoalSpecificInfo {
+  question: string;
+  answer: string;
+}
+
+/**
+ * Onboarding responses object returned by the server
+ */
+export interface OnboardingResponses {
+  responses: {
+    age: string;
+    goals: string;
+    goalSpecificInfo: GoalSpecificInfo | null;
+    timeAvailability: string;
+    activities: string;
+    energeticTime: string;
+    daysOff: string[];
+    additionalNotes: string;
+  };
+  completedAt: Date | null;
+}
+
+// Props for the onboarding layout component
+export interface OnboardingLayoutProps {
+  children: ReactNode;
+}
