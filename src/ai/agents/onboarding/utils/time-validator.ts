@@ -1,6 +1,7 @@
 /**
  * Validate time availability response
  * Ensures realistic time values (between 15 minutes and 5 hours)
+ * Supports formats: "2 hrs", "1.5 hours", "90 minutes", "90" (assumes minutes)
  */
 export function validateTimeResponse(response: string): {
   isValid: boolean;
@@ -12,13 +13,29 @@ export function validateTimeResponse(response: string): {
     return { isValid: true }; // Not a time-based response
   }
 
-  // Match both positive and negative numbers
-  const hoursMatch = response.match(/(-?\d{1,2})\s*(hours|hrs|h)/i);
-  const minsMatch = response.match(/(-?\d{1,4})\s*(minutes|min|m)/i);
+  // Match hours (supports decimals like 1.5)
+  const hoursMatch = response.match(/(-?\d+(?:\.\d+)?)\s*(hours|hrs|h)\b/i);
+  // Match minutes
+  const minsMatch = response.match(/(-?\d+(?:\.\d+)?)\s*(minutes|min|m)\b/i);
+  // Match plain number (assume minutes if no unit specified)
+  const plainNumberMatch = response.match(/^\s*(-?\d+(?:\.\d+)?)\s*$/);
 
   let totalMins = 0;
-  if (hoursMatch) totalMins += parseInt(hoursMatch[1], 10) * 60;
-  if (minsMatch) totalMins += parseInt(minsMatch[1], 10);
+  if (hoursMatch) {
+    const hours = parseFloat(hoursMatch[1]);
+    totalMins += hours * 60;
+  }
+  if (minsMatch) {
+    const mins = parseFloat(minsMatch[1]);
+    totalMins += mins;
+  }
+  if (!hoursMatch && !minsMatch && plainNumberMatch) {
+    // Plain number - assume minutes
+    totalMins = parseFloat(plainNumberMatch[1]);
+  }
+
+  // Round to nearest integer
+  totalMins = Math.round(totalMins);
 
   // Stricter validation: 15 mins to 5 hours (300 mins)
   if (totalMins < 15 || totalMins > 300) {

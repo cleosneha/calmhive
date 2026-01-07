@@ -66,3 +66,8 @@ export interface PlanWithUser extends Plan {
     email: string;
   };
 }
+
+// Response type for plan existence checks
+import type { ApiResponse, ApiError } from "./api";
+
+export type PlanExistenceResponse = ApiResponse<{ exists: boolean }> | ApiError;

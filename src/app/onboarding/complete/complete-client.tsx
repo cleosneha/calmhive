@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
 import type { GoalSpecificInfo } from "@/types/onboarding";
 import {
@@ -15,7 +15,11 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { checkPlanExistence, generatePlan } from "@/actions/plan/plan";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import Image from "next/image";
+import PlanGenerationLoading from "@/components/plan/plan-generation-loading";
 
 interface Props {
   responses: {
@@ -37,11 +41,55 @@ export default function OnboardingCompleteClient({ responses }: Props) {
     question: string;
     answer: string;
   } | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const openDialog = (question: string, answer: string) => {
     setSelected({ question, answer });
     setDialogOpen(true);
   };
+
+  const handleContinueJourney = async () => {
+    try {
+      // Check if plan exists
+      const checkResult = await checkPlanExistence();
+
+      if (checkResult.status === "error") {
+        toast.error("Failed to check plan existence");
+        return;
+      }
+
+      // If plan exists, redirect with default loading screen
+      if (checkResult.data.exists) {
+        router.push("/user/plan");
+        return;
+      }
+
+      // If plan doesn't exist, show custom plan generation loading screen
+      setIsGenerating(true);
+
+      // Generate the plan
+      const generateResult = await generatePlan();
+
+      if (generateResult.status === "error") {
+        toast.error(generateResult.error || "Failed to generate plan");
+        setIsGenerating(false);
+        return;
+      }
+
+      // Success! Redirect to plan page
+      toast.success("Your personalized plan is ready!");
+      router.push("/user/plan");
+    } catch (error) {
+      console.error("Error in handleContinueJourney:", error);
+      toast.error("Something went wrong. Please try again.");
+      setIsGenerating(false);
+    }
+  };
+
+  // Show plan generation loading screen
+  if (isGenerating) {
+    return <PlanGenerationLoading />;
+  }
 
   return (
     <div className="min-h-screen  p-4 md:p-8 flex items-center justify-center">
@@ -177,10 +225,18 @@ export default function OnboardingCompleteClient({ responses }: Props) {
                   Ready to transform
                 </p>
                 <Button
-                  onClick={() => router.push("/user")}
-                  className="bg-[var(--ch-sage-dark)] text-white px-6 py-2 rounded-xl hover:bg-[var(--ch-sage-dark)]/90 transition text-base"
+                  onClick={handleContinueJourney}
+                  disabled={isGenerating}
+                  className="bg-[var(--ch-sage-dark)] text-white px-6 py-2 rounded-xl hover:bg-[var(--ch-sage-dark)]/90 transition text-base disabled:opacity-50"
                 >
-                  Continue your journey
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Preparing...
+                    </>
+                  ) : (
+                    "Continue your journey"
+                  )}
                 </Button>
               </div>
             </div>

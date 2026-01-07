@@ -97,11 +97,12 @@ model Onboarding {
 }
 
 model Plan {
-    id        Int      @id @default(autoincrement())
-    userId    String
-    daysOff   String[] @default([])
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    id           Int      @id @default(autoincrement())
+    userId       String
+    daysOff      String[] @default([])
+    hoursSummary Json? // { "Monday": 8, "Tuesday": 7, ..., "weekTotal": 40 }
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
 
     // Relations
     user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -117,6 +118,7 @@ model Task {
     planId    Int
     day       String // "Monday", etc.
     timeRange String // "10:00-11:00"
+    activity  String // Description of the activity
     status    TaskStatus @default(pending) // Enum
     notes     String?
     createdAt DateTime   @default(now())

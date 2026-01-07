@@ -141,6 +141,23 @@ export async function deleteUserAccount() {
 
     const userId = session.user.id;
 
+    // Delete plan embeddings from vector store
+    try {
+      const { deletePlanEmbedding } = await import(
+        "@/actions/plan/process-embedding"
+      );
+      const deleteResult = await deletePlanEmbedding(userId);
+      if (!deleteResult.success) {
+        console.warn(
+          "⚠️ Failed to delete plan embeddings:",
+          deleteResult.error
+        );
+      }
+    } catch (error) {
+      console.warn("⚠️ Error deleting plan embeddings:", error);
+      // Continue with deletion even if embedding cleanup fails
+    }
+
     // Sign out the user first (before deleting from database)
     const headersList = await headers();
     try {

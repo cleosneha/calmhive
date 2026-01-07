@@ -328,13 +328,31 @@ export async function handleCustomResponse(
       if (timeFollowUp) {
         const nextQuestionIndex = getQuestionIndexByKey(timeFollowUp.nextKey);
 
-        // Extract time in minutes from input
-        const hoursMatch = userInput.match(/(-?\d{1,2})\s*(hours|hrs|h)/i);
-        const minsMatch = userInput.match(/(-?\d{1,4})\s*(minutes|min|m)/i);
+        // Extract time in minutes from input (supports: "2 hrs", "1.5 hours", "90 minutes", "90")
+        const hoursMatch = userInput.match(
+          /(-?\d+(?:\.\d+)?)\s*(hours|hrs|h)\b/i
+        );
+        const minsMatch = userInput.match(
+          /(-?\d+(?:\.\d+)?)\s*(minutes|min|m)\b/i
+        );
+        const plainNumberMatch = userInput.match(/^\s*(-?\d+(?:\.\d+)?)\s*$/);
 
         let totalMins = 0;
-        if (hoursMatch) totalMins += parseInt(hoursMatch[1], 10) * 60;
-        if (minsMatch) totalMins += parseInt(minsMatch[1], 10);
+        if (hoursMatch) {
+          const hours = parseFloat(hoursMatch[1]);
+          totalMins += hours * 60;
+        }
+        if (minsMatch) {
+          const mins = parseFloat(minsMatch[1]);
+          totalMins += mins;
+        }
+        if (!hoursMatch && !minsMatch && plainNumberMatch) {
+          // Plain number - assume minutes
+          totalMins = parseFloat(plainNumberMatch[1]);
+        }
+
+        // Round to nearest integer
+        totalMins = Math.round(totalMins);
 
         // Build message: LLM acknowledgment + follow-up from questions.ts (which already includes next question)
         let fullMessage =
@@ -347,7 +365,7 @@ export async function handleCustomResponse(
         return {
           responses: {
             ...newResponses,
-            // Store time in minutes as integer, not the original string
+            // Store time in minutes as string, not the original input
             timeAvailability: totalMins.toString(),
             timeAvailabilityRange: timeValidation.mappedRange,
           },

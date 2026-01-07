@@ -5,10 +5,10 @@ const qdrantClient = new QdrantClient({
   apiKey: process.env.QDRANT_API_KEY,
 });
 
-export const QDRANT_COLLECTION_NAME = "calmhive_onboarding";
+export const QDRANT_COLLECTION_NAME = "calmhive";
 
 /**
- * Initialize Qdrant collection for onboarding data
+ * Initialize Qdrant collection for CalmHive data (onboarding, plans, etc.)
  * Call this once during setup
  */
 export async function initQdrantCollection() {
@@ -25,6 +25,12 @@ export async function initQdrantCollection() {
           distance: "Cosine",
         },
       });
+      console.log("✅ Qdrant collection created:", QDRANT_COLLECTION_NAME);
+    } else {
+      console.log(
+        "✅ Qdrant collection already exists:",
+        QDRANT_COLLECTION_NAME
+      );
     }
   } catch (error) {
     console.error("Failed to initialize Qdrant collection:", error);
