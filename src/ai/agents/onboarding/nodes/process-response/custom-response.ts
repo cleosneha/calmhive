@@ -7,6 +7,7 @@ import { validateUserResponse } from "../../tools/validation";
 import { validateTimeResponse } from "../../utils/time-validator";
 import { handleModificationRequest } from "./modification-handling";
 import { HARD_CODED_MESSAGES } from "../../utils/hardcoded-messages";
+import { parseTimeToMinutes } from "../../utils/time-parser";
 
 /**
  * Helper: Get question index by key
@@ -150,6 +151,9 @@ export async function handleCustomResponse(
     newResponses = {
       [question.key]: userInput,
     };
+  } else if (question.key === "timeAvailability") {
+    // Don't store raw input here - will be handled by special time validation logic below
+    newResponses = {};
   } else {
     newResponses = {
       [question.key]: userInput,
@@ -273,6 +277,51 @@ export async function handleCustomResponse(
     }
   }
 
+  // Special handling for time availability question: map to range and get appropriate follow-up
+  // MUST come before general followUps handler since timeAvailability has followUps
+  if (question.key === "timeAvailability") {
+    const timeValidation = validateTimeResponse(userInput);
+
+    // Extract time in minutes from input (supports: "2 hrs", "1.5 hours", "90 minutes", "90")
+    const totalMins = parseTimeToMinutes(userInput);
+    console.log(
+      "⏱️ [custom-response] Time parsing - Input:",
+      userInput,
+      "| Total mins:",
+      totalMins,
+      "| Validation range:",
+      timeValidation.mappedRange
+    );
+
+    // Get the follow-up for this time range, or use default
+    const timeFollowUp =
+      (timeValidation.mappedRange &&
+        question.followUps?.[timeValidation.mappedRange]) ||
+      question.followUps?.default;
+
+    if (timeFollowUp) {
+      const nextQuestionIndex = getQuestionIndexByKey(timeFollowUp.nextKey);
+
+      // Build message: LLM acknowledgment + follow-up from questions.ts (which already includes next question)
+      let fullMessage =
+        validationResult.followUpText || "Thank you for sharing!";
+
+      if (timeFollowUp.text) {
+        fullMessage += `\n\n${timeFollowUp.text}`;
+      }
+
+      return {
+        responses: {
+          // Store only the parsed time in minutes, not the original userInput
+          timeAvailability: totalMins.toString(),
+          timeAvailabilityRange: timeValidation.mappedRange || "custom",
+        },
+        messages: [new AIMessage(fullMessage)],
+        step: nextQuestionIndex !== -1 ? nextQuestionIndex : step + 1,
+      };
+    }
+  }
+
   // General handler for questions with followUps (e.g., stressAspect, habitArea, sleepChallenge)
   // This handles both hardcoded options and custom text
   if (question.followUps && Object.keys(question.followUps).length > 0) {
@@ -315,65 +364,6 @@ export async function handleCustomResponse(
     stateUpdate.isComplete = true;
     stateUpdate.messages = [new AIMessage(validationResult.followUpText || "")];
     return stateUpdate;
-  }
-
-  // Special handling for time availability question: map to range and get appropriate follow-up
-  if (question.key === "timeAvailability") {
-    const timeValidation = validateTimeResponse(userInput);
-
-    if (timeValidation.mappedRange) {
-      // Get the follow-up for this time range
-      const timeFollowUp = question.followUps?.[timeValidation.mappedRange];
-
-      if (timeFollowUp) {
-        const nextQuestionIndex = getQuestionIndexByKey(timeFollowUp.nextKey);
-
-        // Extract time in minutes from input (supports: "2 hrs", "1.5 hours", "90 minutes", "90")
-        const hoursMatch = userInput.match(
-          /(-?\d+(?:\.\d+)?)\s*(hours|hrs|h)\b/i
-        );
-        const minsMatch = userInput.match(
-          /(-?\d+(?:\.\d+)?)\s*(minutes|min|m)\b/i
-        );
-        const plainNumberMatch = userInput.match(/^\s*(-?\d+(?:\.\d+)?)\s*$/);
-
-        let totalMins = 0;
-        if (hoursMatch) {
-          const hours = parseFloat(hoursMatch[1]);
-          totalMins += hours * 60;
-        }
-        if (minsMatch) {
-          const mins = parseFloat(minsMatch[1]);
-          totalMins += mins;
-        }
-        if (!hoursMatch && !minsMatch && plainNumberMatch) {
-          // Plain number - assume minutes
-          totalMins = parseFloat(plainNumberMatch[1]);
-        }
-
-        // Round to nearest integer
-        totalMins = Math.round(totalMins);
-
-        // Build message: LLM acknowledgment + follow-up from questions.ts (which already includes next question)
-        let fullMessage =
-          validationResult.followUpText || "Thank you for sharing!";
-
-        if (timeFollowUp.text) {
-          fullMessage += `\n\n${timeFollowUp.text}`;
-        }
-
-        return {
-          responses: {
-            ...newResponses,
-            // Store time in minutes as string, not the original input
-            timeAvailability: totalMins.toString(),
-            timeAvailabilityRange: timeValidation.mappedRange,
-          },
-          messages: [new AIMessage(fullMessage)],
-          step: nextQuestionIndex !== -1 ? nextQuestionIndex : step + 1,
-        };
-      }
-    }
   }
 
   // Regular question progression

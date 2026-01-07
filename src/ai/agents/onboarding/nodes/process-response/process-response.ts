@@ -26,6 +26,16 @@ export async function processResponseNode(
       ? ONBOARDING_QUESTIONS[questionIndex]
       : null;
 
+  console.log(
+    "\n🔄 [processResponseNode] START",
+    "\n  Question key:",
+    question?.key,
+    "\n  User input:",
+    userInput,
+    "\n  Current responses:",
+    state.responses
+  );
+
   // Handle safety acknowledgment (moved to separate module)
   const safetyResult = handleSafetyAcknowledgment(state, userInput);
   if (safetyResult) return safetyResult;
@@ -33,6 +43,13 @@ export async function processResponseNode(
   // Check if this is a predefined option first (to avoid unnecessary LLM calls)
   const isPredefined =
     question && isPredefinedOption(question, userInput, state);
+
+  console.log(
+    "  Is predefined option:",
+    isPredefined,
+    "\n  Question options:",
+    question?.options
+  );
 
   // Handle readiness check ONLY for custom responses (not predefined options)
   if (!isPredefined) {
@@ -42,24 +59,35 @@ export async function processResponseNode(
 
   // Handle custom responses (moved to separate module)
   if (question && !isPredefined && userInput.length > 0) {
+    console.log("  🎨 Calling handleCustomResponse");
     const customResult = await handleCustomResponse(
       question,
       userInput,
       state.step,
       state
     );
-    if (customResult) return customResult;
+    if (customResult) {
+      console.log("  ✅ Custom response returned:", customResult.responses);
+      return customResult;
+    }
   }
 
   // Handle predefined option storage (moved to separate module)
   if (question && isPredefined) {
+    console.log("  📦 Calling handlePredefinedOptionStorage");
     const optionStorageResult = handlePredefinedOptionStorage(
       question,
       userInput,
       state.step,
       state
     );
-    if (optionStorageResult) return optionStorageResult;
+    if (optionStorageResult) {
+      console.log(
+        "  ✅ Option storage returned:",
+        optionStorageResult.responses
+      );
+      return optionStorageResult;
+    }
   }
 
   // Handle empty response for optional questions (moved to separate module)

@@ -3,6 +3,7 @@ import type { OnboardingStateType } from "../../state";
 import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
 import { OnboardingQuestion } from "@/types";
 import { HARD_CODED_MESSAGES } from "../../utils/hardcoded-messages";
+import { parseTimeToMinutes } from "../../utils/time-parser";
 
 /**
  * Helper: Get question index by key
@@ -22,9 +23,23 @@ export function handlePredefinedOptionStorage(
 ): Partial<OnboardingStateType> | null {
   if (!question || !userInput) return null;
 
-  // Special handling for goalSpecificInfo - store as JSON with question and answer
+  // Declare newResponses first
   let newResponses: Record<string, string>;
-  if (
+
+  // Special handling for timeAvailability - parse time to minutes
+  if (question.key === "timeAvailability") {
+    const totalMins = parseTimeToMinutes(userInput);
+    console.log(
+      "⏱️ [option-storage] Time parsing - Input:",
+      userInput,
+      "| Total mins:",
+      totalMins
+    );
+
+    newResponses = {
+      [question.key]: totalMins.toString(),
+    };
+  } else if (
     question.key === "goalSpecificInfo" &&
     state.currentGoalSpecificQuestion
   ) {
