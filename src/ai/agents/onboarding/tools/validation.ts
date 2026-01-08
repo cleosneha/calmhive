@@ -37,19 +37,6 @@ export async function validateUserResponse(
 ): Promise<ValidationResult> {
   const trimmedResponse = userResponse.trim();
 
-  // ===== STEP 6: Time validation =====
-  if (isTimeQuestion(currentQuestionText)) {
-    const timeValidation = validateTimeResponse(trimmedResponse);
-    if (!timeValidation.isValid) {
-      return {
-        isValid: false,
-        isRelevant: false,
-        hasSafetyIssue: false,
-        errorMessage: timeValidation.errorMessage,
-      };
-    }
-  }
-
   // ===== STEP 6.5: Age validation (rule-based, no LLM) =====
   // If question asks for age, verify numeric age is in [4, 110]
   // and map to an age range. If invalid, prompt user to re-enter.
@@ -89,6 +76,12 @@ export async function validateUserResponse(
       nextQuestionText
     );
 
+    console.log("\n✅ [Validation Logic Check]");
+    console.log("isRelevant:", llmResult.isRelevant);
+    console.log("hasSafetyIssue:", llmResult.hasSafetyIssue);
+    console.log("hasExpectationMismatch:", llmResult.hasExpectationMismatch);
+    console.log("---\n");
+
     // PRIORITY 0: Check modification FIRST - user wants to update a previous answer
     if (
       llmResult.modificationRequired &&
@@ -121,6 +114,7 @@ export async function validateUserResponse(
 
     // PRIORITY 3: Check relevance
     if (!llmResult.isRelevant) {
+      console.log("🚫 [IRRELEVANT] Response marked as not relevant by LLM");
       return {
         isValid: false,
         isRelevant: false,
@@ -156,16 +150,32 @@ export async function validateUserResponse(
       };
     }
 
-    // Build final follow-up text
-    let finalFollowUp =
-      llmResult.followUpText || `Thank you for sharing. ${nextQuestionText}`;
-    if (llmResult.suggestBestTime && llmResult.suggestBestTime !== "none") {
-      finalFollowUp += `\n\nWellness tip: Many people find the ${llmResult.suggestBestTime} is a good time to try new routines. Let's explore that!`;
+    // Build final follow-up text only if LLM provided one or a wellness tip is present
+    let finalFollowUp: string | undefined = undefined;
+    if (llmResult.followUpText) {
+      finalFollowUp = llmResult.followUpText;
     }
 
-    // Ensure we always have valid follow-up text
-    if (!finalFollowUp || finalFollowUp.trim() === "") {
-      finalFollowUp = `Thank you for sharing. ${nextQuestionText}`;
+    if (llmResult.suggestBestTime && llmResult.suggestBestTime !== "none") {
+      const tip = `Wellness tip: Many people find the ${llmResult.suggestBestTime} is a good time to try new routines. Let's explore that!`;
+      finalFollowUp = finalFollowUp ? `${finalFollowUp}\n\n${tip}` : tip;
+    }
+
+    // ===== Time validation (after LLM, so modifications are detected first) =====
+    // Only validate time format if no modification was detected and this is a time question
+    if (
+      isTimeQuestion(currentQuestionText) &&
+      !llmResult.modificationRequired
+    ) {
+      const timeValidation = validateTimeResponse(trimmedResponse);
+      if (!timeValidation.isValid) {
+        return {
+          isValid: false,
+          isRelevant: false,
+          hasSafetyIssue: false,
+          errorMessage: timeValidation.errorMessage,
+        };
+      }
     }
 
     // Return with goal suggestions if applicable
@@ -174,9 +184,10 @@ export async function validateUserResponse(
       isRelevant: true,
       hasSafetyIssue: false,
       userWantsToSkip: llmResult.userWantsToSkip,
-      followUpText: finalFollowUp,
       readiness: llmResult.readiness,
     };
+
+    if (finalFollowUp) result.followUpText = finalFollowUp;
 
     // Add goal question and options if this is a goal question
     if (llmResult.goalSpecificQuestion) {
@@ -194,7 +205,6 @@ export async function validateUserResponse(
       isValid: true,
       isRelevant: true,
       hasSafetyIssue: false,
-      followUpText: `Thank you for sharing. ${nextQuestionText}`,
     };
   }
 }

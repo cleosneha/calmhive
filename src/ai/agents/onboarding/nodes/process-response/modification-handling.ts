@@ -5,6 +5,7 @@ import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
 import { validateUserResponse } from "../../tools/validation";
 import type { ValidationResult } from "../../tools/validation";
 import { HARD_CODED_MESSAGES } from "../../utils/hardcoded-messages";
+import { buildMessage } from "./handlers/utils";
 
 /**
  * Helper: Get question index by key
@@ -69,9 +70,21 @@ export async function handleModificationRequest(
       ? "goals"
       : validationResult.modifiedField;
 
+  // Process the modified value (parse if needed)
+  let processedValue = validationResult.modifiedValue;
+
+  // For timeAvailability modifications, parse time to minutes
+  if (normalizedField === "timeAvailability") {
+    const { parseAndMapTime } = await import("../../utils/time-utils");
+    const parsed = parseAndMapTime(validationResult.modifiedValue);
+    if (parsed.mins !== null) {
+      processedValue = parsed.mins.toString();
+    }
+  }
+
   // Valid modification - update the response and acknowledge
   const updatedResponses = {
-    [normalizedField]: validationResult.modifiedValue,
+    [normalizedField]: processedValue,
   };
 
   const acknowledgmentMsg =
@@ -92,18 +105,22 @@ export async function handleModificationRequest(
   }
 
   // Append current question to be re-asked for non-goal modifications
-  const fullMessage = `${acknowledgmentMsg}\n\n${question.text}`;
+  const message = buildMessage(
+    { ...modifiedValidation, followUpText: acknowledgmentMsg },
+    undefined,
+    question
+  );
 
   return {
     responses: updatedResponses,
-    messages: [new AIMessage(fullMessage)],
+    messages: [new AIMessage(message)],
     step, // Stay on current step to re-answer the question
   };
 }
 
 /**
  * Special handling for goals modification
- * Regenerates goal-specific question and options, then jumps to goalSpecificInfo step
+ * Uses goal-specific question and options from validation result, then jumps to goalSpecificInfo step
  */
 async function handleGoalsModification(
   validationResult: ValidationResult,
@@ -114,28 +131,56 @@ async function handleGoalsModification(
   updatedResponses: Record<string, string>,
   acknowledgmentMsg: string
 ): Promise<Partial<OnboardingStateType>> {
-  // Re-validate goals to get new goal-specific question
-  // Use the goals question text to ensure proper goal extraction
+  // Build acknowledgment message
+  let followUp = acknowledgmentMsg;
+
+  // Check if goal-specific question and options are available from the validation
+  const hasGoalSpecificInfo =
+    validationResult.goalSpecificQuestion && validationResult.goalOptions;
+
+  // If new goal-specific question is available, include it
+  if (hasGoalSpecificInfo) {
+    followUp += `\n\n${validationResult.goalSpecificQuestion}`;
+
+    const goalSpecificInfoIndex = getQuestionIndexByKey("goalSpecificInfo");
+
+    const message = buildMessage(
+      { ...validationResult, followUpText: followUp },
+      undefined,
+      undefined
+    );
+
+    return {
+      responses: updatedResponses,
+      messages: [new AIMessage(message)],
+      step: goalSpecificInfoIndex !== -1 ? goalSpecificInfoIndex : currentStep,
+      currentGoalOptions: validationResult.goalOptions || [],
+      currentGoalSpecificQuestion: validationResult.goalSpecificQuestion!,
+    };
+  }
+
+  // Fallback: Re-validate goals to get new goal-specific question if not provided
   const goalsQuestion = ONBOARDING_QUESTIONS.find((q) => q.key === "goals");
   const goalRevalidation = await validateUserResponse(
     validationResult.modifiedValue ?? "",
     goalsQuestion?.text ?? "What are your main goals for using CalmHive?",
-    "Tell me more about this goal." // Next question context
+    "Tell me more about this goal."
   );
 
-  // Build acknowledgment message
-  let fullMessage = acknowledgmentMsg;
-
-  // If new goal-specific question is available, ask it
   if (goalRevalidation.goalSpecificQuestion) {
-    fullMessage += `\n\n${goalRevalidation.goalSpecificQuestion}`;
+    followUp += `\n\n${goalRevalidation.goalSpecificQuestion}`;
 
-    // Jump to goalSpecificInfo step to show the new dynamic options
     const goalSpecificInfoIndex = getQuestionIndexByKey("goalSpecificInfo");
+
+    const message = buildMessage(
+      { ...goalRevalidation, followUpText: followUp },
+      undefined,
+      undefined
+    );
 
     return {
       responses: updatedResponses,
-      messages: [new AIMessage(fullMessage)],
+      messages: [new AIMessage(message)],
       step: goalSpecificInfoIndex !== -1 ? goalSpecificInfoIndex : currentStep,
       currentGoalOptions: goalRevalidation.goalOptions || [],
       currentGoalSpecificQuestion: goalRevalidation.goalSpecificQuestion,
@@ -143,10 +188,15 @@ async function handleGoalsModification(
   }
 
   // No new goal-specific question, just acknowledge and stay
+  const message = buildMessage(
+    { ...modifiedValidation, followUpText: followUp },
+    undefined,
+    undefined
+  );
 
   return {
     responses: updatedResponses,
-    messages: [new AIMessage(fullMessage)],
+    messages: [new AIMessage(message)],
     step: currentStep,
   };
 }

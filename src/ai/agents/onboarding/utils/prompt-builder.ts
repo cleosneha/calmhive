@@ -8,89 +8,97 @@ export function buildLLMPrompt(
 ) {
   switch (type) {
     case "main_goals":
-      return `You are CalmHive's onboarding assistant. The user just shared their main goal. Generate a specific follow-up question and 3 relevant answer options based on their goal.
+      return `Analyze if user is modifying a previous answer OR answering the goals question.
 
-User's Goal: "${userResponse}"
+Question: "${currentQuestion}"
+Response: "${userResponse}"
 
-Reply in this format:
+Output:
 MODIFICATION_REQUIRED: [yes/no]
-MODIFIED_FIELD: [field name or "none"]
+MODIFIED_FIELD: [readiness/age/activities/timeAvailability/energeticTime/daysOff/anythingElse or "none"]
 MODIFIED_VALUE: [new value or "none"]
-RELEVANCE: [yes/no]
+RELEVANCE: [yes/no] - no if off-topic/spam AND not a modification
 SAFETY: [safe/concern]
 EXPECTATION_MISMATCH: [yes/no]
-MISMATCH_MESSAGE: [custom error message or "none"]
+MISMATCH_MESSAGE: [error msg or "none"]
 USER_WANTS_TO_SKIP: [yes/no]
-GOAL_SPECIFIC_QUESTION: [Generate a specific question about their goal, e.g., for "reduce overthinking" ask "What situations trigger your overthinking?"]
-GOAL_OPTIONS: [3 comma-separated concrete answer options for the question, e.g., "Sitting idle", "Meeting toxic people", "Drinking Alcohol"]
-FOLLOW_UP: [Brief warm acknowledgment of their goal]
+GOAL_SPECIFIC_QUESTION: [Only if RELEVANCE=yes and MODIFICATION_REQUIRED=no]
+GOAL_OPTIONS: [3 options only if RELEVANCE=yes and MODIFICATION_REQUIRED=no]
+FOLLOW_UP: [Brief warm acknowledgment of their goal, , might contain a small fact(only if RELEVANCE=yes and MODIFICATION_REQUIRED=no and EXPECTATION_MISMATCH=no)]
 
-Guidelines:
-- MODIFICATION_REQUIRED: yes if user is trying to correct/change a previous answer (e.g., "my age is actually 40", "I meant to say...", "sorry, I meant reduce stress", "correction: my goal is...", "apologies, actually it's...", etc). Otherwise no.
-- MODIFIED_FIELD: If MODIFICATION_REQUIRED=yes, identify which field (age, goals, activities, timeAvailability, energeticTime). Otherwise "none".
-- MODIFIED_VALUE: If MODIFICATION_REQUIRED=yes, extract the new value. Otherwise "none".
-- GOAL_SPECIFIC_QUESTION: Must be a specific, actionable question related to their stated goal. Not generic.
-- GOAL_OPTIONS: Each option should be a specific, concrete scenario or situation related to their goal that they can select as an answer.
+Rules:
+- MODIFICATION_REQUIRED=yes if correcting/changing ANY previous field (e.g., "my age is 40", "I said morning not evening", "activities are reading", "no daysOff")
+- MODIFIED_FIELD: identify field being modified OR "none"
+- MODIFIED_VALUE: [new value or "none"]
+- RELEVANCE=yes if user describes valid wellness goal for CalmHive and no only if off-topic AND not modifying a field
+- SAFETY=concern only for crisis
+- FOLLOW_UP: only if genuinely answering goals question
+- GOAL_SPECIFIC_QUESTION: [Generate a specific question about their goal, e.g., for "reduce overthinking" ask "What situations trigger your overthinking?"]
+- GOAL_OPTIONS: [3 comma-separated concrete answer options for the question, e.g., "Sitting idle", "Meeting toxic people", "Drinking Alcohol"]
 - USER_WANTS_TO_SKIP: yes if user explicitly wants to skip this question or pass. Otherwise no.
-- FOLLOW_UP: Just acknowledge, don't repeat the question.`;
+- EXPECTATION_MISMATCH: yes if the response is negative or non-constructive about their goal. Otherwise no.`;
 
     case "goal_specific_info":
-      return `You are CalmHive's onboarding assistant. The user is answering a goal-specific follow-up question. Analyze their response carefully.
+      return `Analyze if user is modifying any previous field OR answering the goal-specific follow-up.
 
-Current Question (Goal-Specific Info): "${currentQuestion}"
-User Response: "${userResponse}"
+Question: "${currentQuestion}"
+Response: "${userResponse}"
 
-Reply in this format:
+Output:
 MODIFICATION_REQUIRED: [yes/no]
-MODIFIED_FIELD: [field name or "none"]
+MODIFIED_FIELD: [goals/readiness/age/activities/timeAvailability/energeticTime/daysOff or "none"]
 MODIFIED_VALUE: [new value or "none"]
 RELEVANCE: [yes/no]
 SAFETY: [safe/concern]
 EXPECTATION_MISMATCH: [yes/no]
-MISMATCH_MESSAGE: [custom error message or "none"]
+MISMATCH_MESSAGE: [error msg or "none"]
 USER_WANTS_TO_SKIP: [yes/no]
-SUGGEST_BEST_TIME: [suggestion or "none"]
-FOLLOW_UP: [acknowledgment]
-READINESS: [yes/no]
+FOLLOW_UP: [Brief warm acknowledgment, might have small fact(only if RELEVANCE=yes and MODIFICATION_REQUIRED=no and EXPECTATION_MISMATCH=no)]
+GOAL_SPECIFIC_QUESTION: [Only if MODIFIED_FIELD=goals: generate a specific follow-up question about the new goal]
+GOAL_OPTIONS: [Only if MODIFIED_FIELD=goals: 3 concrete options]
 
-Guidelines:
-- MODIFICATION_REQUIRED: yes if user is trying to change their original goal or correct their previous response (e.g., "actually, I want to change my goal to reduce stress instead", "sorry I meant something different", "apologies, my goal is to reduce overthinking", "I want to correct my goal", etc). Otherwise no.
-- MODIFIED_FIELD: If user wants to change their original goal, set to "goals". Otherwise "none".
-- MODIFIED_VALUE: If MODIFICATION_REQUIRED=yes and MODIFIED_FIELD="goals", extract what goal they want to switch to (the new goal). Otherwise "none".
-- RELEVANCE: yes if user properly answers the goal-specific question, no if off-topic/spam.
-- SAFETY: concern only for crisis/extreme cases. Otherwise safe.
-- EXPECTATION_MISMATCH: yes if the response is negative or non-constructive about their goal. Otherwise no.
-- USER_WANTS_TO_SKIP: yes if user explicitly wants to skip. Otherwise no.
-- FOLLOW_UP: Brief warm acknowledgment of their answer.`;
+Rules:
+- This question requests MORE DETAILS about the user's existing goal, but the user MAY also request modifications to any previous field
+- MODIFICATION_REQUIRED=yes if user explicitly asks to change any previous field (e.g., "change my main goal", "my age is 30", "I said evening not morning", "activities are hiking")
+- MODIFIED_FIELD: identify which field (use "goals" if changing main goal) or "none"
+- When MODIFIED_FIELD=goals: generate GOAL_SPECIFIC_QUESTION and GOAL_OPTIONS and treat as a new goal flow
+- If user simply provides details (e.g., "exam pressure", "work stress"), treat as answering current question (MODIFICATION_REQUIRED=no)
+- RELEVANCE=yes if answering the goal-specific question or modifying
+- SAFETY=concern only for crisis
+- FOLLOW_UP: acknowledge only if genuinely answering (not modifying)
+- EXPECTATION_MISMATCH: yes if negative/dismissive`;
 
     default:
-      return `You are CalmHive's onboarding assistant. Analyze the user's response for the current onboarding question and reply in this format:
+      return `Analyze if user is modifying a previous answer OR answering the current question.
 
+Question: "${currentQuestion}"
+Response: "${userResponse}"
+Next: "${nextQuestion}"
+
+Output:
 MODIFICATION_REQUIRED: [yes/no]
-MODIFIED_FIELD: [field name or "none"]
+MODIFIED_FIELD: [readiness/age/goals/stressAspect/habitArea/sleepChallenge/goalSpecificInfo/timeAvailability/activities/energeticTime/daysOff/anythingElse or "none"]
 MODIFIED_VALUE: [new value or "none"]
 RELEVANCE: [yes/no]
 SAFETY: [safe/concern]
 EXPECTATION_MISMATCH: [yes/no]
-MISMATCH_MESSAGE: [custom error message or "none"]
+MISMATCH_MESSAGE: [error msg or "none"]
 USER_WANTS_TO_SKIP: [yes/no]
-SUGGEST_BEST_TIME: [suggestion or "none"]
-FOLLOW_UP: [acknowledgment]
-READINESS: [yes/no]
+FOLLOW_UP: [Brief warm acknowledgment, might contain a small fact, of their answer(only if RELEVANCE=yes and MODIFICATION_REQUIRED=no and EXPECTATION_MISMATCH=no)]
+READINESS: [yes/no] - only for readiness question
+SUGGEST_BEST_TIME: [morning/afternoon/evening or "none"] - only for energeticTime question
+GOAL_SPECIFIC_QUESTION: [Only if MODIFIED_FIELD=goals: generate question about new goal]
+GOAL_OPTIONS: [Only if MODIFIED_FIELD=goals: 3 options]
 
-Current Question: "${currentQuestion}"
-User Response: "${userResponse}"
-Next Question: "${nextQuestion}"
-
-Guidelines:
-- MODIFICATION_REQUIRED: yes if user is trying to correct/change a previous answer (e.g., "my age is actually 40", "sorry, I meant reduce stress not anxiety", etc). Otherwise no.
-- MODIFIED_FIELD: If MODIFICATION_REQUIRED=yes, identify which field they're modifying (age, goals, activities, timeAvailability, energeticTime,etc). Otherwise "none".
-- MODIFIED_VALUE: If MODIFICATION_REQUIRED=yes, extract the new value they want to set. Otherwise "none".
-- RELEVANCE: yes if user answers the question, no if off-topic/spam/gibberish.
-- SAFETY: concern only for crisis/extreme cases. Otherwise safe.
-- EXPECTATION_MISMATCH: yes if the response is negative, dismissive, or non-constructive. Otherwise no.
-- USER_WANTS_TO_SKIP: yes if user explicitly expresses intent to skip this question (e.g., "I want to skip", "can I pass"). Otherwise no.
-- SUGGEST_BEST_TIME: If question is about energy and user says "never", suggest morning/afternoon/evening. Otherwise "none".
-- FOLLOW_UP: Only if RELEVANCE=yes, SAFETY=safe, EXPECTATION_MISMATCH=no, MODIFICATION_REQUIRED=no, USER_WANTS_TO_SKIP=no. Brief warm acknowledgment.`;
+Rules:
+- MODIFICATION_REQUIRED=yes if user corrects/changes ANY previous field
+- MODIFIED_FIELD: identify field OR "none". If user says "my main goal", "my goal", or "what I want to achieve", set to "goals" NOT current question field
+- MODIFIED_VALUE: [new value or "none"]
+- When MODIFIED_FIELD=goals: generate GOAL_SPECIFIC_QUESTION and GOAL_OPTIONS for new goal
+- RELEVANCE=yes if answers question, no if off-topic AND not modifying
+- SAFETY=concern only for crisis
+- EXPECTATION_MISMATCH=yes if negative/dismissive
+- FOLLOW_UP: warm acknowledgment only when truly answering
+- SUGGEST_BEST_TIME: only if energeticTime question and user says "never" or uncertain`;
   }
 }

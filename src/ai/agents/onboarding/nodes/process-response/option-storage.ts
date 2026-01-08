@@ -3,7 +3,8 @@ import type { OnboardingStateType } from "../../state";
 import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
 import { OnboardingQuestion } from "@/types";
 import { HARD_CODED_MESSAGES } from "../../utils/hardcoded-messages";
-import { parseTimeToMinutes } from "../../utils/time-parser";
+import { parseAndMapTime } from "../../utils/time-utils";
+import { buildMessage } from "./handlers/utils";
 
 /**
  * Helper: Get question index by key
@@ -28,16 +29,16 @@ export function handlePredefinedOptionStorage(
 
   // Special handling for timeAvailability - parse time to minutes
   if (question.key === "timeAvailability") {
-    const totalMins = parseTimeToMinutes(userInput);
+    const parsed = parseAndMapTime(userInput);
     console.log(
       "⏱️ [option-storage] Time parsing - Input:",
       userInput,
-      "| Total mins:",
-      totalMins
+      "| Parsed:",
+      parsed
     );
 
     newResponses = {
-      [question.key]: totalMins.toString(),
+      [question.key]: parsed.mins !== null ? parsed.mins.toString() : userInput,
     };
   } else if (
     question.key === "goalSpecificInfo" &&
@@ -109,7 +110,22 @@ export function handlePredefinedOptionStorage(
 
   // Add follow-up message if available
   if (followUpMessage) {
-    stateUpdate.messages = [new AIMessage(followUpMessage)];
+    const nextQuestion = ONBOARDING_QUESTIONS[nextStep];
+
+    // Special-case readiness 'No' response: only show the acknowledgment text
+    if (question.key === "readiness") {
+      stateUpdate.messages = [new AIMessage(followUpMessage)];
+    } else {
+      stateUpdate.messages = [
+        new AIMessage(
+          buildMessage(
+            { followUpText: followUpMessage } as any,
+            undefined,
+            nextQuestion
+          )
+        ),
+      ];
+    }
   }
 
   return stateUpdate;

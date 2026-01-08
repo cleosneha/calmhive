@@ -9,7 +9,7 @@ import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
 export async function markCompleteNode(_state: OnboardingStateType) {
   return {
     isComplete: true,
-    step: ONBOARDING_QUESTIONS.length + 1,
+    step: ONBOARDING_QUESTIONS.length,
   };
 }
 

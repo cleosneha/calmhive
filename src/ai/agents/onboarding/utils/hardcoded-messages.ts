@@ -25,4 +25,7 @@ export const HARD_CODED_MESSAGES = {
 
   AGE_INVALID:
     "Please enter a valid age between 4 and 110 (e.g., 25). Avoid negative numbers or non-numeric characters.",
+
+  LLM_ERROR:
+    "Sorry, I couldn't process that right now. Please try again in a moment.",
 };

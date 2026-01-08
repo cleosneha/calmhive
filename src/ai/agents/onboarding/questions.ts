@@ -70,19 +70,19 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     required: true,
     followUps: {
       "Reduce daily stress and relax more.": {
-        text: "That's really important. I totally understand the need for more calm in your daily routine.\n\nWhat aspect of stress would you like to focus on most?",
+        text: "That's really important. I totally understand the need for more calm in your daily routine.",
         nextKey: "stressAspect",
       },
       "Build better habits and stay productive.": {
-        text: "I love that you're focused on growth! Building consistent habits can really make a difference.\n\nWhich area would you like to build better habits in?",
+        text: "I love that you're focused on growth! Building consistent habits can really make a difference.",
         nextKey: "habitArea",
       },
       "Improve sleep and energy levels.": {
-        text: "Getting quality rest is so important for everything else. I'm glad you're prioritizing that.\n\nWhat's your biggest challenge with sleep or energy right now?",
+        text: "Getting quality rest is so important for everything else. I'm glad you're prioritizing that.",
         nextKey: "sleepChallenge",
       },
       default: {
-        text: "Thank you for sharing that goal.\n\nTell me more about this goal.",
+        text: "Thank you for sharing that goal.",
         nextKey: "goalSpecificInfo",
       },
     },
@@ -98,19 +98,19 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     required: true,
     followUps: {
       "Work and career pressure": {
-        text: "Work stress is so common, and addressing it can make a huge difference in your overall well-being. Let's create strategies to help you manage that pressure better.\n\nHow much time do you typically have available each day for personal activities?",
+        text: "Work stress is so common, and addressing it can make a huge difference in your overall well-being. Let's create strategies to help you manage that pressure better.",
         nextKey: "timeAvailability",
       },
       "Personal relationships": {
-        text: "Relationships are so important, and taking care of the stress they might create is valuable self-care. We'll help you navigate this more smoothly.\n\nHow much time do you typically have available each day for personal activities?",
+        text: "Relationships are so important, and taking care of the stress they might create is valuable self-care. We'll help you navigate this more smoothly.",
         nextKey: "timeAvailability",
       },
       "Daily routines and time management": {
-        text: "Getting your daily routines and time in order can be truly transformative. Better time management often leads to less stress overall.\n\nHow much time do you typically have available each day for personal activities?",
+        text: "Getting your daily routines and time in order can be truly transformative. Better time management often leads to less stress overall.",
         nextKey: "timeAvailability",
       },
       default: {
-        text: "Thank you for sharing. That's really helpful to know.\n\nHow much time do you typically have available each day for personal activities?",
+        text: "Thank you for sharing. That's really helpful to know.",
         nextKey: "timeAvailability",
       },
     },
@@ -126,19 +126,19 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     required: true,
     followUps: {
       "Exercise and physical health": {
-        text: "That's fantastic! Building exercise into your routine is one of the most impactful things you can do for your health. Even small, consistent movements can transform how you feel.\n\nHow much time do you typically have available each day for personal activities?",
+        text: "That's fantastic! Building exercise into your routine is one of the most impactful things you can do for your health. Even small, consistent movements can transform how you feel.",
         nextKey: "timeAvailability",
       },
       "Work productivity and focus": {
-        text: "Great focus! Building better work habits can help you achieve more while feeling less overwhelmed. We'll help you create sustainable routines that boost your productivity.\n\nHow much time do you typically have available each day for personal activities?",
+        text: "Great focus! Building better work habits can help you achieve more while feeling less overwhelmed. We'll help you create sustainable routines that boost your productivity.",
         nextKey: "timeAvailability",
       },
       "Mental health and mindfulness": {
-        text: "Wonderful choice! Investing in your mental health through mindfulness is one of the greatest gifts you can give yourself. These habits create lasting positive changes.\n\nHow much time do you typically have available each day for personal activities?",
+        text: "Wonderful choice! Investing in your mental health through mindfulness is one of the greatest gifts you can give yourself. These habits create lasting positive changes.",
         nextKey: "timeAvailability",
       },
       default: {
-        text: "Great choice! That's a wonderful area to focus on.\n\nHow much time do you typically have available each day for personal activities?",
+        text: "Great choice! That's a wonderful area to focus on.",
         nextKey: "timeAvailability",
       },
     },
@@ -154,19 +154,19 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     required: true,
     followUps: {
       "Difficulty falling asleep": {
-        text: "Falling asleep can be frustrating when your mind won't settle down. CalmHive has wonderful tools to help you wind down and drift off more easily.\n\nHow much time do you typically have available each day for personal activities?",
+        text: "Falling asleep can be frustrating when your mind won't settle down. CalmHive has wonderful tools to help you wind down and drift off more easily.",
         nextKey: "timeAvailability",
       },
       "Waking up tired or low energy": {
-        text: "Waking up refreshed makes such a difference for your entire day. Let's work on improving your sleep quality and morning energy.\n\nHow much time do you typically have available each day for personal activities?",
+        text: "Waking up refreshed makes such a difference for your entire day. Let's work on improving your sleep quality and morning energy.",
         nextKey: "timeAvailability",
       },
       "Inconsistent sleep schedule": {
-        text: "An inconsistent sleep schedule can really throw off your body and mind. Creating a more regular routine can transform how you feel.\n\nHow much time do you typically have available each day for personal activities?",
+        text: "An inconsistent sleep schedule can really throw off your body and mind. Creating a more regular routine can transform how you feel.",
         nextKey: "timeAvailability",
       },
       default: {
-        text: "I understand. Let's work on improving that.\n\nHow much time do you typically have available each day for personal activities?",
+        text: "I understand. Let's work on improving that.",
         nextKey: "timeAvailability",
       },
     },
@@ -178,7 +178,7 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     required: true,
     followUps: {
       default: {
-        text: "Thank you for sharing that detail. It really helps me understand what matters most to you.\n\nHow much time do you typically have available each day for personal activities?",
+        text: "Thank you for sharing that detail. It really helps me understand what matters most to you.",
         nextKey: "timeAvailability",
       },
     },
@@ -190,19 +190,19 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     required: true,
     followUps: {
       "30 minutes.": {
-        text: "That's perfectly fine! Even short moments can make a real impact when used intentionally.\n\nWhat types of activities help you feel more balanced?",
+        text: "That's perfectly fine! Even short moments can make a real impact when used intentionally.",
         nextKey: "activities",
       },
       "45 minutes.": {
-        text: "That's a great amount of time to work with! We can create some meaningful routines for you.\n\nWhat types of activities help you feel more balanced?",
+        text: "That's a great amount of time to work with! We can create some meaningful routines for you.",
         nextKey: "activities",
       },
       "90 minutes.": {
-        text: "Wonderful! Having more time gives us lots of flexibility to explore different activities.\n\nWhat types of activities help you feel more balanced?",
+        text: "Wonderful! Having more time gives us lots of flexibility to explore different activities.",
         nextKey: "activities",
       },
       default: {
-        text: "Thanks for sharing—any amount of time can be helpful when used consistently.\n\nWhat types of activities help you feel more balanced?",
+        text: "Thanks for sharing—any amount of time can be helpful when used consistently.",
         nextKey: "activities",
       },
     },
@@ -218,15 +218,15 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     required: true,
     followUps: {
       "Physical activities like walking or stretching.": {
-        text: "Movement is such a powerful way to reset! Your body will thank you.\n\nOn a typical day, when do you feel most energetic?",
+        text: "Movement is such a powerful way to reset! Your body will thank you.",
         nextKey: "energeticTime",
       },
       "Mindful practices like breathing or reading.": {
-        text: "Those quiet moments can be so grounding. It's great that you value that space.\n\nOn a typical day, when do you feel most energetic?",
+        text: "Those quiet moments can be so grounding. It's great that you value that space.",
         nextKey: "energeticTime",
       },
       "Creative hobbies like journaling or listening to music.": {
-        text: "Creativity is such a beautiful outlet! Those activities can be really nourishing.\n\nOn a typical day, when do you feel most energetic?",
+        text: "Creativity is such a beautiful outlet! Those activities can be really nourishing.",
         nextKey: "energeticTime",
       },
     },
@@ -242,15 +242,15 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     required: true,
     followUps: {
       "Morning (before noon).": {
-        text: "Great! Morning energy is perfect for setting a positive tone for the day.\n\nIs there any day you want a day off of?",
+        text: "Great! Morning energy is perfect for setting a positive tone for the day.",
         nextKey: "daysOff",
       },
       "Afternoon (noon to evening).": {
-        text: "Nice! The afternoon can be a great time to refresh and recharge.\n\nIs there any day you want a day off of?",
+        text: "Nice! The afternoon can be a great time to refresh and recharge.",
         nextKey: "daysOff",
       },
       "Evening (after work/school).": {
-        text: "Perfect! Evening activities can help you unwind and transition into a restful night.\n\nIs there any day you want a day off of?",
+        text: "Perfect! Evening activities can help you unwind and transition into a restful night.",
         nextKey: "daysOff",
       },
     },
@@ -272,7 +272,7 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     multiSelect: true,
     followUps: {
       default: {
-        text: "Perfect! We'll make sure to respect your rest days while planning activities.\n\nIs there anything else you'd like to share to personalize your experience? (Totally optional.)",
+        text: "Perfect! We'll make sure to respect your rest days while planning activities.",
         nextKey: "anythingElse",
       },
     },

@@ -3,6 +3,7 @@ import type { OnboardingStateType } from "../../state";
 import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
 import { OnboardingQuestion } from "@/types";
 import { HARD_CODED_MESSAGES } from "../../utils/hardcoded-messages";
+import { isLastQuestionIndex } from "./handlers/utils";
 
 /**
  * Handle empty response for optional questions
@@ -14,7 +15,7 @@ export function handleEmptyResponse(
 ): Partial<OnboardingStateType> | null {
   if (!question || question.required || userInput) return null;
 
-  const isLastQuestion = step === ONBOARDING_QUESTIONS.length;
+  const isLastQuestion = isLastQuestionIndex(step);
 
   if (isLastQuestion) {
     return {
