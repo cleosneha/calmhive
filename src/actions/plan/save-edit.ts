@@ -275,30 +275,51 @@ export async function saveTaskEdit(
           }
 
           // Generate embeddings and upsert new document
-          const embeddingModel = (await import("@/ai/config/embedding"))
-            .default;
-          const vector = await embeddingModel.embedQuery(updatedContent);
+          try {
+            console.log("🔄 Generating embedding for updated content...");
+            const embeddingModel = (await import("@/ai/config/embedding"))
+              .default;
+            const vector = await embeddingModel.embedQuery(updatedContent);
 
-          console.log("📝 Upserting new plan document to Pinecone...");
+            console.log(
+              "✅ Embedding generated, dimensions:",
+              Array.isArray(vector) ? vector.length : "unknown"
+            );
 
-          await pineconeIndex.namespace("plans").upsert([
-            {
-              id: `user-${session.user.id}`, // Consistent ID for this user
-              values: vector,
-              metadata: {
-                userId: session.user.id,
-                planId: String(existingTask.planId),
-                type: "plan",
-                updatedAt: new Date().toISOString(),
-                text: updatedContent,
+            if (!vector || (Array.isArray(vector) && vector.length === 0)) {
+              console.error("❌ Embedding generation returned empty vector!");
+              throw new Error("Empty embedding vector generated");
+            }
+
+            console.log("📝 Upserting new plan document to Pinecone...");
+            console.log("  Document ID: user-" + session.user.id);
+            console.log("  Vector dimensions:", vector.length || "unknown");
+            console.log("  Content length:", updatedContent.length);
+
+            const upsertResult = await pineconeIndex.namespace("plans").upsert([
+              {
+                id: `user-${session.user.id}`, // Consistent ID for this user
+                values: vector,
+                metadata: {
+                  userId: session.user.id,
+                  planId: String(existingTask.planId),
+                  type: "plan",
+                  updatedAt: new Date().toISOString(),
+                  text: updatedContent,
+                },
               },
-            },
-          ]);
+            ]);
 
-          console.log(
-            "✅ Plan document upserted in Pinecone for userId:",
-            session.user.id
-          );
+            console.log(
+              "✅ Plan document upserted in Pinecone for userId:",
+              session.user.id,
+              "Result:",
+              upsertResult
+            );
+          } catch (upsertError) {
+            console.error("❌ Upsert operation failed:", upsertError);
+            throw upsertError;
+          }
         } else {
           // Qdrant: Use stable UUID and upsert
           const store = await vectorStore;
