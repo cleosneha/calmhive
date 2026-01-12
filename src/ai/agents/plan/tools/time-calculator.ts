@@ -123,3 +123,106 @@ export function calculateHoursSummary(
 
   return summary;
 }
+
+/**
+ * Parse energetic time string to hour limits
+ * Supports formats like "before 8AM", "before 8am", "before 20:00", "7AM-9AM", "7am-9am", "7:00-9:00"
+ * Returns { startHour, endHour } in 24-hour format
+ */
+export function parseEnergeticTime(
+  energeticTime: string
+): { startHour: number; endHour: number } | null {
+  if (!energeticTime || typeof energeticTime !== "string") {
+    return null;
+  }
+
+  const normalized = energeticTime.toLowerCase().trim();
+
+  // Pattern: "before XAM/XPM" or "before X:00"
+  const beforeMatch = normalized.match(/before\s+(\d{1,2})(?::00)?\s*(am|pm)?/);
+  if (beforeMatch) {
+    let hour = parseInt(beforeMatch[1], 10);
+    const period = beforeMatch[2];
+
+    // Convert to 24-hour format
+    if (period === "pm" && hour !== 12) {
+      hour += 12;
+    } else if (period === "am" && hour === 12) {
+      hour = 0;
+    }
+
+    return { startHour: 0, endHour: hour };
+  }
+
+  // Pattern: "after XAM/XPM" or "after X:00"
+  const afterMatch = normalized.match(/after\s+(\d{1,2})(?::00)?\s*(am|pm)?/);
+  if (afterMatch) {
+    let hour = parseInt(afterMatch[1], 10);
+    const period = afterMatch[2];
+
+    // Convert to 24-hour format
+    if (period === "pm" && hour !== 12) {
+      hour += 12;
+    } else if (period === "am" && hour === 12) {
+      hour = 0;
+    }
+
+    return { startHour: hour, endHour: 23 };
+  }
+
+  // Pattern: "XAM/XPM-YAM/YPM" or "X:00-Y:00"
+  const rangeMatch = normalized.match(
+    /(\d{1,2})(?::00)?\s*(am|pm)?\s*-\s*(\d{1,2})(?::00)?\s*(am|pm)?/
+  );
+  if (rangeMatch) {
+    let startHour = parseInt(rangeMatch[1], 10);
+    const startPeriod = rangeMatch[2];
+    let endHour = parseInt(rangeMatch[3], 10);
+    const endPeriod = rangeMatch[4];
+
+    // Convert to 24-hour format
+    if (startPeriod === "pm" && startHour !== 12) {
+      startHour += 12;
+    } else if (startPeriod === "am" && startHour === 12) {
+      startHour = 0;
+    }
+
+    if (endPeriod === "pm" && endHour !== 12) {
+      endHour += 12;
+    } else if (endPeriod === "am" && endHour === 12) {
+      endHour = 0;
+    }
+
+    return { startHour, endHour };
+  }
+
+  return null;
+}
+
+/**
+ * Check if a time range (HH:MM-HH:MM) falls within the energetic time window
+ */
+export function isTimeWithinEnergeticWindow(
+  timeRange: string,
+  energeticTimeLimit: { startHour: number; endHour: number } | null
+): boolean {
+  if (!energeticTimeLimit) return true;
+
+  const [start] = timeRange.split("-");
+  const [startHour] = start.split(":").map(Number);
+
+  // Check if activity starts within the energetic window
+  return (
+    startHour >= energeticTimeLimit.startHour &&
+    startHour < energeticTimeLimit.endHour
+  );
+}
+
+/**
+ * Get end time from a time range
+ */
+export function getEndTime(timeRange: string): number {
+  const [, end] = timeRange.split("-");
+  const [endHour, endMin] = end.split(":").map(Number);
+  return endHour + (endMin > 0 ? 0.5 : 0);
+}

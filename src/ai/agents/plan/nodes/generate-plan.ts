@@ -2,6 +2,7 @@ import model from "@/ai/config/llm";
 import type { PlanStateType } from "../state";
 import { buildPlanGenerationPrompt } from "../utils/prompt-builder";
 import { parseAIResponse } from "../utils/plan-formatter";
+import { handleAIError } from "@/utils/ai-error-handler";
 
 /**
  * Node: Generate plan using LLM
@@ -45,8 +46,9 @@ export async function generatePlanNode(
     };
   } catch (error) {
     console.error("❌ Error generating plan:", error);
+    const { error: errorMessage } = handleAIError(error);
     return {
-      error: error instanceof Error ? error.message : "Failed to generate plan",
+      error: errorMessage,
       generatedTasks: [],
       isComplete: false,
     };

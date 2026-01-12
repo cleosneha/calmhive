@@ -3,6 +3,7 @@
 import { getCurrentUser } from "@/actions/auth";
 import prisma from "@/lib/db";
 import { compilePlanGraph } from "@/ai/agents/plan/graph";
+import { handleAIError } from "@/utils/ai-error-handler";
 import type { ApiResponse, ApiError } from "@/types/api";
 
 /**
@@ -99,7 +100,7 @@ export async function generatePlan(): Promise<
       data: {
         userId: user.id,
         daysOff: onboarding.daysOff,
-        ...(result.hoursSummary ? { hoursSummary: result.hoursSummary } : {}),
+        hoursSummary: result.hoursSummary ?? undefined,
         tasks: {
           create: result.generatedTasks.map((task) => ({
             day: task.day,
@@ -163,10 +164,11 @@ export async function generatePlan(): Promise<
     };
   } catch (error) {
     console.error("❌ Error generating plan:", error);
+    const { error: errorMessage, code } = handleAIError(error);
     return {
       status: "error",
-      error: error instanceof Error ? error.message : "Failed to generate plan",
-      code: "INTERNAL_ERROR",
+      error: errorMessage,
+      code,
     };
   }
 }

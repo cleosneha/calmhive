@@ -20,25 +20,7 @@ function routeAfterFetch(state: PlanStateType): string {
  * Router: Determine next node after validation
  */
 function routeAfterValidation(state: PlanStateType): string {
-  // If validation passed, we're done
-  if (state.validation?.isValid && state.isComplete) {
-    return END;
-  }
-
-  // If there's an error (e.g., retry limit reached), end
-  if (state.error) {
-    return END;
-  }
-
-  // If validation failed but we can retry, regenerate
-  if (!state.validation?.isValid && state.retryCount < 2) {
-    console.log(
-      `⚠️ Validation failed, retrying (attempt ${state.retryCount + 1}/2)`
-    );
-    return "generate";
-  }
-
-  // Otherwise, end (shouldn't reach here, but just in case)
+  // Always end after validation (no retries)
   return END;
 }
 

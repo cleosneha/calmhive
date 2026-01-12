@@ -5,6 +5,7 @@ import {
 } from "@/actions/onboarding/onboarding";
 import type { OnboardingMessage } from "@/types";
 import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
+import { toast } from "sonner";
 
 interface OnboardingSessionState {
   messages: OnboardingMessage[];
@@ -18,6 +19,20 @@ interface OnboardingSessionState {
   selectedDays: string[];
   isMultiSelectMode: boolean;
 }
+
+interface ErrorResponse {
+  status: "error";
+  error: string;
+  code?: string;
+}
+
+const isErrorResponse = (obj: unknown): obj is ErrorResponse => {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    (obj as Record<string, unknown>).status === "error"
+  );
+};
 
 export function useOnboardingSession() {
   const [state, setState] = useState<OnboardingSessionState>({
@@ -38,6 +53,14 @@ export function useOnboardingSession() {
     const initSession = async () => {
       try {
         const result = await startOnboardingSession();
+
+        // Check if result is an error response
+        if (isErrorResponse(result)) {
+          toast.error(result.error);
+          console.error("Failed to start onboarding:", result.error);
+          return;
+        }
+
         setState((prev) => ({
           ...prev,
           messages: Array.isArray(result.messages)
@@ -56,6 +79,7 @@ export function useOnboardingSession() {
         }));
       } catch (error) {
         console.error("Failed to start onboarding:", error);
+        toast.error("Failed to start onboarding session");
       } finally {
         setState((prev) => ({ ...prev, loading: false }));
       }
@@ -95,6 +119,24 @@ export function useOnboardingSession() {
 
       try {
         const result = await processOnboardingMessage(textToSend);
+
+        // Check if result is an error response
+        if (isErrorResponse(result)) {
+          toast.error(result.error);
+          setState((prev) => ({
+            ...prev,
+            messages: [
+              ...prev.messages,
+              {
+                role: "assistant",
+                content: result.error,
+              },
+            ],
+            loading: false,
+          }));
+          return;
+        }
+
         setState((prev) => ({
           ...prev,
           messages: Array.isArray(result.messages)
@@ -125,6 +167,24 @@ export function useOnboardingSession() {
         ) {
           try {
             const result = await startOnboardingSession();
+
+            // Check if restart result is an error
+            if (isErrorResponse(result)) {
+              toast.error(result.error);
+              setState((prev) => ({
+                ...prev,
+                messages: [
+                  ...prev.messages,
+                  {
+                    role: "assistant",
+                    content: result.error,
+                  },
+                ],
+                loading: false,
+              }));
+              return;
+            }
+
             setState((prev) => ({
               ...prev,
               messages: Array.isArray(result.messages)
@@ -146,6 +206,7 @@ export function useOnboardingSession() {
             return;
           } catch (restartError) {
             console.error("Failed to restart session:", restartError);
+            toast.error("Failed to restart session");
           }
         }
 
@@ -260,6 +321,24 @@ export function useOnboardingSession() {
 
     try {
       const result = await processOnboardingMessage(daysText);
+
+      // Check if result is an error response
+      if (isErrorResponse(result)) {
+        toast.error(result.error);
+        setState((prev) => ({
+          ...prev,
+          messages: [
+            ...prev.messages,
+            {
+              role: "assistant",
+              content: result.error,
+            },
+          ],
+          loading: false,
+        }));
+        return;
+      }
+
       setState((prev) => ({
         ...prev,
         messages: Array.isArray(result.messages)
@@ -277,6 +356,7 @@ export function useOnboardingSession() {
       }));
     } catch (error: unknown) {
       console.error("Failed to process message:", error);
+      toast.error("Failed to send days");
       setState((prev) => ({
         ...prev,
         messages: [

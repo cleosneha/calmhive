@@ -3,18 +3,20 @@ import type { ValidationResult } from "../types";
 import {
   calculateDailyHours,
   calculateHoursSummary,
+  parseEnergeticTime,
+  isTimeWithinEnergeticWindow,
 } from "../tools/time-calculator";
 import { filterDaysOff } from "../tools/days-off-checker";
 
 /**
  * Node: Validate the generated plan
- * Checks time constraints and days off violations
+ * Checks time constraints, days off violations, and energetic time constraints
  */
 export async function validatePlanNode(
   state: PlanStateType
 ): Promise<Partial<PlanStateType>> {
   try {
-    const { generatedTasks, onboardingData, retryCount } = state;
+    const { generatedTasks, onboardingData } = state;
 
     if (!generatedTasks || generatedTasks.length === 0) {
       return {
@@ -76,7 +78,7 @@ export async function validatePlanNode(
       }
     });
 
-    // Check 3: Validate time ranges
+    // Check 3: Validate time ranges format
     generatedTasks.forEach((task) => {
       if (!task.timeRange.match(/^\d{2}:\d{2}-\d{2}:\d{2}$/)) {
         errors.push(
@@ -84,6 +86,27 @@ export async function validatePlanNode(
         );
       }
     });
+
+    // Check 4: Validate energetic time constraint
+    const energeticTimeLimit = parseEnergeticTime(onboardingData.energeticTime);
+    if (energeticTimeLimit) {
+      const tasksOutsideEnergeticTime = generatedTasks.filter(
+        (task) =>
+          !isTimeWithinEnergeticWindow(task.timeRange, energeticTimeLimit)
+      );
+
+      if (tasksOutsideEnergeticTime.length > 0) {
+        errors.push(
+          `Found ${
+            tasksOutsideEnergeticTime.length
+          } tasks outside energetic time window (${
+            onboardingData.energeticTime
+          }): ${tasksOutsideEnergeticTime
+            .map((t) => `${t.day} ${t.timeRange} - ${t.activity}`)
+            .join(", ")}`
+        );
+      }
+    }
 
     const validation: ValidationResult = {
       isValid: errors.length === 0,
@@ -118,24 +141,11 @@ export async function validatePlanNode(
       };
     }
 
-    // If invalid and retry limit reached, fail
-    const maxRetries = 2;
-    if (retryCount >= maxRetries) {
-      return {
-        validation,
-        isComplete: false,
-        error: `Plan validation failed after ${maxRetries} retries: ${errors.join(
-          "; "
-        )}`,
-      };
-    }
-
-    // Otherwise, allow retry
+    // If invalid, fail immediately (no retries)
     return {
       validation,
-      retryCount: retryCount + 1,
       isComplete: false,
-      error: null,
+      error: `Plan validation failed: ${errors.join("; ")}`,
     };
   } catch (error) {
     console.error("❌ Error validating plan:", error);
