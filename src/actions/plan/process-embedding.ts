@@ -47,28 +47,33 @@ export async function embedPlan(
       });
 
       const pineconeIndex = pinecone.Index(
-        process.env.PINECONE_INDEX_NAME || "calmhive-onboarding"
+        process.env.PINECONE_INDEX_NAME || "calmhive-embeddings"
       );
 
-      const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
-        pineconeIndex,
-        namespace: "plans",
-      });
+      // Generate embedding
+      const vector = await embeddings.embedQuery(planText);
 
-      // Use deterministic UUID as document id (compatible with Pinecone and Qdrant)
-      const pointId = generatePlanPointId(userId);
+      // Use consistent ID format: user-${userId}
+      const documentId = `user-${userId}`;
 
-      await vectorStore.addDocuments([
+      // Upsert with explicit ID
+      await pineconeIndex.namespace("plans").upsert([
         {
-          pageContent: planText,
+          id: documentId,
+          values: vector,
           metadata: {
             ...metadata,
-            id: pointId,
+            text: planText,
           },
         },
       ]);
 
-      console.log("✅ Plan embedded in Pinecone:", planId);
+      console.log(
+        "✅ Plan embedded in Pinecone with ID:",
+        documentId,
+        "planId:",
+        planId
+      );
     } else {
       // Qdrant for local development
       const vectorStore = await QdrantVectorStore.fromExistingCollection(
@@ -121,16 +126,13 @@ export async function deletePlanEmbedding(
       });
 
       const pineconeIndex = pinecone.Index(
-        process.env.PINECONE_INDEX_NAME || "calmhive-onboarding"
+        process.env.PINECONE_INDEX_NAME || "calmhive-embeddings"
       );
 
-      const documentId = userId;
+      const documentId = `user-${userId}`;
       await pineconeIndex.namespace("plans").deleteOne(documentId);
 
-      console.log(
-        "✅ Plan embedding deleted from Pinecone (id= userId):",
-        userId
-      );
+      console.log("✅ Plan embedding deleted from Pinecone (id):", documentId);
     } else {
       // Qdrant for local development
       const qdrantClient = (await import("@/ai/config/qdrant")).default;
