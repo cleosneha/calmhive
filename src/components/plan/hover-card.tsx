@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
+import { FiEdit } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 
 interface Props {
@@ -31,6 +32,34 @@ function convertToMarkdown(text: string): string {
 
   // If single line with commas, keep as-is for now
   return text;
+}
+
+// Small status badge component
+function getStatusLabel(status?: string) {
+  if (!status) return "unknown";
+  const s = status.toLowerCase();
+  if (s.includes("pending")) return "Pending";
+  if (s.includes("partial") || s.includes("partially"))
+    return "Partially completed";
+  if (s.includes("complete") || s.includes("done")) return "Completed";
+  return status;
+}
+
+function StatusBadge({ status }: { status?: string }) {
+  const label = getStatusLabel(status);
+  const s = (status ?? "").toLowerCase();
+  let cls = "text-[var(--foreground)]/80";
+  if (s.includes("pending")) cls = "text-amber-600";
+  else if (s.includes("partial") || s.includes("partially"))
+    cls = "text-yellow-600";
+  else if (s.includes("complete") || s.includes("done"))
+    cls = "text-emerald-600";
+
+  return <span className={`text-sm font-medium ${cls}`}>{label}</span>;
+}
+
+function EditIcon() {
+  return <FiEdit className="w-4 h-4" />;
 }
 
 export default function TaskHoverCard({
@@ -147,58 +176,63 @@ export default function TaskHoverCard({
           {/* Hover Card */}
           <div
             ref={cardRef}
-            className="absolute z-40 w-72 bg-white border border-slate-200 rounded shadow-lg p-3 pointer-events-auto"
+            className="absolute z-40 w-72 bg-white border border-slate-200 rounded shadow-lg pointer-events-auto"
             style={position as React.CSSProperties}
             onMouseEnter={() => setIsOpen(true)}
             onMouseLeave={() => setIsOpen(false)}
           >
-            <div className="space-y-2">
-              <div className="font-semibold text-[var(--ch-sage-dark)]">
-                {activity}
-              </div>
-              <div className="text-sm text-[var(--foreground)]/80 prose prose-sm max-w-none">
-                {formattedNotes ? (
-                  <ReactMarkdown
-                    components={{
-                      p: ({ children }) => (
-                        <p className="m-0 text-sm">{children}</p>
-                      ),
-                      ul: ({ children }) => (
-                        <ul className="m-0 pl-4 text-sm list-disc">
-                          {children}
-                        </ul>
-                      ),
-                      ol: ({ children }) => (
-                        <ol className="m-0 pl-4 text-sm list-decimal">
-                          {children}
-                        </ol>
-                      ),
-                      li: ({ children }) => (
-                        <li className="m-0 text-sm">{children}</li>
-                      ),
-                      strong: ({ children }) => (
-                        <strong className="font-semibold">{children}</strong>
-                      ),
-                      em: ({ children }) => (
-                        <em className="italic">{children}</em>
-                      ),
-                    }}
-                  >
-                    {formattedNotes}
-                  </ReactMarkdown>
-                ) : (
-                  "No notes provided."
-                )}
-              </div>
-              <div className="flex items-center justify-between pt-2">
-                <div className="text-xs text-[var(--foreground)]/70">
-                  Status:{" "}
-                  <span className="font-medium">{status ?? "unknown"}</span>
-                </div>
-                <Button size="sm" variant="ghost" onClick={onEdit}>
-                  Edit
-                </Button>
-              </div>
+            {/* Header */}
+            <div className="px-3 py-2 bg-[var(--ch-sage-dark)] text-white font-semibold rounded-t-md">
+              {activity}
+            </div>
+
+            {/* Notes */}
+            <div className="p-3 text-sm text-[var(--foreground)]/80 prose prose-sm max-w-none">
+              {formattedNotes ? (
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => (
+                      <p className="m-0 text-sm">{children}</p>
+                    ),
+                    ul: ({ children }) => (
+                      <ul className="m-0 pl-4 text-sm list-disc">{children}</ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className="m-0 pl-4 text-sm list-decimal">
+                        {children}
+                      </ol>
+                    ),
+                    li: ({ children }) => (
+                      <li className="m-0 text-sm">{children}</li>
+                    ),
+                    strong: ({ children }) => (
+                      <strong className="font-semibold">{children}</strong>
+                    ),
+                    em: ({ children }) => (
+                      <em className="italic">{children}</em>
+                    ),
+                  }}
+                >
+                  {formattedNotes}
+                </ReactMarkdown>
+              ) : (
+                <div className="text-sm">No notes provided.</div>
+              )}
+            </div>
+
+            {/* Status centered */}
+            <div className="px-3 pt-1 flex items-center justify-between ">
+              <StatusBadge status={status} />
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onEdit}
+                className="inline-flex items-center gap-2 text-[var(--ch-sage)]"
+                aria-label="Edit task"
+              >
+                <EditIcon />
+                <span className="text-sm font-medium">Edit</span>
+              </Button>
             </div>
           </div>
         </>
