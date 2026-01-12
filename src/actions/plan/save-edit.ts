@@ -253,7 +253,7 @@ export async function saveTaskEdit(
           // Query for vectors with matching userId metadata
           try {
             const queryResults = await pineconeIndex.namespace("plans").query({
-              vector: new Array(1536).fill(0), // dummy vector
+              vector: new Array(1024).fill(0), // dummy vector (matches Pinecone index dimension)
               filter: { userId: { $eq: session.user.id } },
               topK: 100,
               includeMetadata: true,
