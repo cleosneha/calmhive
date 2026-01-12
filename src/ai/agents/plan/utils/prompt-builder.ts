@@ -27,30 +27,32 @@ export function buildPlanGenerationPrompt(data: OnboardingData): string {
 - Available Days: ${availableDays.join(", ")}
 - Additional Notes: ${data.additionalNotes || "None"}
 
+**CRITICAL CONSTRAINTS (MUST FOLLOW):**
+1. Only schedule activities on available days: ${availableDays.join(", ")}
+2. NEVER schedule anything on days off: ${data.daysOff.join(", ")}
+3. STRICTLY respect energetic time: ${data.energeticTime}
+4. Maximum ${timeAvailabilityHours} hours per day, total across all activities
+5. All activities MUST fall within the user's energetic time window
+
 **Instructions:**
-1. Create a weekly plan for the available days only (${availableDays.join(
-    ", "
-  )})
-2. DO NOT schedule anything on days off: ${data.daysOff.join(", ")}
-3. Respect the time availability: maximum ${timeAvailabilityHours} hours per day
-4. Consider the user's most energetic time (${
+1. Create a weekly plan for available days only
+2. Respect the time availability: maximum ${timeAvailabilityHours} hours per day
+3. STRICTLY schedule all activities during the energetic time: ${
     data.energeticTime
-  }) when scheduling activities
-5. Never schedule activities outside of the time availability: maximum ${timeAvailabilityHours} hours per day and outside preferred energetic time (${
-    data.energeticTime
-  })
-6. Incorporate the user's preferred activities: ${data.activities}
-7. Align activities with their goals: ${data.goals}
-8. Break down activities into specific time blocks (e.g., "09:00-10:00")
-9. Ensure time blocks are realistic and don't overlap
-10. Include variety and balance throughout the week
-11. Add helpful notes for each activity when appropriate
-12. Give minimum 3 activities per day, but do NOT exceed ${timeAvailabilityHours} hours per day
+  }. This is mandatory - NO exceptions.
+4. Incorporate the user's preferred activities: ${data.activities}
+5. Align activities with their goals: ${data.goals}
+6. Break down activities into specific time blocks (e.g., "09:00-10:00")
+7. Ensure time blocks are realistic and don't overlap
+8. Include variety and balance throughout the week
+9. Add helpful notes for each activity when appropriate
+10. Minimum 2-3 activities per day, but DO NOT exceed ${timeAvailabilityHours} hours per day
+11. All activity start times MUST be within the energetic time window
 
 **Output Format (JSON):**
 Return a JSON array of tasks. Each task must have:
 - day: string (e.g., "Monday")
-- timeRange: string (e.g., "09:00-10:00")
+- timeRange: string (e.g., "09:00-10:00" in 24-hour format)
 - activity: string (descriptive activity name)
 - duration: number (in minutes)
 - notes: string (optional, helpful guidance)
@@ -74,26 +76,4 @@ Return a JSON array of tasks. Each task must have:
 ]
 
 Generate a complete weekly plan now. Return ONLY the JSON array, no additional text.`;
-}
-
-/**
- * Build validation refinement prompt
- */
-export function buildValidationRefinementPrompt(
-  originalPlan: string,
-  errors: string[],
-  warnings: string[]
-): string {
-  return `The generated plan has validation issues. Please fix them and regenerate the plan.
-
-**Original Plan:**
-${originalPlan}
-
-**Errors (must fix):**
-${errors.join("\n")}
-
-**Warnings:**
-${warnings.join("\n")}
-
-Please regenerate the plan addressing all errors. Return ONLY the corrected JSON array, no additional text.`;
 }

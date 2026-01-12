@@ -39,12 +39,6 @@ export const PlanState = Annotation.Root({
     default: () => false,
   }),
 
-  // Retry counter for failed validations
-  retryCount: Annotation<number>({
-    reducer: (_, value) => value,
-    default: () => 0,
-  }),
-
   // Hours summary for each day and week total
   hoursSummary: Annotation<Record<string, number> | null>({
     reducer: (_, value) => value,
