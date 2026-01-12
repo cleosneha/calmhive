@@ -257,23 +257,39 @@ export async function saveTaskEdit(
           try {
             if (isProd) {
               console.log("📌 Using Pinecone deletion...");
-              // Pinecone: delete by document ID
               const pinecone = new (
                 await import("@pinecone-database/pinecone")
               ).Pinecone({
                 apiKey: process.env.PINECONE_API_KEY!,
               });
               const pineconeIndex = pinecone.Index(
-                process.env.PINECONE_INDEX_NAME || "calmhive-onboarding"
+                process.env.PINECONE_INDEX_NAME || "calmhive-embeddings"
               );
-              // Use deterministic UUID as document id for Pinecone
-              const documentId = generatePlanPointId(session.user.id);
 
-              console.log("📍 Deleting Pinecone document ID:", documentId);
-              await pineconeIndex.namespace("plans").deleteOne(documentId);
+              // Query for vectors with matching userId metadata
+              const queryResults = await pineconeIndex
+                .namespace("plans")
+                .query({
+                  vector: new Array(1536).fill(0), // dummy vector for metadata query
+                  filter: { userId: { $eq: session.user.id } },
+                  topK: 100,
+                  includeMetadata: true,
+                });
+
+              // Delete found vectors by their actual Pinecone IDs
+              const vectorIdsToDelete = queryResults.matches.map((m) => m.id);
+              if (vectorIdsToDelete.length > 0) {
+                console.log(
+                  "📍 Deleting Pinecone vectors by metadata (count):",
+                  vectorIdsToDelete.length
+                );
+                await pineconeIndex
+                  .namespace("plans")
+                  .deleteMany(vectorIdsToDelete);
+              }
 
               console.log(
-                "✅ Deleted old plan document from Pinecone for userId (pointId):",
+                "✅ Deleted old plan documents from Pinecone for userId:",
                 session.user.id
               );
             } else {
@@ -313,22 +329,42 @@ export async function saveTaskEdit(
             type: "plan",
           });
 
-          // Add the updated document with the SAME point ID
+          // Add the updated document
           if (isProd) {
-            // Pinecone: add document with specific ID (pointId UUID)
-            const pointId = generatePlanPointId(session.user.id);
-            await store.addDocuments([
+            // Pinecone: use native API to upsert with proper metadata
+            const pinecone = new (
+              await import("@pinecone-database/pinecone")
+            ).Pinecone({
+              apiKey: process.env.PINECONE_API_KEY!,
+            });
+            const pineconeIndex = pinecone.Index(
+              process.env.PINECONE_INDEX_NAME || "calmhive-embeddings"
+            );
+
+            // Generate embeddings using LangChain
+            const embeddingModel = (await import("@/ai/config/embedding"))
+              .default;
+            const vector = await embeddingModel.embedQuery(updatedContent);
+
+            // Upsert with userId as filter for future queries
+            await pineconeIndex.namespace("plans").upsert([
               {
-                pageContent: updatedContent,
+                id: `user-${session.user.id}`, // Use consistent ID
+                values: vector,
                 metadata: {
                   userId: session.user.id,
                   planId: String(existingTask.planId),
                   type: "plan",
                   updatedAt: new Date().toISOString(),
-                  id: pointId,
+                  text: updatedContent,
                 },
               },
             ]);
+
+            console.log(
+              "✅ Document upserted in Pinecone with ID: user-" +
+                session.user.id
+            );
           } else {
             // Qdrant: add document with stable UUID v5
             await store.addDocuments(
@@ -345,9 +381,12 @@ export async function saveTaskEdit(
               ],
               { ids: [pointId] }
             );
-          }
 
-          console.log("✅ Document updated with Point ID:", pointId);
+            console.log(
+              "✅ Document updated in Qdrant with Point ID:",
+              pointId
+            );
+          }
 
           console.log(
             "✅ User plan document updated in vector store for taskId:",
