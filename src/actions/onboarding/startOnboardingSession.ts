@@ -40,7 +40,12 @@ export async function startOnboardingSession(): Promise<
     // Map messages from graph
     const messages = result.messages.map((msg: BaseMessage) => ({
       role: msg._getType() === "ai" ? "assistant" : "user",
-      content: msg.content,
+      content:
+        typeof msg.content === "string"
+          ? msg.content
+          : Array.isArray(msg.content)
+          ? msg.content.map((c) => ("text" in c ? c.text : "")).join("")
+          : String(msg.content),
     }));
 
     return {

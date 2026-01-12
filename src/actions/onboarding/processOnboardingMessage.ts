@@ -44,7 +44,12 @@ export async function processOnboardingMessage(userMessage: string): Promise<
     return {
       messages: result.messages.map((msg: BaseMessage) => ({
         role: msg._getType() === "ai" ? "assistant" : "user",
-        content: msg.content,
+        content:
+          typeof msg.content === "string"
+            ? msg.content
+            : Array.isArray(msg.content)
+            ? msg.content.map((c) => ("text" in c ? c.text : "")).join("")
+            : String(msg.content),
       })),
       step: result.step,
       isComplete: result.isComplete,

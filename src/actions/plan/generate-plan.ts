@@ -100,7 +100,7 @@ export async function generatePlan(): Promise<
       data: {
         userId: user.id,
         daysOff: onboarding.daysOff,
-        hoursSummary: result.hoursSummary || null,
+        hoursSummary: result.hoursSummary ?? undefined,
         tasks: {
           create: result.generatedTasks.map((task) => ({
             day: task.day,
