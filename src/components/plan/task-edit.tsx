@@ -80,7 +80,6 @@ export default function TaskEditDialog({
   const [aiUsedCount, setAiUsedCount] = useState(0);
   const [aiLimit, setAiLimit] = useState(3);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(open);
 
   // Fetch AI count when dialog opens
   useEffect(() => {

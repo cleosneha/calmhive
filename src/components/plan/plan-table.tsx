@@ -1,5 +1,3 @@
-"use client";
-
 import { Badge } from "@/components/ui/badge";
 import TaskHoverCard from "@/components/plan/hover-card";
 
