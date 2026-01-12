@@ -67,6 +67,8 @@ export interface PlanWithUser extends Plan {
   };
 }
 
+export type Status = "pending" | "in-progress" | "completed" | "cancelled";
+
 // Response type for plan existence checks
 import type { ApiResponse, ApiError } from "./api";
 

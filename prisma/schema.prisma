@@ -13,17 +13,19 @@ datasource db {
 }
 
 model User {
-    id                        String    @id
-    email                     String    @unique
-    emailVerified             Boolean   @default(false)
-    name                      String?
-    password                  String?
-    verificationCode          String? // Temporary OTP code for email verification
-    verificationCodeExpiresAt DateTime? // OTP expiration time
-    onboarded                 Boolean   @default(false)
-    currentPlan               Json? // Generated weekly plan (only after T&C)
-    createdAt                 DateTime  @default(now())
-    updatedAt                 DateTime  @updatedAt
+    id                           String    @id
+    email                        String    @unique
+    emailVerified                Boolean   @default(false)
+    name                         String?
+    password                     String?
+    verificationCode             String? // Temporary OTP code for email verification
+    verificationCodeExpiresAt    DateTime? // OTP expiration time
+    onboarded                    Boolean   @default(false)
+    currentPlan                  Json? // Generated weekly plan (only after T&C)
+    aiNoteGenerationCount        Int       @default(0) // AI note generation usage (0-3 per 24h)
+    aiNoteGenerationCountResetAt DateTime? // Timestamp when 24h reset should occur
+    createdAt                    DateTime  @default(now())
+    updatedAt                    DateTime  @updatedAt
 
     onboarding     Onboarding?
     plan           Plan[]
@@ -114,18 +116,18 @@ model Plan {
 }
 
 model Task {
-    id        Int        @id @default(autoincrement())
-    planId    Int
-    day       String // "Monday", etc.
-    timeRange String // "10:00-11:00"
-    activity  String // Description of the activity
-    status    TaskStatus @default(pending) // Enum
-    notes     String?
-    createdAt DateTime   @default(now())
-    updatedAt DateTime   @updatedAt
-
+    id            Int        @id @default(autoincrement())
+    planId        Int
+    day           String // "Monday", etc.
+    timeRange     String // "10:00-11:00"
+    activity      String // Description of the activity
+    status        TaskStatus @default(pending) // Enum
+    notes         String?
+    createdAt     DateTime   @default(now())
+    updatedAt     DateTime   @updatedAt
+    personalNotes String     @default("")
     // Relations
-    plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+    plan          Plan       @relation(fields: [planId], references: [id], onDelete: Cascade)
 
     @@index([planId, status]) // For quick status filters
     @@map("task")

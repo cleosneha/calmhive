@@ -1,7 +1,7 @@
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { PineconeStore } from "@langchain/pinecone";
 import { Pinecone } from "@pinecone-database/pinecone";
-import embeddings from "./embedding.js";
+import embeddings from "./embedding";
 
 const isProd = process.env.NODE_ENV === "production";
 
