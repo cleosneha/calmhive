@@ -132,58 +132,76 @@ export default function TaskHoverCard({
       {children}
 
       {isOpen && (
-        <div
-          ref={cardRef}
-          className="absolute z-40 w-72 bg-white border border-slate-200 rounded shadow-lg p-3 pointer-events-auto"
-          style={position as React.CSSProperties}
-        >
-          <div className="space-y-2">
-            <div className="font-semibold text-[var(--ch-sage-dark)]">
-              {activity}
-            </div>
-            <div className="text-sm text-[var(--foreground)]/80 prose prose-sm max-w-none">
-              {formattedNotes ? (
-                <ReactMarkdown
-                  components={{
-                    p: ({ children }) => (
-                      <p className="m-0 text-sm">{children}</p>
-                    ),
-                    ul: ({ children }) => (
-                      <ul className="m-0 pl-4 text-sm list-disc">{children}</ul>
-                    ),
-                    ol: ({ children }) => (
-                      <ol className="m-0 pl-4 text-sm list-decimal">
-                        {children}
-                      </ol>
-                    ),
-                    li: ({ children }) => (
-                      <li className="m-0 text-sm">{children}</li>
-                    ),
-                    strong: ({ children }) => (
-                      <strong className="font-semibold">{children}</strong>
-                    ),
-                    em: ({ children }) => (
-                      <em className="italic">{children}</em>
-                    ),
-                  }}
-                >
-                  {formattedNotes}
-                </ReactMarkdown>
-              ) : (
-                "No notes provided."
-              )}
-            </div>
-            <div className="flex items-center justify-between pt-2">
-              <div className="text-xs text-[var(--foreground)]/70">
-                Status:{" "}
-                <span className="font-medium">{status ?? "unknown"}</span>
+        <>
+          {/* Invisible spacer to keep hover active between trigger and card */}
+          <div
+            className="absolute pointer-events-none"
+            style={{
+              left: 0,
+              top: "100%",
+              width: "100%",
+              height: "8px",
+            }}
+          />
+
+          {/* Hover Card */}
+          <div
+            ref={cardRef}
+            className="absolute z-40 w-72 bg-white border border-slate-200 rounded shadow-lg p-3 pointer-events-auto"
+            style={position as React.CSSProperties}
+            onMouseEnter={() => setIsOpen(true)}
+            onMouseLeave={() => setIsOpen(false)}
+          >
+            <div className="space-y-2">
+              <div className="font-semibold text-[var(--ch-sage-dark)]">
+                {activity}
               </div>
-              <Button size="sm" variant="ghost" onClick={onEdit}>
-                Edit
-              </Button>
+              <div className="text-sm text-[var(--foreground)]/80 prose prose-sm max-w-none">
+                {formattedNotes ? (
+                  <ReactMarkdown
+                    components={{
+                      p: ({ children }) => (
+                        <p className="m-0 text-sm">{children}</p>
+                      ),
+                      ul: ({ children }) => (
+                        <ul className="m-0 pl-4 text-sm list-disc">
+                          {children}
+                        </ul>
+                      ),
+                      ol: ({ children }) => (
+                        <ol className="m-0 pl-4 text-sm list-decimal">
+                          {children}
+                        </ol>
+                      ),
+                      li: ({ children }) => (
+                        <li className="m-0 text-sm">{children}</li>
+                      ),
+                      strong: ({ children }) => (
+                        <strong className="font-semibold">{children}</strong>
+                      ),
+                      em: ({ children }) => (
+                        <em className="italic">{children}</em>
+                      ),
+                    }}
+                  >
+                    {formattedNotes}
+                  </ReactMarkdown>
+                ) : (
+                  "No notes provided."
+                )}
+              </div>
+              <div className="flex items-center justify-between pt-2">
+                <div className="text-xs text-[var(--foreground)]/70">
+                  Status:{" "}
+                  <span className="font-medium">{status ?? "unknown"}</span>
+                </div>
+                <Button size="sm" variant="ghost" onClick={onEdit}>
+                  Edit
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
