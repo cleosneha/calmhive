@@ -4,12 +4,25 @@ import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import { FiEdit } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
+import TaskEditDialog from "@/components/plan/task-edit";
+
+interface Task {
+  id: number;
+  day: string;
+  timeRange: string;
+  activity: string;
+  status: string;
+  notes: string | null;
+}
 
 interface Props {
+  task: Task;
   activity: string;
   notes?: string | null;
   status?: string;
   onEdit?: () => void;
+  onTaskSave?: (task: Task) => Promise<void>;
+  onTaskSaved?: () => Promise<void>; // Refetch plan after task save
   children: React.ReactNode;
 }
 
@@ -35,25 +48,24 @@ function convertToMarkdown(text: string): string {
 }
 
 // Small status badge component
-function getStatusLabel(status?: string) {
-  if (!status) return "unknown";
+function getStatusLabel(status?: string): string {
+  if (!status) return "Unknown";
   const s = status.toLowerCase();
-  if (s.includes("pending")) return "Pending";
-  if (s.includes("partial") || s.includes("partially"))
-    return "Partially completed";
-  if (s.includes("complete") || s.includes("done")) return "Completed";
+  if (s === "pending") return "Pending";
+  if (s === "partial") return "Partially Done";
+  if (s === "done") return "Done";
+  if (s === "skipped") return "Skipped";
   return status;
 }
 
-function StatusBadge({ status }: { status?: string }) {
+function StatusBadge({ status }: { status?: string }): React.ReactNode {
   const label = getStatusLabel(status);
   const s = (status ?? "").toLowerCase();
   let cls = "text-[var(--foreground)]/80";
-  if (s.includes("pending")) cls = "text-amber-600";
-  else if (s.includes("partial") || s.includes("partially"))
-    cls = "text-yellow-600";
-  else if (s.includes("complete") || s.includes("done"))
-    cls = "text-emerald-600";
+  if (s === "pending") cls = "text-amber-600";
+  else if (s === "partial") cls = "text-yellow-600";
+  else if (s === "done") cls = "text-emerald-600";
+  else if (s === "skipped") cls = "text-slate-400";
 
   return <span className={`text-sm font-medium ${cls}`}>{label}</span>;
 }
@@ -63,13 +75,17 @@ function EditIcon() {
 }
 
 export default function TaskHoverCard({
+  task,
   activity,
   notes,
   status,
   onEdit,
+  onTaskSave,
+  onTaskSaved,
   children,
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [position, setPosition] = useState<{
     top?: string;
     bottom?: string;
@@ -78,6 +94,33 @@ export default function TaskHoverCard({
   }>({});
   const triggerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Clear timeout on cleanup
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Handle mouse enter - clear any pending close timeout
+  const handleMouseEnter = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setIsOpen(true);
+  };
+
+  // Handle mouse leave - delay card close
+  const handleMouseLeave = () => {
+    closeTimeoutRef.current = setTimeout(() => {
+      setIsOpen(false);
+      closeTimeoutRef.current = null;
+    }, 200); // 200ms delay before card disappears
+  };
 
   useEffect(() => {
     if (!isOpen || !triggerRef.current) return;
@@ -155,31 +198,20 @@ export default function TaskHoverCard({
     <div
       ref={triggerRef}
       className="relative"
-      onMouseEnter={() => setIsOpen(true)}
-      onMouseLeave={() => setIsOpen(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {children}
 
       {isOpen && (
         <>
-          {/* Invisible spacer to keep hover active between trigger and card */}
-          <div
-            className="absolute pointer-events-none"
-            style={{
-              left: 0,
-              top: "100%",
-              width: "100%",
-              height: "8px",
-            }}
-          />
-
           {/* Hover Card */}
           <div
             ref={cardRef}
             className="absolute z-40 w-72 bg-white border border-slate-200 rounded shadow-lg pointer-events-auto"
             style={position as React.CSSProperties}
-            onMouseEnter={() => setIsOpen(true)}
-            onMouseLeave={() => setIsOpen(false)}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
           >
             {/* Header */}
             <div className="px-3 py-2 bg-[var(--ch-sage-dark)] text-white font-semibold rounded-t-md">
@@ -226,7 +258,7 @@ export default function TaskHoverCard({
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={onEdit}
+                onClick={() => setIsEditDialogOpen(true)}
                 className="inline-flex items-center gap-2 text-[var(--ch-sage)]"
                 aria-label="Edit task"
               >
@@ -237,6 +269,15 @@ export default function TaskHoverCard({
           </div>
         </>
       )}
+
+      {/* Task Edit Dialog */}
+      <TaskEditDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        task={task}
+        onSave={onTaskSave}
+        onTaskSaved={onTaskSaved}
+      />
     </div>
   );
 }

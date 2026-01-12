@@ -26,6 +26,7 @@ interface Plan {
 interface Props {
   plan: Plan;
   onEdit?: (taskId: number) => void;
+  onRefresh?: () => Promise<void>; // Refetch plan after task save
 }
 
 const DAYS_ORDER = [
@@ -38,7 +39,7 @@ const DAYS_ORDER = [
   "Saturday",
 ];
 
-export default function PlanTable({ plan, onEdit }: Props) {
+export default function PlanTable({ plan, onEdit, onRefresh }: Props) {
   // Group tasks by day
   const tasksByDay = plan.tasks.reduce((acc, task) => {
     if (!acc[task.day]) {
@@ -124,6 +125,7 @@ export default function PlanTable({ plan, onEdit }: Props) {
                     >
                       {task ? (
                         <TaskHoverCard
+                          task={task}
                           activity={task.activity}
                           notes={task.notes}
                           status={task.status}
@@ -132,6 +134,12 @@ export default function PlanTable({ plan, onEdit }: Props) {
                               ? onEdit(task.id)
                               : window.alert(`Edit task ${task.id}`)
                           }
+                          onTaskSaved={onRefresh}
+                          onTaskSave={async (updatedTask) => {
+                            // Tasks updated via save-edit action in dialog
+                            // This callback is for UI updates if needed
+                            console.log("Task saved:", updatedTask);
+                          }}
                         >
                           <p className="font-medium text-[var(--ch-sage-dark)] text-sm cursor-pointer hover:text-[var(--ch-sage)] transition-colors">
                             {task.activity}

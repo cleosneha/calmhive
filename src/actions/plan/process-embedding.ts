@@ -5,14 +5,15 @@ import { QdrantVectorStore } from "@langchain/qdrant";
 import { PineconeStore } from "@langchain/pinecone";
 import { Pinecone } from "@pinecone-database/pinecone";
 import type { PlanTask } from "@/ai/agents/plan/types";
+import type { Task } from "@prisma/client";
 import { v5 as uuidv5 } from "uuid";
 
 const isProd = process.env.NODE_ENV === "production";
 const PLAN_NAMESPACE = "6ba7b810-9dad-11d1-80b4-00c04fd430c8"; // Standard UUID v5 namespace for plans
 
 /**
- * Generate a stable UUID v5 for plan point ID based on userId
- * Using just userId ensures we can regenerate the same ID for deletion
+ * Generate a deterministic UUID v5 for point ID based on userId
+ * This produces a valid UUID compatible with Qdrant's requirements
  */
 function generatePlanPointId(userId: string): string {
   return uuidv5(`plan-${userId}`, PLAN_NAMESPACE);
@@ -20,11 +21,12 @@ function generatePlanPointId(userId: string): string {
 
 /**
  * Embed plan data in vector store (Qdrant for local, Pinecone for prod)
+ * Accepts both PlanTask (from LLM) and Task (from DB with IDs)
  */
 export async function embedPlan(
   userId: string,
   planId: number,
-  tasks: PlanTask[],
+  tasks: PlanTask[] | Task[],
   daysOff: string[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
@@ -53,12 +55,15 @@ export async function embedPlan(
         namespace: "plans",
       });
 
+      // Use deterministic UUID as document id (compatible with Pinecone and Qdrant)
+      const pointId = generatePlanPointId(userId);
+
       await vectorStore.addDocuments([
         {
           pageContent: planText,
           metadata: {
             ...metadata,
-            id: `plan-${userId}`,
+            id: pointId,
           },
         },
       ]);
@@ -74,7 +79,7 @@ export async function embedPlan(
         }
       );
 
-      // Generate valid UUID v5 for point ID
+      // Use the userId as the point ID
       const pointId = generatePlanPointId(userId);
 
       await vectorStore.addDocuments(
@@ -119,22 +124,28 @@ export async function deletePlanEmbedding(
         process.env.PINECONE_INDEX_NAME || "calmhive-onboarding"
       );
 
-      const documentId = `plan-${userId}`;
+      const documentId = userId;
       await pineconeIndex.namespace("plans").deleteOne(documentId);
 
-      console.log("✅ Plan embedding deleted from Pinecone:", userId);
+      console.log(
+        "✅ Plan embedding deleted from Pinecone (id= userId):",
+        userId
+      );
     } else {
       // Qdrant for local development
       const qdrantClient = (await import("@/ai/config/qdrant")).default;
 
-      // Use same UUID generation as embedPlan
+      // Use userId as the point ID
       const pointId = generatePlanPointId(userId);
 
       await qdrantClient.delete("calmhive", {
         points: [pointId],
       });
 
-      console.log("✅ Plan embedding deleted from Qdrant:", userId);
+      console.log(
+        "✅ Plan embedding deleted from Qdrant (pointId = userId):",
+        userId
+      );
     }
 
     return { success: true };
@@ -152,9 +163,13 @@ export async function deletePlanEmbedding(
 
 /**
  * Format plan tasks for embedding
+ * Handles both DB tasks (with IDs) and LLM tasks (without IDs)
  */
-function formatPlanForEmbedding(tasks: PlanTask[], daysOff: string[]): string {
-  const tasksByDay: Record<string, PlanTask[]> = {};
+function formatPlanForEmbedding(
+  tasks: PlanTask[] | Task[],
+  daysOff: string[]
+): string {
+  const tasksByDay: Record<string, (PlanTask | Task)[]> = {};
 
   tasks.forEach((task) => {
     if (!tasksByDay[task.day]) {
@@ -178,12 +193,17 @@ function formatPlanForEmbedding(tasks: PlanTask[], daysOff: string[]): string {
     .map((day) => {
       const dayTasks = tasksByDay[day];
       const taskList = dayTasks
-        .map(
-          (task) =>
-            `${task.timeRange}: ${task.activity}${
-              task.notes ? ` - ${task.notes}` : ""
-            }`
-        )
+        .map((task) => {
+          // Check if task has ID (DB task) or not (LLM task)
+          const hasId = "id" in task && typeof task.id === "number";
+          const taskIdPrefix = hasId ? `[TaskID:${(task as Task).id}] ` : "";
+          const notes = "notes" in task && task.notes ? ` - ${task.notes}` : "";
+          const personalNotes =
+            "personalNotes" in task && task.personalNotes
+              ? ` (Personal: ${task.personalNotes})`
+              : "";
+          return `${taskIdPrefix}${task.timeRange}: ${task.activity}${notes}${personalNotes}`;
+        })
         .join("; ");
       return `${day}: ${taskList}`;
     })

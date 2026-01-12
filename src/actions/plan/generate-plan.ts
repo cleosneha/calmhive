@@ -107,6 +107,7 @@ export async function generatePlan(): Promise<
             timeRange: task.timeRange,
             activity: task.activity,
             notes: task.notes || null,
+            personalNotes: "",
           })),
         },
       },
@@ -118,11 +119,12 @@ export async function generatePlan(): Promise<
     console.log("✅ Plan created successfully:", plan.id);
 
     // 8. Embed plan in vector store
+    // Use the DB tasks (which now have IDs) instead of LLM tasks
     const { embedPlan } = await import("./process-embedding");
     const embedResult = await embedPlan(
       user.id,
       plan.id,
-      result.generatedTasks,
+      plan.tasks,
       onboarding.daysOff
     );
 

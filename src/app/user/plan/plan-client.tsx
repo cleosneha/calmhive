@@ -1,6 +1,8 @@
 "use client";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import PlanTable from "@/components/plan/plan-table";
+import { fetchUserPlan } from "@/fetchers/plan";
 
 interface Task {
   id: number;
@@ -28,7 +30,19 @@ interface Props {
 
 // Status icons and labels removed; only activity name is displayed in table cells.
 
-export default function PlanClient({ plan }: Props) {
+export default function PlanClient({ plan: initialPlan }: Props) {
+  const [plan, setPlan] = useState<Plan>(initialPlan);
+
+  const handleRefresh = async () => {
+    try {
+      const res = await fetchUserPlan();
+      if (res.status === "success" && res.data.plan) {
+        setPlan(res.data.plan);
+      }
+    } catch (error) {
+      console.error("Failed to refresh plan:", error);
+    }
+  };
   return (
     <div className="min-h-screen p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
@@ -83,7 +97,11 @@ export default function PlanClient({ plan }: Props) {
 
         <div className=" shadow-lg overflow-auto rounded-lg border border-slate-200">
           {/* Render PlanTable component */}
-          <PlanTable plan={plan} onEdit={(id) => alert(`Edit task ${id}`)} />
+          <PlanTable
+            plan={plan}
+            onEdit={(id) => alert(`Edit task ${id}`)}
+            onRefresh={handleRefresh}
+          />
         </div>
       </div>
     </div>
