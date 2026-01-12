@@ -15,7 +15,7 @@ export function formatHoursHuman(hours: number): string {
   const h = Math.floor(totalMins / 60);
   const m = totalMins % 60;
 
-  if (h > 0 && m > 0) return `${h}h ${m}m`;
-  if (h > 0) return `${h}h`;
-  return `${m}m`;
+  if (h > 0 && m > 0) return `${h} hr ${m} mins`;
+  if (h > 0) return `${h} hr`;
+  return `${m} mins`;
 }

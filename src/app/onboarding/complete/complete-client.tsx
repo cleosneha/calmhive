@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
 import type { GoalSpecificInfo } from "@/types/onboarding";
+import { formatHoursHuman } from "@/utils/formatting";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -154,9 +155,19 @@ export default function OnboardingCompleteClient({ responses }: Props) {
             const answerAny = responses[key];
             if (!answerAny) return null;
 
-            const answer = Array.isArray(answerAny)
+            // Normalize answer to string
+            let answer = Array.isArray(answerAny)
               ? answerAny.join(", ")
               : String(answerAny);
+
+            // Special formatting: if the question is timeAvailability, parse minutes and show human string
+            if (key === "timeAvailability") {
+              const mins = Number(answer);
+              if (!Number.isNaN(mins)) {
+                // formatHoursHuman expects hours (float), so convert minutes -> hours
+                answer = formatHoursHuman(mins / 60);
+              }
+            }
 
             const fullAnswer = answer;
 
