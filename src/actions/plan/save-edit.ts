@@ -264,11 +264,16 @@ export async function saveTaskEdit(
             if (vectorIdsToDelete.length > 0) {
               console.log(
                 "📍 Found existing documents, deleting count:",
-                vectorIdsToDelete.length
+                vectorIdsToDelete.length,
+                "IDs:",
+                vectorIdsToDelete
               );
-              await pineconeIndex
+              const deleteResult = await pineconeIndex
                 .namespace("plans")
                 .deleteMany(vectorIdsToDelete);
+              console.log("🗑️ Delete result:", deleteResult);
+            } else {
+              console.log("ℹ️ No existing documents found to delete");
             }
           } catch (queryError) {
             console.warn("⚠️ Query for existing vectors failed:", queryError);
@@ -315,6 +320,22 @@ export async function saveTaskEdit(
               session.user.id,
               "Result:",
               upsertResult
+            );
+
+            // Verify the upsert by fetching the document back
+            console.log("🔍 Verifying upsert by fetching document...");
+            const verifyResults = await pineconeIndex.namespace("plans").query({
+              vector: new Array(1024).fill(0),
+              filter: { userId: { $eq: session.user.id } },
+              topK: 1,
+              includeMetadata: true,
+            });
+            console.log(
+              "✅ Verification: Found documents:",
+              verifyResults.matches.length,
+              verifyResults.matches.length > 0
+                ? `ID: ${verifyResults.matches[0].id}`
+                : ""
             );
           } catch (upsertError) {
             console.error("❌ Upsert operation failed:", upsertError);
