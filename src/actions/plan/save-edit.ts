@@ -169,235 +169,165 @@ export async function saveTaskEdit(
 
     // Update vector stores (Pinecone for prod, Qdrant for dev)
     try {
-      const store = await vectorStore;
+      const isProd = process.env.NODE_ENV === "production";
 
-      // Search for existing user document using similarity search
-      // Search by userId to find the user's plan document
-      const searchQuery = `Weekly Plan ${session.user.id}`;
-      const searchResults = await store.similaritySearch(searchQuery, 1);
+      // Fetch all tasks for this plan to reconstruct the full document
+      const allTasks = await prisma.task.findMany({
+        where: { planId: existingTask.planId },
+        select: {
+          id: true,
+          day: true,
+          timeRange: true,
+          activity: true,
+          notes: true,
+          personalNotes: true,
+        },
+      });
 
-      // If we found a user document, update it with all current tasks
-      if (searchResults && searchResults.length > 0) {
-        // Fetch all tasks for this plan to reconstruct the full document
-        const allTasks = await prisma.task.findMany({
-          where: { planId: existingTask.planId },
-          select: {
-            id: true,
-            day: true,
-            timeRange: true,
-            activity: true,
-            notes: true,
-            personalNotes: true,
-          },
+      // Get plan data for days off
+      const plan = await prisma.plan.findUnique({
+        where: { id: existingTask.planId },
+        select: { daysOff: true },
+      });
+
+      if (allTasks.length > 0 && plan) {
+        // Format updated plan content with all tasks including task IDs
+        const tasksByDay: Record<string, typeof allTasks> = {};
+        allTasks.forEach((task) => {
+          if (!tasksByDay[task.day]) {
+            tasksByDay[task.day] = [];
+          }
+          tasksByDay[task.day].push(task);
         });
 
-        // Get plan data for days off
-        const plan = await prisma.plan.findUnique({
-          where: { id: existingTask.planId },
-          select: { daysOff: true },
-        });
+        const days = [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday",
+        ];
 
-        if (allTasks.length > 0 && plan) {
-          // Format updated plan content with all tasks including task IDs
-          const tasksByDay: Record<string, typeof allTasks> = {};
-          allTasks.forEach((task) => {
-            if (!tasksByDay[task.day]) {
-              tasksByDay[task.day] = [];
-            }
-            tasksByDay[task.day].push(task);
+        const planDescription = days
+          .filter((day) => tasksByDay[day])
+          .map((day) => {
+            const dayTasks = tasksByDay[day];
+            const taskList = dayTasks
+              .map(
+                (task) =>
+                  `[TaskID:${task.id}] ${task.timeRange}: ${task.activity}${
+                    task.notes ? ` - ${task.notes}` : ""
+                  }${
+                    task.personalNotes
+                      ? ` (Personal: ${task.personalNotes})`
+                      : ""
+                  }`
+              )
+              .join("; ");
+            return `${day}: ${taskList}`;
+          })
+          .join(". ");
+
+        const daysOffText =
+          plan.daysOff.length > 0
+            ? ` Days off: ${plan.daysOff.join(", ")}.`
+            : "";
+
+        const updatedContent = `Weekly Plan: ${planDescription}.${daysOffText}`;
+
+        if (isProd) {
+          // Pinecone: Query by userId, delete old if exists, then upsert new
+          const pinecone = new (
+            await import("@pinecone-database/pinecone")
+          ).Pinecone({
+            apiKey: process.env.PINECONE_API_KEY!,
           });
+          const pineconeIndex = pinecone.Index(
+            process.env.PINECONE_INDEX_NAME || "calmhive-embeddings"
+          );
 
-          const days = [
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday",
-          ];
+          console.log("🔍 Checking for existing plan document in Pinecone...");
 
-          const planDescription = days
-            .filter((day) => tasksByDay[day])
-            .map((day) => {
-              const dayTasks = tasksByDay[day];
-              const taskList = dayTasks
-                .map(
-                  (task) =>
-                    `[TaskID:${task.id}] ${task.timeRange}: ${task.activity}${
-                      task.notes ? ` - ${task.notes}` : ""
-                    }${
-                      task.personalNotes
-                        ? ` (Personal: ${task.personalNotes})`
-                        : ""
-                    }`
-                )
-                .join("; ");
-              return `${day}: ${taskList}`;
-            })
-            .join(". ");
-
-          const daysOffText =
-            plan.daysOff.length > 0
-              ? ` Days off: ${plan.daysOff.join(", ")}.`
-              : "";
-
-          const updatedContent = `Weekly Plan: ${planDescription}.${daysOffText}`;
-
-          // Delete the old document using the stable point ID
-          const isProd = process.env.NODE_ENV === "production";
-          const pointId = generatePlanPointId(session.user.id);
-
-          console.log("🔍 UPDATE ATTEMPT:");
-          console.log("  isProd:", isProd);
-          console.log("  userId:", session.user.id);
-          console.log("  planId:", String(existingTask.planId));
-          console.log("  Stable Point ID:", pointId);
-
+          // Query for vectors with matching userId metadata
           try {
-            if (isProd) {
-              console.log("📌 Using Pinecone deletion...");
-              const pinecone = new (
-                await import("@pinecone-database/pinecone")
-              ).Pinecone({
-                apiKey: process.env.PINECONE_API_KEY!,
-              });
-              const pineconeIndex = pinecone.Index(
-                process.env.PINECONE_INDEX_NAME || "calmhive-embeddings"
-              );
+            const queryResults = await pineconeIndex.namespace("plans").query({
+              vector: new Array(1536).fill(0), // dummy vector
+              filter: { userId: { $eq: session.user.id } },
+              topK: 100,
+              includeMetadata: true,
+            });
 
-              // Query for vectors with matching userId metadata
-              const queryResults = await pineconeIndex
+            // Delete found vectors by their actual Pinecone IDs
+            const vectorIdsToDelete = queryResults.matches.map((m) => m.id);
+            if (vectorIdsToDelete.length > 0) {
+              console.log(
+                "📍 Found existing documents, deleting count:",
+                vectorIdsToDelete.length
+              );
+              await pineconeIndex
                 .namespace("plans")
-                .query({
-                  vector: new Array(1536).fill(0), // dummy vector for metadata query
-                  filter: { userId: { $eq: session.user.id } },
-                  topK: 100,
-                  includeMetadata: true,
-                });
-
-              // Delete found vectors by their actual Pinecone IDs
-              const vectorIdsToDelete = queryResults.matches.map((m) => m.id);
-              if (vectorIdsToDelete.length > 0) {
-                console.log(
-                  "📍 Deleting Pinecone vectors by metadata (count):",
-                  vectorIdsToDelete.length
-                );
-                await pineconeIndex
-                  .namespace("plans")
-                  .deleteMany(vectorIdsToDelete);
-              }
-
-              console.log(
-                "✅ Deleted old plan documents from Pinecone for userId:",
-                session.user.id
-              );
-            } else {
-              console.log("📌 Using Qdrant deletion...");
-              // Qdrant: delete by stable point ID
-              const qdrantClient = (await import("@/ai/config/qdrant")).default;
-
-              console.log("📍 Deleting Qdrant point ID:", pointId);
-
-              const deleteResult = await qdrantClient.delete("calmhive", {
-                points: [pointId],
-              });
-
-              console.log(
-                "✅ Qdrant delete result:",
-                JSON.stringify(deleteResult)
-              );
-              console.log(
-                "✅ Deleted old plan document from Qdrant for userId:",
-                session.user.id
-              );
+                .deleteMany(vectorIdsToDelete);
             }
-          } catch (deleteError) {
-            console.error(
-              "❌ Delete operation failed with error:",
-              deleteError
-            );
-            console.warn(
-              "⚠️ Could not delete old document, will proceed with adding new one"
-            );
+          } catch (queryError) {
+            console.warn("⚠️ Query for existing vectors failed:", queryError);
           }
 
-          console.log("📝 Now adding new document with same Point ID...");
-          console.log("🔍 New document metadata:", {
-            userId: session.user.id,
-            planId: String(existingTask.planId),
-            type: "plan",
-          });
+          // Generate embeddings and upsert new document
+          const embeddingModel = (await import("@/ai/config/embedding"))
+            .default;
+          const vector = await embeddingModel.embedQuery(updatedContent);
 
-          // Add the updated document
-          if (isProd) {
-            // Pinecone: use native API to upsert with proper metadata
-            const pinecone = new (
-              await import("@pinecone-database/pinecone")
-            ).Pinecone({
-              apiKey: process.env.PINECONE_API_KEY!,
-            });
-            const pineconeIndex = pinecone.Index(
-              process.env.PINECONE_INDEX_NAME || "calmhive-embeddings"
-            );
+          console.log("📝 Upserting new plan document to Pinecone...");
 
-            // Generate embeddings using LangChain
-            const embeddingModel = (await import("@/ai/config/embedding"))
-              .default;
-            const vector = await embeddingModel.embedQuery(updatedContent);
+          await pineconeIndex.namespace("plans").upsert([
+            {
+              id: `user-${session.user.id}`, // Consistent ID for this user
+              values: vector,
+              metadata: {
+                userId: session.user.id,
+                planId: String(existingTask.planId),
+                type: "plan",
+                updatedAt: new Date().toISOString(),
+                text: updatedContent,
+              },
+            },
+          ]);
 
-            // Upsert with userId as filter for future queries
-            await pineconeIndex.namespace("plans").upsert([
+          console.log(
+            "✅ Plan document upserted in Pinecone for userId:",
+            session.user.id
+          );
+        } else {
+          // Qdrant: Use stable UUID and upsert
+          const store = await vectorStore;
+          const pointId = generatePlanPointId(session.user.id);
+
+          console.log("📝 Upserting plan document to Qdrant...");
+
+          await store.addDocuments(
+            [
               {
-                id: `user-${session.user.id}`, // Use consistent ID
-                values: vector,
+                pageContent: updatedContent,
                 metadata: {
                   userId: session.user.id,
                   planId: String(existingTask.planId),
                   type: "plan",
                   updatedAt: new Date().toISOString(),
-                  text: updatedContent,
                 },
               },
-            ]);
-
-            console.log(
-              "✅ Document upserted in Pinecone with ID: user-" +
-                session.user.id
-            );
-          } else {
-            // Qdrant: add document with stable UUID v5
-            await store.addDocuments(
-              [
-                {
-                  pageContent: updatedContent,
-                  metadata: {
-                    userId: session.user.id,
-                    planId: String(existingTask.planId),
-                    type: "plan",
-                    updatedAt: new Date().toISOString(),
-                  },
-                },
-              ],
-              { ids: [pointId] }
-            );
-
-            console.log(
-              "✅ Document updated in Qdrant with Point ID:",
-              pointId
-            );
-          }
+            ],
+            { ids: [pointId] }
+          );
 
           console.log(
-            "✅ User plan document updated in vector store for taskId:",
-            updatedTask.id
+            "✅ Plan document upserted in Qdrant for userId:",
+            session.user.id
           );
         }
       } else {
-        console.warn(
-          "⚠️ No existing user plan document found to update for userId:",
-          session.user.id
-        );
+        console.warn("⚠️ No tasks found to embed");
       }
     } catch (vectorError) {
       // Log vector store error but don't fail the entire operation
