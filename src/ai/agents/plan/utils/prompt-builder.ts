@@ -45,9 +45,12 @@ export function buildPlanGenerationPrompt(data: OnboardingData): string {
 6. Break down activities into specific time blocks (e.g., "09:00-10:00")
 7. Ensure time blocks are realistic and don't overlap
 8. Include variety and balance throughout the week
-9. Add helpful notes for each activity when appropriate
-10. Minimum 2-3 activities per day, but DO NOT exceed ${timeAvailabilityHours} hours per day
-11. All activity start times MUST be within the energetic time window
+9. For every activity, include a concise, actionable 'notes' string formatted as a markdown list (use line breaks and dashes). Include 2–3 short practical steps or cues — this applies to all activity types (physical, mindfulness, journaling, social, etc.). Examples:
+   - "Intense HIIT Workout" → "- warm-up: leg swings, high knees\n- main: squats, side runs\n- cool-down: stretching"
+   - "Evening journaling" → "- 5-min freewrite\n- list 3 wins\n- set one intention"
+10. Add helpful notes for each activity when appropriate
+11. Minimum 2-3 activities per day, but DO NOT exceed ${timeAvailabilityHours} hours per day
+12. All activity start times MUST be within the energetic time window
 
 **Output Format (JSON):**
 Return a JSON array of tasks. Each task must have:
