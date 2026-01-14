@@ -81,6 +81,30 @@ body {
   font-family: "Poppins", sans-serif;
 }
 
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ch-offwhite);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ch-sage-dark);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ch-sage-light);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-color: var(--ch-sage-dark) var(--ch-offwhite);
+  scrollbar-width: thin;
+}
+
 /* Utility classes for CalmHive theme (optional, for easy use) */
 .ch-bg-card {
   background: var(--ch-taupe);
