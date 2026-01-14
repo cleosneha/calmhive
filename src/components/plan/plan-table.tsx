@@ -96,7 +96,7 @@ export default function PlanTable({ plan, onEdit, onRefresh }: Props) {
   };
 
   return (
-    <div className="shadow-lg overflow-hidden">
+    <div className="shadow-lg overflow-hidden hidden md:block">
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>

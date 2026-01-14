@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import PlanTable from "@/components/plan/plan-table";
+import PlanTableMobile from "@/components/plan/plan-table-mobile";
 import PlanChatbot from "@/components/plan/plan-chatbot";
 import { fetchUserPlan } from "@/fetchers/plan";
 import { Button } from "@/components/ui/button";
@@ -113,9 +114,18 @@ export default function PlanClient({ plan: initialPlan }: Props) {
           </Button>
         </div>
 
-        <div className="shadow-lg overflow-auto rounded-lg border border-slate-200">
-          {/* Render PlanTable component */}
+        <div className="shadow-lg overflow-auto rounded-lg border border-slate-200 hidden md:block">
+          {/* Desktop Plan Table */}
           <PlanTable
+            plan={plan}
+            onEdit={(id) => alert(`Edit task ${id}`)}
+            onRefresh={handleRefresh}
+          />
+        </div>
+
+        {/* Mobile Plan Table */}
+        <div className="md:hidden">
+          <PlanTableMobile
             plan={plan}
             onEdit={(id) => alert(`Edit task ${id}`)}
             onRefresh={handleRefresh}
