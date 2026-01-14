@@ -22,13 +22,6 @@ import {
   FieldError,
   FieldGroup,
 } from "@/components/ui/field";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -46,7 +39,6 @@ const taskEditSchema = z.object({
   activity: z.string().min(1, "Activity is required"),
   timeRange: z.string().min(1, "Time range is required"),
   notes: z.string().optional().nullable(),
-  status: z.enum(["pending", "done", "skipped", "partial"]),
   selfNotes: z.string().optional().nullable(),
 });
 
@@ -102,16 +94,12 @@ export default function TaskEditDialog({
           activity: task.activity || "",
           timeRange: task.timeRange || "",
           notes: task.notes || "",
-          status:
-            (task.status as "pending" | "done" | "skipped" | "partial") ||
-            "pending",
           selfNotes: "",
         }
       : {
           activity: "",
           timeRange: "",
           notes: "",
-          status: "pending",
           selfNotes: "",
         },
   });
@@ -126,7 +114,7 @@ export default function TaskEditDialog({
         day: task.day,
         timeRange: data.timeRange,
         activity: data.activity,
-        status: data.status as "pending" | "done" | "skipped" | "partial",
+        status: task.status as "pending" | "done" | "skipped" | "partial",
         notes: data.notes || null,
         personalNotes: data.selfNotes || null,
       };
@@ -321,39 +309,6 @@ export default function TaskEditDialog({
                   errors={
                     form.formState.errors.notes
                       ? [form.formState.errors.notes]
-                      : undefined
-                  }
-                />
-              </FieldContent>
-            </Field>
-
-            {/* Status Dropdown */}
-            <Field>
-              <FieldLabel>Status</FieldLabel>
-              <FieldContent>
-                <Select
-                  value={form.watch("status")}
-                  onValueChange={(value) =>
-                    form.setValue(
-                      "status",
-                      value as "pending" | "done" | "skipped" | "partial"
-                    )
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="done">Done</SelectItem>
-                    <SelectItem value="partial">Partially Done</SelectItem>
-                    <SelectItem value="skipped">Skipped</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FieldError
-                  errors={
-                    form.formState.errors.status
-                      ? [form.formState.errors.status]
                       : undefined
                   }
                 />

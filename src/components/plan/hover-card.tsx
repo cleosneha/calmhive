@@ -79,7 +79,6 @@ export default function TaskHoverCard({
   activity,
   notes,
   status,
-  onEdit,
   onTaskSave,
   onTaskSaved,
   children,
@@ -197,7 +196,7 @@ export default function TaskHoverCard({
   return (
     <div
       ref={triggerRef}
-      className="relative"
+      className="relative inline-block"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >

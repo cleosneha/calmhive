@@ -1,8 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import PlanTable from "@/components/plan/plan-table";
+import PlanChatbot from "@/components/plan/plan-chatbot";
 import { fetchUserPlan } from "@/fetchers/plan";
+import { Button } from "@/components/ui/button";
 
 interface Task {
   id: number;
@@ -43,6 +45,15 @@ export default function PlanClient({ plan: initialPlan }: Props) {
       console.error("Failed to refresh plan:", error);
     }
   };
+  // Ref for chatbot section
+  const chatbotRef = useRef<HTMLDivElement>(null);
+
+  const handleAskEditPlan = () => {
+    if (chatbotRef.current) {
+      chatbotRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <div className="min-h-screen p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
@@ -95,13 +106,25 @@ export default function PlanClient({ plan: initialPlan }: Props) {
           </div>
         </div>
 
-        <div className=" shadow-lg overflow-auto rounded-lg border border-slate-200">
+        {/* Ask/Edit Plan Button */}
+        <div className="mb-4 flex justify-end">
+          <Button type="button" variant="white" onClick={handleAskEditPlan}>
+            Ask/Edit Plan
+          </Button>
+        </div>
+
+        <div className="shadow-lg overflow-auto rounded-lg border border-slate-200">
           {/* Render PlanTable component */}
           <PlanTable
             plan={plan}
             onEdit={(id) => alert(`Edit task ${id}`)}
             onRefresh={handleRefresh}
           />
+        </div>
+
+        {/* Plan Chatbot UI below the table */}
+        <div ref={chatbotRef} className="mt-8">
+          <PlanChatbot />
         </div>
       </div>
     </div>
