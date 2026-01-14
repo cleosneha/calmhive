@@ -16,6 +16,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { updateTaskStatus } from "@/actions/plan/update-task-status";
+import TaskEditDialog from "@/components/plan/task-edit";
 import { toast } from "sonner";
 import { FiEdit2 } from "react-icons/fi";
 
@@ -45,8 +46,9 @@ interface Props {
   onRefresh?: () => Promise<void>;
 }
 
-export default function PlanTableMobile({ plan, onEdit, onRefresh }: Props) {
+export default function PlanTableMobile({ plan, onRefresh }: Props) {
   const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
 
   // Sort tasks by day and time
   const sortedTasks = plan.tasks
@@ -117,7 +119,7 @@ export default function PlanTableMobile({ plan, onEdit, onRefresh }: Props) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 px-4">
       <Accordion type="single" collapsible className="w-full">
         {dayOrder.map((day) => {
           const tasks = grouped[day];
@@ -244,16 +246,25 @@ export default function PlanTableMobile({ plan, onEdit, onRefresh }: Props) {
                             {/* Edit Button */}
                             <button
                               type="button"
-                              onClick={() =>
-                                onEdit
-                                  ? onEdit(task.id)
-                                  : window.alert(`Edit task ${task.id}`)
-                              }
+                              onClick={() => setEditingTaskId(task.id)}
                               className="w-full px-2.5 py-1.5 text-xs font-medium border border-slate-300 rounded hover:bg-slate-100 transition-colors flex items-center justify-center gap-1.5"
                             >
                               <FiEdit2 className="w-3 h-3" />
                               Edit
                             </button>
+
+                            {/* Task Edit Dialog */}
+                            <TaskEditDialog
+                              open={editingTaskId === task.id}
+                              onOpenChange={(open) => {
+                                if (!open) setEditingTaskId(null);
+                              }}
+                              task={task}
+                              onSave={async (updatedTask) => {
+                                console.log("Task saved:", updatedTask);
+                              }}
+                              onTaskSaved={onRefresh}
+                            />
                           </div>
                         </AccordionContent>
                       </AccordionItem>
