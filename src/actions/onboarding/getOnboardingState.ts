@@ -1,7 +1,6 @@
 "use server";
 
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { getCurrentUser } from "@/actions/auth";
 import { compileOnboardingGraph } from "@/ai/agents/onboarding";
 import { BaseMessage } from "@langchain/core/messages";
 
@@ -10,13 +9,13 @@ let graphInstance: Awaited<ReturnType<typeof compileOnboardingGraph>> | null =
 
 // Retrieve the current onboarding state without modifying it
 export async function getOnboardingState() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Unauthorized");
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Unauthorized");
 
   if (!graphInstance) graphInstance = await compileOnboardingGraph();
 
   const state = await graphInstance.getState({
-    configurable: { thread_id: session.user.id },
+    configurable: { thread_id: user.id },
   });
 
   if (!state?.values) return null;

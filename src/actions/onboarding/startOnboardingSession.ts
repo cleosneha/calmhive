@@ -1,7 +1,6 @@
 "use server";
 
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { getCurrentUser } from "@/actions/auth";
 import { compileOnboardingGraph } from "@/ai/agents/onboarding";
 import { BaseMessage } from "@langchain/core/messages";
 import { handleAIError } from "@/utils/ai-error-handler";
@@ -26,15 +25,15 @@ export async function startOnboardingSession(): Promise<
   | ApiError
 > {
   try {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user) throw new Error("Unauthorized");
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Unauthorized");
 
     if (!graphInstance) graphInstance = await compileOnboardingGraph();
 
     // Always invoke to get fresh or existing state
     const result = await graphInstance.invoke(
-      { userId: session.user.id, userName: session.user.name || "there" },
-      { configurable: { thread_id: session.user.id } }
+      { userId: user.id, userName: user.name || "there" },
+      { configurable: { thread_id: user.id } }
     );
 
     // Map messages from graph
@@ -55,7 +54,7 @@ export async function startOnboardingSession(): Promise<
       waitingForSafetyAck: result.waitingForSafetyAck,
       currentGoalOptions: result.currentGoalOptions || [],
       currentGoalSpecificQuestion: result.currentGoalSpecificQuestion || "",
-      firstName: (session.user.name || "there").split(" ")[0],
+      firstName: (user.name || "there").split(" ")[0],
       selectedDays: result.selectedDays || [],
       isMultiSelectMode: result.isMultiSelectMode || false,
     };

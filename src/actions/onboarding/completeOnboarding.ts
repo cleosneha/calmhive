@@ -1,7 +1,6 @@
 "use server";
 
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { getCurrentUser } from "@/actions/auth";
 import db from "@/lib/db";
 import { createCheckpointer } from "@/ai/agents/onboarding";
 import type { Prisma } from "@prisma/client";
@@ -12,13 +11,13 @@ let graphInstance: Awaited<ReturnType<typeof compileOnboardingGraph>> | null =
 
 // Complete the onboarding and store responses in the database
 export async function completeOnboarding() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Unauthorized");
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Unauthorized");
 
   if (!graphInstance) graphInstance = await compileOnboardingGraph();
 
   const state = await graphInstance.getState({
-    configurable: { thread_id: session.user.id },
+    configurable: { thread_id: user.id },
   });
 
   if (!state?.values?.responses) {
@@ -150,14 +149,14 @@ export async function completeOnboarding() {
   }
 
   await db.onboarding.upsert({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
     update: {
       ...onboardingData,
       // For list fields, Prisma expects the set syntax on update
       daysOff: { set: parsedDaysOff },
     },
     create: {
-      userId: session.user.id,
+      userId: user.id,
       ...onboardingData,
       // For create, we can directly pass the array
       daysOff: parsedDaysOff,
@@ -165,29 +164,22 @@ export async function completeOnboarding() {
   });
 
   await db.user.update({
-    where: { id: session.user.id },
+    where: { id: user.id },
     data: { onboarded: true },
   });
 
   try {
-    await db.session.update({
-      where: { token: session.session.token },
-      data: { updatedAt: new Date() },
-    });
-  } catch {}
-
-  try {
     const checkpointer = await createCheckpointer();
-    await checkpointer.deleteThread(session.user.id);
+    await checkpointer.deleteThread(user.id);
     await db.$transaction([
       db.checkpoint.deleteMany({
-        where: { threadId: session.user.id },
+        where: { threadId: user.id },
       }),
       db.checkpointBlob.deleteMany({
-        where: { threadId: session.user.id },
+        where: { threadId: user.id },
       }),
       db.checkpointWrite.deleteMany({
-        where: { threadId: session.user.id },
+        where: { threadId: user.id },
       }),
     ]);
   } catch {}

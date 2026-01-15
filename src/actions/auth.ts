@@ -12,24 +12,11 @@ import { apiError, getErrorMessage } from "@/utils/api-error";
  * @returns User session or null if not authenticated
  */
 export async function getSession() {
-  const headersList = await headers();
   const session = await auth.api.getSession({
-    headers: headersList,
+    headers: await headers(),
   });
 
   return session;
-}
-
-/**
- * Sign out the current user
- */
-export async function signOutAction() {
-  const headersList = await headers();
-  await auth.api.signOut({
-    headers: headersList,
-  });
-
-  redirect("/login");
 }
 
 /**
@@ -43,89 +30,6 @@ export async function getCurrentUser() {
   }
 
   return session.user;
-}
-
-/**
- * Check if user is authenticated
- */
-export async function isAuthenticated() {
-  const session = await getSession();
-  return !!session?.user;
-}
-
-/**
- * Get user by ID from database
- */
-export async function getUserById(userId: string) {
-  try {
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        onboarded: true,
-        emailVerified: true,
-        createdAt: true,
-      },
-    });
-
-    return user;
-  } catch (error) {
-    console.error("Error fetching user:", error);
-    return null;
-  }
-}
-
-/**
- * Update user profile
- */
-export async function updateUserProfile(
-  userId: string,
-  data: { name?: string }
-) {
-  try {
-    const user = await db.user.update({
-      where: { id: userId },
-      data,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-      },
-    });
-
-    return apiResponse(user, "Profile updated successfully");
-  } catch (error) {
-    console.error("Error updating user:", error);
-    return apiError("Failed to update user profile");
-  }
-}
-
-/**
- * Mark user as onboarded
- * After onboarding is complete, this updates the user record
- * The session will automatically refresh with the new onboarded status
- * due to the callback in src/lib/auth.ts
- */
-export async function completeOnboarding(userId: string) {
-  try {
-    const user = await db.user.update({
-      where: { id: userId },
-      data: { onboarded: true },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        onboarded: true,
-      },
-    });
-
-    return apiResponse(user, "Onboarding completed successfully");
-  } catch (error) {
-    console.error("Error completing onboarding:", error);
-    return apiError("Failed to complete onboarding");
-  }
 }
 
 /**
@@ -179,4 +83,125 @@ export async function deleteUserAccount() {
     console.error("Error deleting user account:", error);
     return apiError(getErrorMessage(error));
   }
+}
+
+/**
+ * Get authentication state - single source of truth
+ * This function is called once per layout to get all auth info
+ */
+export async function getAuthState() {
+  const session = await getSession();
+  const user = session?.user;
+
+  return {
+    user,
+    session,
+    isLoggedIn: !!user,
+    isVerified: user?.emailVerified ?? false,
+    isOnboarded: user?.onboarded ?? false,
+  };
+}
+
+/**
+ * Require authentication - redirects to login if not authenticated
+ * Use this in pages/layouts that require a logged-in user
+ */
+export async function requireAuth() {
+  const { session, user } = await getAuthState();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  return { session, user };
+}
+
+/**
+ * Require verified email - redirects to verify-email if not verified
+ * Use this in pages/layouts that require email verification
+ */
+export async function requireVerifiedEmail() {
+  const { user, isVerified } = await getAuthState();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  if (!isVerified) {
+    redirect("/verify-email");
+  }
+
+  return user;
+}
+
+/**
+ * Require completed onboarding - redirects to onboarding if not completed
+ * Use this in protected pages/layouts that require full onboarding
+ */
+export async function requireOnboarding() {
+  const { user, isVerified, isOnboarded } = await getAuthState();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  if (!isVerified) {
+    redirect("/verify-email");
+  }
+
+  if (!isOnboarded) {
+    redirect("/onboarding");
+  }
+
+  return user;
+}
+
+/**
+ * Redirect if authenticated - for login/register pages
+ * Redirects authenticated users away from auth pages to appropriate destination
+ */
+export async function redirectIfAuthenticated() {
+  const { isLoggedIn, isVerified, isOnboarded } = await getAuthState();
+
+  if (!isLoggedIn) {
+    return; // Not logged in, stay on page
+  }
+
+  if (!isVerified) {
+    redirect("/verify-email");
+  }
+
+  if (!isOnboarded) {
+    redirect("/onboarding");
+  }
+
+  // Fully authenticated and onboarded
+  redirect("/user");
+}
+
+/**
+ * Redirect if onboarded - for onboarding pages
+ * Redirects users who have completed onboarding to dashboard
+ */
+export async function redirectIfOnboarded() {
+  const { user, isOnboarded } = await getAuthState();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  if (isOnboarded) {
+    redirect("/user");
+  }
+
+  return user;
+}
+
+/**
+ * Check if onboarding is complete
+ * Returns boolean without redirecting
+ */
+export async function isOnboardingComplete() {
+  const { isOnboarded } = await getAuthState();
+  return isOnboarded;
 }

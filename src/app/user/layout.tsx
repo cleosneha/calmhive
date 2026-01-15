@@ -1,10 +1,14 @@
 import Sidebar from "@/components/shared/sidebar/sidebar";
 import HamburgerHeader from "@/components/shared/hamburger-header/hamburger-header";
 import type { AuthenticatedLayoutProps } from "@/types";
+import { requireOnboarding } from "@/actions/auth";
 
-export default function AuthenticatedLayout({
+export default async function AuthenticatedLayout({
   children,
 }: AuthenticatedLayoutProps) {
+  // Ensure user is fully authenticated and onboarded
+  await requireOnboarding();
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Desktop Sidebar - hidden on small screens */}

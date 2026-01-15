@@ -1,20 +1,13 @@
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { fetchUserPlan } from "@/fetchers/plan";
 import PlanClient from "./plan-client";
 import NoPlanUI from "./no-plan-ui";
 import Loading from "@/app/loading";
-import { getCurrentUser } from "@/actions/auth";
 
 async function PlanContent() {
   const res = await fetchUserPlan();
 
-  // Check for authentication errors
-  if (res.status === "error" && res.code === "UNAUTHORIZED") {
-    redirect("/login");
-  }
-
-  // Check for other errors
+  // Check for errors
   if (res.status === "error") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
@@ -39,12 +32,7 @@ async function PlanContent() {
 }
 
 export default async function PlanPage() {
-  // Verify user is authenticated
-  const user = await getCurrentUser();
-  if (!user) {
-    redirect("/login");
-  }
-
+  // Layout already handles authentication with requireOnboarding()
   return (
     <Suspense fallback={<Loading />}>
       <PlanContent />

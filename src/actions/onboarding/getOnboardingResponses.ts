@@ -1,17 +1,15 @@
 "use server";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-
+import { getCurrentUser } from "@/actions/auth";
 import db from "@/lib/db";
 import type { GoalSpecificInfo, OnboardingResponses } from "@/types/onboarding";
 
 // Retrieve the current onboarding responses
 export async function getOnboardingResponses(): Promise<OnboardingResponses> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Unauthorized");
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Unauthorized");
 
   const onboarding = await db.onboarding.findUnique({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
   });
 
   if (!onboarding) {

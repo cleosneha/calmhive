@@ -1,9 +1,8 @@
 "use server";
 
-import { headers } from "next/headers";
+import { getCurrentUser } from "@/actions/auth";
 import prisma from "@/lib/db";
 import vectorStore from "@/ai/config/vector-store";
-import { auth } from "@/lib/auth";
 import { v5 as uuidv5 } from "uuid";
 
 const PLAN_NAMESPACE = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
@@ -90,9 +89,9 @@ export async function saveTaskEdit(
   taskInput: TaskUpdateInput
 ): Promise<SaveEditResponse> {
   try {
-    // Get current session
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user?.id) {
+    // Get current user
+    const user = await getCurrentUser();
+    if (!user?.id) {
       return {
         success: false,
         message: "Unauthorized - Please log in",
@@ -113,7 +112,7 @@ export async function saveTaskEdit(
     }
 
     // Verify user owns this plan
-    if (existingTask.plan.userId !== session.user.id) {
+    if (existingTask.plan.userId !== user.id) {
       return {
         success: false,
         message: "Unauthorized - You don't own this plan",
@@ -254,7 +253,7 @@ export async function saveTaskEdit(
           try {
             const queryResults = await pineconeIndex.namespace("plans").query({
               vector: new Array(1024).fill(0), // dummy vector (matches Pinecone index dimension)
-              filter: { userId: { $eq: session.user.id } },
+              filter: { userId: { $eq: user.id } },
               topK: 100,
               includeMetadata: true,
             });
@@ -297,16 +296,16 @@ export async function saveTaskEdit(
             }
 
             console.log("📝 Upserting new plan document to Pinecone...");
-            console.log("  Document ID: user-" + session.user.id);
+            console.log("  Document ID: user-" + user.id);
             console.log("  Vector dimensions:", vector.length || "unknown");
             console.log("  Content length:", updatedContent.length);
 
             const upsertResult = await pineconeIndex.namespace("plans").upsert([
               {
-                id: `user-${session.user.id}`, // Consistent ID for this user
+                id: `user-${user.id}`, // Consistent ID for this user
                 values: vector,
                 metadata: {
-                  userId: session.user.id,
+                  userId: user.id,
                   planId: String(existingTask.planId),
                   type: "plan",
                   updatedAt: new Date().toISOString(),
@@ -317,7 +316,7 @@ export async function saveTaskEdit(
 
             console.log(
               "✅ Plan document upserted in Pinecone for userId:",
-              session.user.id,
+              user.id,
               "Result:",
               upsertResult
             );
@@ -326,7 +325,7 @@ export async function saveTaskEdit(
             console.log("🔍 Verifying upsert by fetching document...");
             const verifyResults = await pineconeIndex.namespace("plans").query({
               vector: new Array(1024).fill(0),
-              filter: { userId: { $eq: session.user.id } },
+              filter: { userId: { $eq: user.id } },
               topK: 1,
               includeMetadata: true,
             });
@@ -344,7 +343,7 @@ export async function saveTaskEdit(
         } else {
           // Qdrant: Use stable UUID and upsert
           const store = await vectorStore;
-          const pointId = generatePlanPointId(session.user.id);
+          const pointId = generatePlanPointId(user.id);
 
           console.log("📝 Upserting plan document to Qdrant...");
 
@@ -353,7 +352,7 @@ export async function saveTaskEdit(
               {
                 pageContent: updatedContent,
                 metadata: {
-                  userId: session.user.id,
+                  userId: user.id,
                   planId: String(existingTask.planId),
                   type: "plan",
                   updatedAt: new Date().toISOString(),
@@ -365,7 +364,7 @@ export async function saveTaskEdit(
 
           console.log(
             "✅ Plan document upserted in Qdrant for userId:",
-            session.user.id
+            user.id
           );
         }
       } else {

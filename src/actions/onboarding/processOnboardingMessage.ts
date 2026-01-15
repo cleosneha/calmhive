@@ -1,7 +1,6 @@
 "use server";
 
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { getCurrentUser } from "@/actions/auth";
 import { compileOnboardingGraph } from "@/ai/agents/onboarding";
 import { HumanMessage, BaseMessage } from "@langchain/core/messages";
 import { handleAIError } from "@/utils/ai-error-handler";
@@ -25,20 +24,20 @@ export async function processOnboardingMessage(userMessage: string): Promise<
   | ApiError
 > {
   try {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user) throw new Error("Unauthorized");
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Unauthorized");
 
     if (!graphInstance) graphInstance = await compileOnboardingGraph();
 
     const state = await graphInstance.getState({
-      configurable: { thread_id: session.user.id },
+      configurable: { thread_id: user.id },
     });
 
     if (!state?.values) throw new Error("SESSION_EXPIRED");
 
     const result = await graphInstance.invoke(
       { messages: [new HumanMessage(userMessage)] },
-      { configurable: { thread_id: session.user.id } }
+      { configurable: { thread_id: user.id } }
     );
 
     return {

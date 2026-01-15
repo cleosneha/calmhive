@@ -30,19 +30,13 @@ export async function fetchUserPlan(): Promise<
   | ApiError
 > {
   try {
+    // Layout already ensures user is authenticated via requireOnboarding()
     const user = await getCurrentUser();
-
-    if (!user?.id) {
-      return {
-        status: "error",
-        error: "Unauthorized",
-        code: "UNAUTHORIZED",
-      };
-    }
+    const userId = user!.id; // Non-null assertion safe here
 
     const planData = await prisma.plan.findUnique({
       where: {
-        userId: user.id,
+        userId,
       },
       include: {
         tasks: {
@@ -69,7 +63,7 @@ export async function fetchUserPlan(): Promise<
           hoursSummaryHuman,
         }
       : null;
-    console.log("Fetched plan for user:", user.id, plan);
+    console.log("Fetched plan for user:", userId, plan);
     return {
       status: "success",
       data: { plan },

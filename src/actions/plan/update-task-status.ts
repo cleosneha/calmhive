@@ -1,7 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { getCurrentUser } from "@/actions/auth";
 import prisma from "@/lib/db";
 
 interface UpdateTaskStatusInput {
@@ -22,11 +21,9 @@ export async function updateTaskStatus(
   input: UpdateTaskStatusInput
 ): Promise<UpdateTaskStatusResponse> {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const user = await getCurrentUser();
 
-    if (!session?.user) {
+    if (!user?.id) {
       return {
         success: false,
         message: "Unauthorized",
@@ -49,7 +46,7 @@ export async function updateTaskStatus(
       where: {
         id: taskId,
         plan: {
-          userId: session.user.id,
+          userId: user.id,
         },
       },
     });
