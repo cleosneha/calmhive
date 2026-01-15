@@ -135,7 +135,7 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
             <AccordionItem
               key={day}
               value={day}
-              className="border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-shadow mb-4 last:mb-0"
+              className="border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-shadow mb-4 last:mb-0 bg-white"
             >
               <AccordionTrigger className="px-4 py-3.5 hover:bg-[var(--ch-sage-dark)]/5 [&[data-state=open]>svg]:pr-2">
                 <div className="text-left flex-1">
