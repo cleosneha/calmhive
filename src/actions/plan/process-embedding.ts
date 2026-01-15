@@ -2,7 +2,6 @@
 
 import embeddings from "@/ai/config/embedding";
 import { QdrantVectorStore } from "@langchain/qdrant";
-import { PineconeStore } from "@langchain/pinecone";
 import { Pinecone } from "@pinecone-database/pinecone";
 import type { PlanTask } from "@/ai/agents/plan/types";
 import type { Task } from "@prisma/client";

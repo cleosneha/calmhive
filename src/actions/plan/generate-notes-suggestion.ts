@@ -40,7 +40,7 @@ export async function generateNotesSuggestion(
       if (Array.isArray(parsed) && parsed.every((p) => typeof p === "string")) {
         return { success: true, notes: parsed, raw: content };
       }
-    } catch (err) {
+    } catch {
       // ignore and try to extract bullets
     }
 

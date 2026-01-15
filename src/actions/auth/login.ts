@@ -2,7 +2,6 @@
 
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import db from "@/lib/db";
 import { apiError } from "@/utils/api-error";
 import { apiResponse } from "@/utils/api-response";

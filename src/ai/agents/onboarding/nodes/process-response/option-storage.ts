@@ -119,7 +119,12 @@ export function handlePredefinedOptionStorage(
       stateUpdate.messages = [
         new AIMessage(
           buildMessage(
-            { followUpText: followUpMessage } as any,
+            {
+              isValid: true,
+              isRelevant: true,
+              hasSafetyIssue: false,
+              followUpText: followUpMessage,
+            },
             undefined,
             nextQuestion
           )

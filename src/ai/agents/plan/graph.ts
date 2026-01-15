@@ -19,7 +19,7 @@ function routeAfterFetch(state: PlanStateType): string {
 /**
  * Router: Determine next node after validation
  */
-function routeAfterValidation(state: PlanStateType): string {
+function routeAfterValidation(): string {
   // Always end after validation (no retries)
   return END;
 }

@@ -50,7 +50,7 @@ export default function VerifyEmailClient() {
           router.push("/login");
         }, 2000);
       }
-    } catch (err) {
+    } catch {
       toast.error("An unexpected error occurred");
     } finally {
       setIsLoading(false);
@@ -68,7 +68,7 @@ export default function VerifyEmailClient() {
         toast.success(result.message || "OTP sent successfully to your email");
         setOtp("");
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to resend OTP");
     } finally {
       setIsResending(false);

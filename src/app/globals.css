@@ -36,6 +36,28 @@
   --ch-taupe: #e6e1da; /* Light Taupe (cards) */
   --ch-bluegrey: #000000; /* Muted Blue-Grey (secondary actions) */
   --ch-text: #2f2f2f; /* Primary Text */
+  --ch-muted: #6b6b6b; /* Soft muted text for secondary/subheadings */
+  --ch-border-muted: rgba(0, 0, 0, 0.06); /* Subtle border color for cards */
+  --ch-gradient: linear-gradient(
+    135deg,
+    var(--ch-sage-dark),
+    var(--ch-sage-light)
+  ); /* Primary theme gradient */
+  --ch-gradient-foreground: var(
+    --ch-offwhite
+  ); /* Text color for gradient surfaces */
+  --ch-gradient-fade-start: rgba(
+    255,
+    255,
+    255,
+    0
+  ); /* Gradient fade start (transparent) */
+  --ch-gradient-fade-end: rgba(
+    255,
+    255,
+    255,
+    0.6
+  ); /* Gradient fade end (overlay) */
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);

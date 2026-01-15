@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { FiSend, FiPlay } from "react-icons/fi";
 import Image from "next/image";
 import ChatMessages from "@/components/onboarding/chat-messages";

@@ -1,14 +1,15 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function HeaderLoggedOut() {
   return (
-    <header className="w-full px-4 py-3 bg-[var(--ch-offwhite)] border-b border-[var(--ch-sage-dark)]/10 shadow-sm">
+    <header className="w-full px-4 py-3 bg-transparent relative z-20  ">
       <nav className="max-w-6xl mx-auto flex items-center justify-between">
         {/* Left: Brand */}
         <div className="flex items-center gap-2">
           <Link
             href="/"
-            className="text-2xl font-bold text-[var(--ch-sage-dark)] tracking-tight select-none"
+            className="text-2xl font-bold text-white drop-shadow-lg tracking-tight select-none"
           >
             CalmHive
           </Link>
@@ -17,27 +18,42 @@ export default function HeaderLoggedOut() {
         {/* Center: Navigation */}
         <ul className="hidden md:flex gap-8 items-center justify-center flex-1">
           <li>
-            <Link href="/" className="nav-link">
+            <Link
+              href="/"
+              className="nav-link text-white drop-shadow-md hover:text-white/80 transition"
+            >
               Home
             </Link>
           </li>
           <li>
-            <Link href="#purpose" className="nav-link">
+            <Link
+              href="#purpose"
+              className="nav-link text-white drop-shadow-md hover:text-white/80 transition"
+            >
               Purpose
             </Link>
           </li>
           <li>
-            <Link href="#guide" className="nav-link">
+            <Link
+              href="#guide"
+              className="nav-link text-white drop-shadow-md hover:text-white/80 transition"
+            >
               Guide
             </Link>
           </li>
           <li>
-            <Link href="#pricing" className="nav-link">
+            <Link
+              href="#pricing"
+              className="nav-link text-white drop-shadow-md hover:text-white/80 transition"
+            >
               Pricing
             </Link>
           </li>
           <li>
-            <Link href="#contact" className="nav-link">
+            <Link
+              href="#contact"
+              className="nav-link text-white drop-shadow-md hover:text-white/80 transition"
+            >
               Contact
             </Link>
           </li>
@@ -45,12 +61,13 @@ export default function HeaderLoggedOut() {
 
         {/* Right: Get Started Button */}
         <div className="flex items-center gap-2">
-          <Link
-            href="/login"
-            className="rounded-full bg-[var(--ch-sage-dark)] hover:bg-[var(--ch-sage-light)] text-white px-6 py-2 font-semibold text-base transition-colors shadow focus:outline-none focus:ring-2 focus:ring-[var(--ch-sage-light)]"
+          <Button
+            asChild
+            variant="white"
+            className="bg-[var(--ch-sage-light)]/70 hover:bg-[var(--ch-sage-dark)] shadow-lg hover:shadow-xl"
           >
-            Get Started
-          </Link>
+            <Link href="/login">Sign in</Link>
+          </Button>
         </div>
       </nav>
     </header>

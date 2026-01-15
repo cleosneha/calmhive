@@ -1,6 +1,5 @@
 import { AIMessage } from "@langchain/core/messages";
 import type { OnboardingStateType } from "../../state";
-import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
 import { OnboardingQuestion } from "@/types";
 import { HARD_CODED_MESSAGES } from "../../utils/hardcoded-messages";
 import { isLastQuestionIndex } from "./handlers/utils";

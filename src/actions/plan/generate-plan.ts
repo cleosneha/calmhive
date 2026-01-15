@@ -140,7 +140,6 @@ export async function generatePlan(): Promise<
         connectionString: process.env.DATABASE_URL,
       });
 
-      const threadId = `plan-${user.id}-${Date.now()}`;
       await pool.query("DELETE FROM checkpoints WHERE thread_id LIKE $1", [
         `plan-${user.id}%`,
       ]);
