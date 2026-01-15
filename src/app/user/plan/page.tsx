@@ -1,11 +1,12 @@
 import { Suspense } from "react";
+import { getCurrentUser } from "@/actions/auth";
 import { fetchUserPlan } from "@/fetchers/plan";
 import PlanClient from "./plan-client";
 import NoPlanUI from "./no-plan-ui";
 import Loading from "@/app/loading";
 
-async function PlanContent() {
-  const res = await fetchUserPlan();
+async function PlanContent({ userId }: { userId: string }) {
+  const res = await fetchUserPlan(userId);
 
   // Check for errors
   if (res.status === "error") {
@@ -28,14 +29,16 @@ async function PlanContent() {
     return <NoPlanUI />;
   }
 
-  return <PlanClient plan={plan} />;
+  return <PlanClient plan={plan} userId={userId} />;
 }
 
 export default async function PlanPage() {
-  // Layout already handles authentication with requireOnboarding()
+  // Get the authenticated user (layout already checked requireOnboarding)
+  const user = await getCurrentUser();
+
   return (
     <Suspense fallback={<Loading />}>
-      <PlanContent />
+      <PlanContent userId={user!.id} />
     </Suspense>
   );
 }

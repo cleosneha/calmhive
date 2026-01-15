@@ -29,16 +29,17 @@ interface Plan {
 
 interface Props {
   plan: Plan;
+  userId: string;
 }
 
 // Status icons and labels removed; only activity name is displayed in table cells.
 
-export default function PlanClient({ plan: initialPlan }: Props) {
+export default function PlanClient({ plan: initialPlan, userId }: Props) {
   const [plan, setPlan] = useState<Plan>(initialPlan);
 
   const handleRefresh = async () => {
     try {
-      const res = await fetchUserPlan();
+      const res = await fetchUserPlan(userId);
       if (res.status === "success" && res.data.plan) {
         setPlan(res.data.plan);
       }

@@ -1,14 +1,14 @@
 "use server";
 
-import { getCurrentUser } from "@/actions/auth";
 import prisma from "@/lib/db";
 import { formatHoursHuman } from "@/utils/formatting";
 import type { ApiResponse, ApiError } from "@/types/api";
 
 /**
  * Fetch user's plan with tasks
+ * @param userId - The user ID (passed from authenticated context)
  */
-export async function fetchUserPlan(): Promise<
+export async function fetchUserPlan(userId: string): Promise<
   | ApiResponse<{
       plan: {
         id: number;
@@ -30,9 +30,8 @@ export async function fetchUserPlan(): Promise<
   | ApiError
 > {
   try {
-    // Layout already ensures user is authenticated via requireOnboarding()
-    const user = await getCurrentUser();
-    const userId = user!.id; // Non-null assertion safe here
+    // userId is already authenticated by the layout (requireOnboarding)
+    // No need to call getCurrentUser() which uses headers()
 
     const planData = await prisma.plan.findUnique({
       where: {
