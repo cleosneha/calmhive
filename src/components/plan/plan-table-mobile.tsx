@@ -119,7 +119,7 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
   }
 
   return (
-    <div className="space-y-2 px-4">
+    <div className="space-y-4 py-4 w-full">
       <Accordion type="single" collapsible className="w-full">
         {dayOrder.map((day) => {
           const tasks = grouped[day];
@@ -135,23 +135,23 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
             <AccordionItem
               key={day}
               value={day}
-              className="border rounded-lg mt-2"
+              className="border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-shadow mb-4 last:mb-0"
             >
-              <AccordionTrigger className="px-3 py-2.5 hover:bg-[var(--ch-sage-dark)]/5">
+              <AccordionTrigger className="px-4 py-3.5 hover:bg-[var(--ch-sage-dark)]/5 [&[data-state=open]>svg]:pr-2">
                 <div className="text-left flex-1">
-                  <h3 className="font-semibold text-sm text-[var(--ch-sage-dark)]">
+                  <h3 className="font-semibold text-base text-[var(--ch-sage-dark)]">
                     {day}
                   </h3>
                   {dayHours && (
-                    <p className="text-xs text-[var(--foreground)]/60 mt-0.5">
+                    <p className="text-sm text-[var(--foreground)]/60 mt-1">
                       {dayHours}
                     </p>
                   )}
                 </div>
               </AccordionTrigger>
 
-              <AccordionContent className="pt-2 pb-3 px-3">
-                <div className="space-y-2">
+              <AccordionContent className="pt-3 pb-4 px-4">
+                <div className="space-y-3">
                   {tasks.map((task) => (
                     <Accordion
                       key={task.id}
@@ -161,29 +161,29 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
                     >
                       <AccordionItem
                         value={`task-${task.id}`}
-                        className="border border-slate-200 rounded px-2.5 py-1.5"
+                        className="border border-slate-200 rounded-md px-3 py-2.5 shadow-sm hover:shadow-md transition-shadow bg-white mb-3 last:mb-0"
                       >
-                        <AccordionTrigger className="w-full py-0.5 px-0 hover:bg-slate-50 rounded">
-                          <div className="flex gap-1.5 flex-col min-w-0">
+                        <AccordionTrigger className="w-full py-1 px-0 hover:bg-slate-50 rounded pr-2">
+                          <div className="flex gap-2 flex-col min-w-0">
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-[var(--ch-sage-dark)] text-xs whitespace-normal break-words line-clamp-2 leading-tight">
+                              <p className=" text-[var(--ch-sage-dark)] text-sm whitespace-normal break-words line-clamp-2 leading-snug">
                                 {task.activity}
                               </p>
                             </div>
                             <Badge
                               variant="outline"
-                              className="text-xs whitespace-nowrap px-1.5 py-0 w-fit"
+                              className="text-xs whitespace-nowrap px-2 py-0.5 w-fit"
                             >
                               {task.timeRange}
                             </Badge>
                           </div>
                         </AccordionTrigger>
 
-                        <AccordionContent className="pt-2 mt-1 border-t border-slate-200">
-                          <div className="space-y-2">
+                        <AccordionContent className="pt-3 mt-2 border-t border-slate-200">
+                          <div className="space-y-3">
                             {/* Status Selector (inside expanded content) */}
-                            <div className="flex items-center gap-2">
-                              <div className="text-xs text-[var(--foreground)]/70">
+                            <div className="flex items-center gap-2.5">
+                              <div className="text-sm text-[var(--foreground)]/70 font-medium">
                                 Status
                               </div>
                               <Select
@@ -194,7 +194,7 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
                                 disabled={updatingStatusId === task.id}
                               >
                                 <SelectTrigger
-                                  className={`w-auto px-2 py-0.5 text-xs font-medium border-0 shadow-none h-auto ${
+                                  className={`w-auto px-3 py-1.5 text-sm font-medium border-0 shadow-sm h-auto rounded ${
                                     statusClasses[task.status] ?? ""
                                   }`}
                                   onClick={(e) => e.stopPropagation()}
@@ -233,11 +233,11 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
 
                             {/* Notes Section */}
                             {task.notes && (
-                              <div className="bg-slate-50 rounded p-2">
-                                <p className="text-xs font-medium text-[var(--foreground)]/70 mb-1">
+                              <div className="bg-slate-50 rounded-md p-3 shadow-sm">
+                                <p className="text-sm font-semibold text-[var(--foreground)]/70 mb-2">
                                   Notes
                                 </p>
-                                <p className="text-xs text-[var(--foreground)] whitespace-pre-wrap break-words">
+                                <p className="text-sm text-[var(--foreground)] whitespace-pre-wrap break-words leading-relaxed">
                                   {task.notes}
                                 </p>
                               </div>
@@ -247,10 +247,10 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
                             <button
                               type="button"
                               onClick={() => setEditingTaskId(task.id)}
-                              className="w-full px-2.5 py-1.5 text-xs font-medium border border-slate-300 rounded hover:bg-slate-100 transition-colors flex items-center justify-center gap-1.5"
+                              className="w-full px-3 py-2 text-sm font-medium border border-slate-300 rounded-md hover:bg-slate-100 hover:shadow-sm transition-all flex items-center justify-center gap-2"
                             >
-                              <FiEdit2 className="w-3 h-3" />
-                              Edit
+                              <FiEdit2 className="w-4 h-4" />
+                              Edit Task
                             </button>
 
                             {/* Task Edit Dialog */}

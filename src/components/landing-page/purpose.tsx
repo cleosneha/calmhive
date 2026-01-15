@@ -12,9 +12,9 @@ export default function Purpose() {
         <p className="text-lg text-[var(--ch-muted)] mb-3 md:mb-6 text-center">
           What we help you let go of
         </p>
-        <div className="hidden md:flex items-center justify-center gap-4 md:gap-12 max-w-4xl mx-auto">
+        <div className="hidden md:flex items-center justify-center gap-4 md:gap-12 max-w-6xl mx-auto">
           {/* Left: Vertical stack with indicators and animated connectors */}
-          <div className="flex-1 h-full max-w-xl">
+          <div className="flex-1 h-full max-w-6xl">
             <div className="flex flex-col gap-8 h-full justify-center">
               {words.map((w, i) => (
                 <div key={w} className="flex items-center gap-2 md:gap-4">
