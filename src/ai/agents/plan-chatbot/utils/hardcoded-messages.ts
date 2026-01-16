@@ -22,4 +22,7 @@ export const HARD_CODED_MESSAGES = {
 
   EXECUTE_ERROR:
     "Sorry, I couldn't complete that change right now. Please try again.",
+
+  QUOTA_EXCEEDED:
+    "AI requests for today are complete. Please try again after some time. 🧘",
 };

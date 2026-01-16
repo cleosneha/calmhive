@@ -48,6 +48,15 @@ export async function analyzeNode(
     isEditRequest: analysis.isEditRequest,
   });
 
+  // PRIORITY 0: Handle quota exceeded
+  if (analysis.quotaExceeded) {
+    console.log("  ⚠️ QUOTA EXCEEDED - returning quota message");
+    return {
+      messages: [new AIMessage(HARD_CODED_MESSAGES.QUOTA_EXCEEDED)],
+      responseHandled: true,
+    };
+  }
+
   // PRIORITY 1: Handle safety issues
   if (!analysis.isSafe) {
     console.log("  ⚠️ SAFETY CONCERN - returning safety message");
@@ -73,6 +82,7 @@ export async function analyzeNode(
 
     // Build preview based on edit type
     const preview = buildEditPreview(analysis);
+    const previewMessage = buildPreviewMessage(analysis, preview);
 
     return {
       waitingForConfirmation: true,
@@ -83,11 +93,7 @@ export async function analyzeNode(
         preview,
       },
       messages: [
-        new AIMessage({
-          content: `${confirmation}\n\n📋 **Preview:**\n${formatPreview(
-            preview
-          )}\n\n**Actions:** [CONFIRM_BUTTON] [CANCEL_BUTTON]`,
-        }),
+        new AIMessage(`${previewMessage}\n\n[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`),
       ],
     };
   }
@@ -111,10 +117,10 @@ function buildEditPreview(analysis: EditAnalysisResult): EditPreview {
   switch (editType) {
     case "add_task":
       return {
-        after: `➕ New task: **${
-          extractedEdit.activity || "Activity"
-        }**\n   📅 ${extractedEdit.day || "Day"} at ${
-          extractedEdit.timeRange || "Time"
+        after: `New Activity: **${extractedEdit.activity || "Activity"}**\n   ${
+          extractedEdit.day || "Day"
+        } at ${extractedEdit.timeRange || "Time"}${
+          extractedEdit.notes ? `\n\nNotes:\n${extractedEdit.notes}` : ""
         }`,
         changes: [
           {
@@ -134,25 +140,46 @@ function buildEditPreview(analysis: EditAnalysisResult): EditPreview {
 
     case "remove_task":
       return {
-        before: `🗑️ Task to remove: **${extractedEdit.activity || "Task"}**`,
+        before: `Task to remove: **${extractedEdit.activity || "Task"}**`,
       };
 
     case "modify_task":
       const changes = [];
+      if (extractedEdit.oldActivity && extractedEdit.activity) {
+        changes.push({
+          field: "Activity",
+          oldValue: extractedEdit.oldActivity,
+          newValue: extractedEdit.activity,
+        });
+      } else if (extractedEdit.activity) {
+        changes.push({ field: "Activity", newValue: extractedEdit.activity });
+      }
       if (extractedEdit.day)
         changes.push({ field: "Day", newValue: extractedEdit.day });
       if (extractedEdit.timeRange)
         changes.push({ field: "Time", newValue: extractedEdit.timeRange });
-      if (extractedEdit.activity)
-        changes.push({ field: "Activity", newValue: extractedEdit.activity });
 
-      return {
-        changes,
-      };
+      const modifyPreview: EditPreview = { changes };
+
+      // Structure: Old activity, Time, Notes | Changes suggested | New Activity, Time, Notes
+      if (extractedEdit.oldActivity && extractedEdit.activity) {
+        modifyPreview.before = `Old Activity: **${
+          extractedEdit.oldActivity
+        }**\n   ${extractedEdit.day || "Day"} at ${
+          extractedEdit.timeRange || "Time"
+        }`;
+        modifyPreview.after = `New Activity: **${
+          extractedEdit.activity
+        }**\n   ${extractedEdit.day || "Day"} at ${
+          extractedEdit.timeRange || "Time"
+        }${extractedEdit.notes ? `\n\nNotes:\n${extractedEdit.notes}` : ""}`;
+      }
+
+      return modifyPreview;
 
     case "change_days_off":
       return {
-        after: `📆 New days off: **${
+        after: `New days off: **${
           extractedEdit.daysOff?.join(", ") || "None"
         }**`,
         changes: [
@@ -169,20 +196,48 @@ function buildEditPreview(analysis: EditAnalysisResult): EditPreview {
 }
 
 /**
- * Format preview for display
+ * Build conversational preview message
  */
-function formatPreview(preview: EditPreview): string {
-  const parts: string[] = [];
+function buildPreviewMessage(
+  analysis: EditAnalysisResult,
+  preview: EditPreview
+): string {
+  const { editType, extractedEdit } = analysis;
 
-  if (preview.before) parts.push(preview.before);
-  if (preview.after) parts.push(preview.after);
+  if (!extractedEdit) return "";
 
-  if (preview.changes && preview.changes.length > 0) {
-    parts.push(
-      "\n**Changes:**\n" +
-        preview.changes.map((c) => `• ${c.field}: ${c.newValue}`).join("\n")
-    );
+  switch (editType) {
+    case "add_task":
+      return `I have detected a new activity: **${
+        extractedEdit.activity
+      }** on **${extractedEdit.day}** at **${extractedEdit.timeRange}**${
+        extractedEdit.notes
+          ? `\n\nNow as per your request, suggestions according to me is you should do **${extractedEdit.activity}** at **${extractedEdit.timeRange}** by following these:\n${extractedEdit.notes}`
+          : ""
+      }\n\nShould I proceed?`;
+
+    case "modify_task":
+      return `I have detected **${extractedEdit.oldActivity}** on **${
+        extractedEdit.day
+      }** at **${extractedEdit.timeRange}**${
+        extractedEdit.activity
+          ? `\n\nNow as per your request, suggestions according to me is you should do **${
+              extractedEdit.activity
+            }** at **${extractedEdit.timeRange}** by following these:\n${
+              extractedEdit.notes || ""
+            }`
+          : ""
+      }\n\nShould I proceed?`;
+
+    case "remove_task":
+      return `I have detected **${extractedEdit.activity}** which you want to remove.\n\nShould I proceed?`;
+
+    case "change_days_off":
+      return `I have detected you want to set days off as: **${
+        extractedEdit.daysOff?.join(", ") || "None"
+      }**\n\nShould I proceed?`;
+
+    default:
+      return "";
   }
-
-  return parts.join("\n");
 }

@@ -1,6 +1,7 @@
 import type { EditAnalysisResult } from "../types";
 import { invokeLLM } from "./llm-service";
 import { retrievePlanFromEmbeddings } from "./retrieve-plan";
+import { buildProcessMessagePrompt } from "./prompts";
 
 /**
  * Combined message processing - analyzes intent and answers query in single LLM call
@@ -16,43 +17,18 @@ export async function processUserMessage(
     // Get plan context first
     const planContext = await retrievePlanFromEmbeddings(userId);
 
-    const prompt = `Analyze user message about their wellness plan and provide response if needed.
+    const prompt = buildProcessMessagePrompt(
+      userMessage,
+      planContext ?? undefined
+    );
 
-${
-  planContext ? `User's Plan:\n${planContext}\n\n` : ""
-}User message: "${userMessage}"
-
-Output:
-IS_EDIT_REQUEST: [yes/no]
-SAFETY: [safe/concern]
-RELEVANCE: [yes/no]
-EDIT_TYPE: [add_task/remove_task/modify_task/change_days_off/other/none]
-DAY: [Monday-Sunday or "none"]
-TIME_RANGE: [e.g., "6:00 AM - 7:00 AM" or "none"]
-ACTIVITY: [activity name or "none"]
-DAYS_OFF: [comma-separated days or "none"]
-ANSWER: [Only if IS_EDIT_REQUEST=no and RELEVANCE=yes, provide helpful answer based on plan. Otherwise "none"]
-
-Rules:
-- IS_EDIT_REQUEST=yes ONLY if user explicitly wants to add/remove/change tasks or days off
-- SAFETY=concern if message contains:
-  * Self-harm or suicidal ideation (e.g., "kill myself", "end my life", "want to die")
-  * Violence or harm to others
-  * Dangerous or harmful wellness activities
-  * Substance abuse or illegal activities
-- RELEVANCE=no if completely unrelated to wellness/planning (jokes, random topics)
-- IMPORTANT: Safety takes priority. If SAFETY=concern, set IS_EDIT_REQUEST=no, EDIT_TYPE=none, ANSWER=none
-- Extract specific details (day, time, activity) ONLY when IS_EDIT_REQUEST=yes
-- ANSWER: If IS_EDIT_REQUEST=no and RELEVANCE=yes, provide clear, concise answer using plan data. Use markdown formatting. Be friendly and helpful.
-
-`;
-
+    console.log("  🤖 Invoking LLM...");
     const content = await invokeLLM(prompt);
 
     // Parse structured output (key: value format)
     const lines = content.split("\n").filter((line) => line.trim());
     const parsed: Record<string, string> = {};
-
+    console.log("  📄 LLM Response:\n", content);
     for (const line of lines) {
       const match = line.match(/^([A-Z_]+):\s*(.+)$/);
       if (match) {
@@ -77,12 +53,29 @@ Rules:
       if (parsed.DAY !== "none") extractedEdit.day = parsed.DAY;
       if (parsed.TIME_RANGE !== "none")
         extractedEdit.timeRange = parsed.TIME_RANGE;
-      if (parsed.ACTIVITY !== "none") extractedEdit.activity = parsed.ACTIVITY;
-      if (parsed.DAYS_OFF !== "none") {
+
+      // Handle OLD_ACTIVITY and NEW_ACTIVITY for proper change tracking
+      if (parsed.OLD_ACTIVITY && parsed.OLD_ACTIVITY !== "none") {
+        extractedEdit.oldActivity = parsed.OLD_ACTIVITY;
+      }
+      if (parsed.NEW_ACTIVITY && parsed.NEW_ACTIVITY !== "none") {
+        extractedEdit.activity = parsed.NEW_ACTIVITY;
+      }
+
+      // Add notes if provided (ALWAYS include for add/modify tasks)
+      if (parsed.NOTES && parsed.NOTES !== "none") {
+        extractedEdit.notes = parsed.NOTES;
+        console.log("  📝 Notes extracted:", extractedEdit.notes);
+      } else {
+        console.log("  ⚠️ NOTES not found or set to 'none'");
+      }
+
+      if (parsed.DAYS_OFF && parsed.DAYS_OFF !== "none") {
         extractedEdit.daysOff = parsed.DAYS_OFF.split(",").map((d) => d.trim());
       }
 
       analysis.extractedEdit = extractedEdit;
+      console.log("  ✏️ Edit extracted:", extractedEdit);
     }
 
     // Extract answer if it's a query
@@ -112,12 +105,20 @@ Rules:
     return { analysis, answer };
   } catch (error) {
     console.error("Error processing message:", error);
-    // Default to safe query if processing fails
+
+    // Check if quota exceeded
+    const errorMessage = error instanceof Error ? error.message : "";
+    const isQuotaExceeded =
+      errorMessage.includes("429") ||
+      errorMessage.includes("quota") ||
+      errorMessage.includes("Too Many Requests");
+
     return {
       analysis: {
         isEditRequest: false,
         isSafe: true,
         isRelevant: true,
+        quotaExceeded: isQuotaExceeded,
       },
     };
   }

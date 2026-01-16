@@ -23,6 +23,7 @@ export interface EditAnalysisResult {
   isEditRequest: boolean;
   isSafe: boolean;
   isRelevant: boolean;
+  quotaExceeded?: boolean;
   editType?:
     | "add_task"
     | "remove_task"
@@ -32,7 +33,9 @@ export interface EditAnalysisResult {
   extractedEdit?: {
     day?: string;
     timeRange?: string;
-    activity?: string;
+    oldActivity?: string; // For modify_task - what's being replaced
+    activity?: string; // For add_task/modify_task - new activity name
+    notes?: string; // AI-generated notes for the activity
     taskId?: number;
     daysOff?: string[];
   };

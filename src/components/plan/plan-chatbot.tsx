@@ -28,6 +28,12 @@ export default function PlanChatbot({
     null
   ) as React.RefObject<HTMLDivElement>;
 
+  // Check if waiting for confirmation
+  const waitingForConfirmation =
+    messages.length > 0 &&
+    messages[messages.length - 1].role === "assistant" &&
+    messages[messages.length - 1].actions !== undefined;
+
   // Auto-scroll when messages change
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -124,25 +130,48 @@ export default function PlanChatbot({
           />
         </div>
 
-        <div className="mt-2 flex gap-2">
-          <Input
-            placeholder="Type a message..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleInputKeyDown}
-            disabled={loading}
-            className="flex-1 rounded-xl border border-[var(--ch-sage-dark)]/20 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ch-sage-dark)]"
-          />
-          <Button
-            type="button"
-            onClick={() => handleSend()}
-            disabled={loading || !input.trim()}
-            className="bg-[var(--ch-sage-dark)] text-white rounded-xl w-9 h-9 flex items-center justify-center hover:bg-[var(--ch-sage-dark)]/90"
-            aria-label="Send"
-          >
-            <FiSend className="text-base" />
-          </Button>
-        </div>
+        {/* Action buttons when waiting for confirmation */}
+        {waitingForConfirmation &&
+          messages[messages.length - 1].actions &&
+          messages[messages.length - 1].actions?.map((action, index) => (
+            <div key={index} className="mt-3 flex gap-2">
+              <Button
+                type="button"
+                onClick={() => handleActionClick(action.label)}
+                disabled={loading}
+                className={`flex-1 px-4 py-2 rounded-lg font-medium transition ${
+                  action.type === "confirm"
+                    ? "bg-[var(--ch-sage-dark)] text-white hover:bg-[var(--ch-sage-dark)]/90"
+                    : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+                }`}
+              >
+                {action.label}
+              </Button>
+            </div>
+          ))}
+
+        {/* Input area (disabled when waiting for confirmation) */}
+        {!waitingForConfirmation && (
+          <div className="mt-2 flex gap-2">
+            <Input
+              placeholder="Type a message..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleInputKeyDown}
+              disabled={loading}
+              className="flex-1 rounded-xl border border-[var(--ch-sage-dark)]/20 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ch-sage-dark)]"
+            />
+            <Button
+              type="button"
+              onClick={() => handleSend()}
+              disabled={loading || !input.trim()}
+              className="bg-[var(--ch-sage-dark)] text-white rounded-xl w-9 h-9 flex items-center justify-center hover:bg-[var(--ch-sage-dark)]/90"
+              aria-label="Send"
+            >
+              <FiSend className="text-base" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
