@@ -4,10 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import PlanTable from "@/components/plan/plan-table";
 import PlanTableMobile from "@/components/plan/plan-table-mobile";
 import PlanChatbot from "@/components/plan/plan-chatbot";
+import AddTaskDialog from "@/components/plan/add-task";
 import { fetchUserPlan } from "@/fetchers/plan";
 import { Button } from "@/components/ui/button";
 import { BsStars } from "react-icons/bs";
 import { FiX } from "react-icons/fi";
+import { MdAdd } from "react-icons/md";
 
 interface Task {
   id: number;
@@ -39,6 +41,7 @@ interface Props {
 export default function PlanClient({ plan: initialPlan, userId }: Props) {
   const [plan, setPlan] = useState<Plan>(initialPlan);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
 
   // Manage body overflow when modal opens
@@ -113,6 +116,18 @@ export default function PlanClient({ plan: initialPlan, userId }: Props) {
                   </Badge>
                 </div>
               )}
+
+              {/* Add Task Button (desktop, top-right) */}
+              <div className="mt-2 hidden md:block">
+                <Button
+                  onClick={() => setIsAddTaskOpen(true)}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <MdAdd className="w-4 h-4" />
+                  Add Task
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -192,6 +207,13 @@ export default function PlanClient({ plan: initialPlan, userId }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Add Task Dialog */}
+      <AddTaskDialog
+        open={isAddTaskOpen}
+        onOpenChange={setIsAddTaskOpen}
+        onTaskAdded={handleRefresh}
+      />
     </div>
   );
 }
