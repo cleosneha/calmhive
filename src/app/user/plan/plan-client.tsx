@@ -1,11 +1,13 @@
 "use client";
-import { useRef, useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import PlanTable from "@/components/plan/plan-table";
 import PlanTableMobile from "@/components/plan/plan-table-mobile";
 import PlanChatbot from "@/components/plan/plan-chatbot";
 import { fetchUserPlan } from "@/fetchers/plan";
 import { Button } from "@/components/ui/button";
+import { BsStars } from "react-icons/bs";
+import { FiX } from "react-icons/fi";
 
 interface Task {
   id: number;
@@ -36,6 +38,21 @@ interface Props {
 
 export default function PlanClient({ plan: initialPlan, userId }: Props) {
   const [plan, setPlan] = useState<Plan>(initialPlan);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  // Manage body overflow when modal opens
+  useEffect(() => {
+    if (isChatbotOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isChatbotOpen]);
 
   const handleRefresh = async () => {
     try {
@@ -47,17 +64,9 @@ export default function PlanClient({ plan: initialPlan, userId }: Props) {
       console.error("Failed to refresh plan:", error);
     }
   };
-  // Ref for chatbot section
-  const chatbotRef = useRef<HTMLDivElement>(null);
-
-  const handleAskEditPlan = () => {
-    if (chatbotRef.current) {
-      chatbotRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
+    <div className="min-h-screen p-4 md:p-8 relative">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
@@ -108,13 +117,6 @@ export default function PlanClient({ plan: initialPlan, userId }: Props) {
           </div>
         </div>
 
-        {/* Ask/Edit Plan Button */}
-        <div className="mb-4 flex justify-end">
-          <Button type="button" variant="white" onClick={handleAskEditPlan}>
-            Ask/Edit Plan
-          </Button>
-        </div>
-
         <div className="shadow-lg overflow-auto rounded-lg border border-slate-200 hidden md:block">
           {/* Desktop Plan Table */}
           <PlanTable
@@ -132,10 +134,62 @@ export default function PlanClient({ plan: initialPlan, userId }: Props) {
             onRefresh={handleRefresh}
           />
         </div>
+      </div>
 
-        {/* Plan Chatbot UI below the table */}
-        <div ref={chatbotRef} className="mt-8">
-          <PlanChatbot />
+      {/* Floating AI Icon Button */}
+      <div className="fixed bottom-8 right-8">
+        <div className="relative">
+          {/* Tooltip */}
+          {showTooltip && (
+            <div className="absolute bottom-full right-0 mb-3 bg-[var(--ch-sage-dark)] text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap shadow-lg z-40">
+              Ask/Edit with AI
+              <div className="absolute top-full right-2 w-2 h-2 bg-[var(--ch-sage-dark)] transform rotate-45"></div>
+            </div>
+          )}
+
+          {/* Circular AI Button */}
+          <Button
+            onClick={() => setIsChatbotOpen(true)}
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+            className="w-14 h-14 rounded-full bg-[var(--ch-sage-dark)] text-white shadow-lg hover:bg-[var(--ch-sage-dark)]/90 transition-all hover:scale-110 flex items-center justify-center"
+            aria-label="Open AI Chatbot"
+            size="icon"
+          >
+            <BsStars className="w-6 h-6" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Chatbot Popup Modal */}
+      <div
+        className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${
+          isChatbotOpen ? "block" : "hidden"
+        }`}
+      >
+        {/* Backdrop with blur */}
+        <div
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm"
+          onClick={() => setIsChatbotOpen(false)}
+        ></div>
+
+        {/* Modal centered on screen */}
+        <div className="relative w-full sm:w-140 sm:max-h-[90vh] bg-white rounded-lg shadow-2xl max-h-[100vh] flex flex-col z-50 overflow-hidden min-h-0 ">
+          {/* Close Button */}
+          <Button
+            onClick={() => setIsChatbotOpen(false)}
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 right-4 text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition z-10"
+            aria-label="Close chatbot"
+          >
+            <FiX className="w-5 h-5" />
+          </Button>
+
+          {/* Chatbot Component */}
+          <div className="flex-1 min-h-0">
+            <PlanChatbot onPlanUpdate={handleRefresh} />
+          </div>
         </div>
       </div>
     </div>

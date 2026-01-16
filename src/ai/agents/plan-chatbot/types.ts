@@ -1,6 +1,22 @@
 export interface PlanChatMessage {
   role: "assistant" | "user";
   content: string;
+  actions?: Array<{
+    type: "confirm" | "cancel" | "undo";
+    label: string;
+  }>;
+}
+
+export interface PreviewChange {
+  field: string;
+  oldValue?: string;
+  newValue: string;
+}
+
+export interface EditPreview {
+  before?: string;
+  after?: string;
+  changes?: PreviewChange[];
 }
 
 export interface EditAnalysisResult {

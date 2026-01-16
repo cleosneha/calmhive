@@ -55,11 +55,21 @@ export async function processPlanChatMessage(
       config
     );
 
-    // Extract messages
-    const messages: PlanChatMessage[] = result.messages.map((msg) => ({
-      role: msg._getType() === "human" ? "user" : "assistant",
-      content: msg.content.toString(),
-    }));
+    // Extract messages and parse action buttons
+    const messages: PlanChatMessage[] = result.messages.map((msg) => {
+      const content = msg.content.toString();
+      const actions = parseActionButtons(content);
+
+      return {
+        role: msg._getType() === "human" ? "user" : "assistant",
+        content: content
+          .replace(/\[CONFIRM_BUTTON\]/g, "")
+          .replace(/\[CANCEL_BUTTON\]/g, "")
+          .replace(/\[UNDO_BUTTON\]/g, "")
+          .trim(),
+        actions,
+      };
+    });
 
     return {
       success: true,
@@ -72,6 +82,30 @@ export async function processPlanChatMessage(
       error: "Failed to process message. Please try again.",
     };
   }
+}
+
+/**
+ * Parse action buttons from message content
+ */
+function parseActionButtons(
+  content: string
+): Array<{ type: "confirm" | "cancel" | "undo"; label: string }> | undefined {
+  const actions: Array<{ type: "confirm" | "cancel" | "undo"; label: string }> =
+    [];
+
+  if (content.includes("[CONFIRM_BUTTON]")) {
+    actions.push({ type: "confirm", label: "Apply Changes" });
+  }
+
+  if (content.includes("[CANCEL_BUTTON]")) {
+    actions.push({ type: "cancel", label: "Cancel" });
+  }
+
+  if (content.includes("[UNDO_BUTTON]")) {
+    actions.push({ type: "undo", label: "Undo" });
+  }
+
+  return actions.length > 0 ? actions : undefined;
 }
 
 /**
@@ -107,11 +141,21 @@ export async function initializePlanChatSession(
       config
     );
 
-    // Extract messages
-    const messages: PlanChatMessage[] = result.messages.map((msg) => ({
-      role: msg._getType() === "human" ? "user" : "assistant",
-      content: msg.content.toString(),
-    }));
+    // Extract messages and parse action buttons
+    const messages: PlanChatMessage[] = result.messages.map((msg) => {
+      const content = msg.content.toString();
+      const actions = parseActionButtons(content);
+
+      return {
+        role: msg._getType() === "human" ? "user" : "assistant",
+        content: content
+          .replace(/\[CONFIRM_BUTTON\]/g, "")
+          .replace(/\[CANCEL_BUTTON\]/g, "")
+          .replace(/\[UNDO_BUTTON\]/g, "")
+          .trim(),
+        actions,
+      };
+    });
 
     return {
       success: true,

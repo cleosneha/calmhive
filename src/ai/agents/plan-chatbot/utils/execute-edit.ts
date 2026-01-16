@@ -1,4 +1,5 @@
 import prisma from "@/lib/db";
+import { embedPlan } from "@/actions/plan/process-embedding";
 
 /**
  * Execute plan edit in database and vector store
@@ -11,17 +12,30 @@ export async function executePlanEdit(
     | "modify_task"
     | "change_days_off"
     | "other",
-  data: Record<string, unknown>
-): Promise<{ success: boolean; message?: string; error?: string }> {
+  data: Record<string, unknown>,
+  planId?: number | null
+): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+  previousData?: Record<string, unknown>;
+}> {
   try {
     // Find user's plan
     const plan = await prisma.plan.findFirst({
       where: { userId },
+      include: { tasks: true },
     });
 
     if (!plan) {
       return { success: false, error: "No plan found for this user" };
     }
+
+    let result: {
+      success: boolean;
+      message?: string;
+      previousData?: Record<string, unknown>;
+    } = { success: false };
 
     switch (editType) {
       case "add_task": {
@@ -31,7 +45,7 @@ export async function executePlanEdit(
           activity: string;
         };
 
-        await prisma.task.create({
+        const newTask = await prisma.task.create({
           data: {
             planId: plan.id,
             day,
@@ -41,13 +55,12 @@ export async function executePlanEdit(
           },
         });
 
-        // TODO: Update vector store with new task
-        // await updateVectorStore(userId, plan.id);
-
-        return {
+        result = {
           success: true,
           message: `Added **${activity}** on **${day}** at **${timeRange}**.`,
+          previousData: { taskId: newTask.id }, // Store new task ID for undo (removal)
         };
+        break;
       }
 
       case "remove_task": {
@@ -70,17 +83,23 @@ export async function executePlanEdit(
           };
         }
 
+        // Store task data for undo (re-adding)
+        const previousData = {
+          day: task.day,
+          timeRange: task.timeRange,
+          activity: task.activity,
+        };
+
         await prisma.task.delete({
           where: { id: taskId },
         });
 
-        // TODO: Update vector store
-        // await updateVectorStore(userId, plan.id);
-
-        return {
+        result = {
           success: true,
           message: `Removed **${task.activity}** from **${task.day}**.`,
+          previousData,
         };
+        break;
       }
 
       case "modify_task": {
@@ -108,6 +127,14 @@ export async function executePlanEdit(
           };
         }
 
+        // Store previous task data for undo
+        const previousData = {
+          taskId: task.id,
+          day: task.day,
+          timeRange: task.timeRange,
+          activity: task.activity,
+        };
+
         const updated = await prisma.task.update({
           where: { id: taskId },
           data: {
@@ -117,13 +144,12 @@ export async function executePlanEdit(
           },
         });
 
-        // TODO: Update vector store
-        // await updateVectorStore(userId, plan.id);
-
-        return {
+        result = {
           success: true,
           message: `Updated task on **${updated.day}**: **${updated.activity}**.`,
+          previousData,
         };
+        break;
       }
 
       case "change_days_off": {
@@ -133,23 +159,49 @@ export async function executePlanEdit(
           return { success: false, error: "Days off array is required" };
         }
 
+        // Store previous days off for undo
+        const previousData = {
+          daysOff: plan.daysOff,
+        };
+
         await prisma.plan.update({
           where: { id: plan.id },
           data: { daysOff },
         });
 
-        // TODO: Update vector store
-        // await updateVectorStore(userId, plan.id);
-
-        return {
+        result = {
           success: true,
           message: `Updated days off to: **${daysOff.join(", ")}**.`,
+          previousData,
         };
+        break;
       }
 
       default:
         return { success: false, error: "Unknown edit type" };
     }
+
+    // Update embeddings after successful edit
+    if (result.success) {
+      // Fetch fresh tasks after the edit
+      const updatedPlan = await prisma.plan.findUnique({
+        where: { id: plan.id },
+        include: { tasks: true },
+      });
+
+      if (updatedPlan) {
+        // Update vector store with new plan data
+        await embedPlan(
+          userId,
+          plan.id,
+          updatedPlan.tasks,
+          updatedPlan.daysOff
+        );
+        console.log("✅ Embeddings updated after plan edit");
+      }
+    }
+
+    return result;
   } catch (error) {
     console.error("Error executing plan edit:", error);
     return {

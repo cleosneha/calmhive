@@ -6,6 +6,7 @@ import {
   confirmNode,
   executeEditNode,
   respondNode,
+  undoNode,
 } from "./nodes";
 
 /**
@@ -15,6 +16,11 @@ function routeEntry(state: PlanChatbotStateType): string {
   // If no messages or only greeting, start with greet
   if (!state.messages || state.messages.length === 0) {
     return "greet";
+  }
+
+  // If undo request
+  if (state.isUndoRequest) {
+    return "undo";
   }
 
   // If waiting for confirmation, go to confirm node
@@ -68,6 +74,7 @@ export function createPlanChatbotGraph() {
     .addNode("confirm", confirmNode)
     .addNode("execute_edit", executeEditNode)
     .addNode("respond", respondNode)
+    .addNode("undo", undoNode)
 
     // Define edges
     .addConditionalEdges(START, routeEntry) // Route to appropriate starting node
@@ -75,7 +82,8 @@ export function createPlanChatbotGraph() {
     .addConditionalEdges("analyze", routeAfterAnalysis)
     .addConditionalEdges("confirm", routeAfterConfirm)
     .addEdge("execute_edit", "respond")
-    .addEdge("respond", END);
+    .addEdge("respond", END)
+    .addEdge("undo", END); // After undo, return to client
 
   return workflow;
 }

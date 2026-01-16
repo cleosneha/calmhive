@@ -7,13 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { usePlanChatbotSession } from "@/hooks/usePlanChatbotSession";
 
-export default function PlanChatbot() {
+export default function PlanChatbot({
+  onPlanUpdate,
+}: {
+  onPlanUpdate?: () => void;
+}) {
   const {
     messages,
     input,
     loading,
     handleSend,
     handleInputKeyDown,
+    handleActionClick,
     setInput,
     isInitialized,
     initializeChat,
@@ -28,10 +33,23 @@ export default function PlanChatbot() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Check if plan was updated and trigger refresh
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (
+        lastMessage.role === "assistant" &&
+        lastMessage.content.includes("Plan updated successfully")
+      ) {
+        onPlanUpdate?.();
+      }
+    }
+  }, [messages, onPlanUpdate]);
+
   // Show initialization screen if not initialized
   if (!isInitialized) {
     return (
-      <div className="mt-4 rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="rounded-lg border border-slate-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
         <div className="px-4 py-3 border-b border-[var(--ch-sage-dark)]/10 flex items-center justify-between">
           <div>
             <h2 className="text-sm font-semibold text-[var(--ch-sage-dark)]">
@@ -70,8 +88,22 @@ export default function PlanChatbot() {
   }
 
   return (
-    <div className="mt-4 rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="px-4 py-3 border-b border-[var(--ch-sage-dark)]/10 flex items-center justify-between">
+    <div className="rounded-lg border border-slate-200 bg-white shadow-sm flex-1 min-h-0 flex flex-col relative">
+      {/* Background image (show when chat has started) */}
+      {messages.length > 0 && (
+        <div className="pointer-events-none absolute inset-0 flex items-start justify-center z-0">
+          <div className="hidden lg:block w-56 h-48 mt-12 opacity-10">
+            <Image
+              src="/assets/plan-chatbot.png"
+              alt="Plan Assistant Background"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+        </div>
+      )}{" "}
+      <div className="px-4 py-3 border-b border-[var(--ch-sage-dark)]/10 flex items-center justify-between relative z-10">
         <div>
           <h2 className="text-sm font-semibold text-[var(--ch-sage-dark)]">
             Plan Assistant
@@ -81,13 +113,14 @@ export default function PlanChatbot() {
           </p>
         </div>
       </div>
-
-      <div className="px-4 py-3 h-64 lg:h-72 flex flex-col">
+      <div className="px-4 py-3 flex-1 flex flex-col min-h-0 relative z-10">
         <div className="flex-1 overflow-y-auto pb-2">
           <ChatMessages
             messages={messages}
             loading={loading}
             chatEndRef={chatEndRef}
+            onActionClick={handleActionClick}
+            compact
           />
         </div>
 

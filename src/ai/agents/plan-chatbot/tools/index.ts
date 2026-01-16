@@ -1,4 +1,3 @@
-export { fetchPlanTool } from "./fetch-plan";
 export {
   addTaskTool,
   removeTaskTool,

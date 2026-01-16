@@ -1,5 +1,6 @@
 import type { PlanChatbotStateType } from "../state";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import { HARD_CODED_MESSAGES } from "../utils";
 
 /**
  * Confirm Node: Handle user's confirmation response
@@ -18,7 +19,28 @@ export async function confirmNode(
       ? lastMessage.content.toString().toLowerCase().trim()
       : "";
 
-  // Check if user confirmed
+  // Check for button actions (prefixed with ACTION:)
+  if (userMessage.startsWith("action:confirm") || userMessage === "[confirm]") {
+    // User confirmed via button
+    if (state.pendingEdit) {
+      return {
+        mode: "edit",
+        waitingForConfirmation: false,
+      };
+    }
+  }
+
+  if (userMessage.startsWith("action:cancel") || userMessage === "[cancel]") {
+    // User cancelled via button
+    return {
+      mode: "query",
+      waitingForConfirmation: false,
+      pendingEdit: null,
+      messages: [new AIMessage(HARD_CODED_MESSAGES.CONFIRMATION_CANCEL)],
+    };
+  }
+
+  // Legacy text-based confirmation for backwards compatibility
   const isConfirmed =
     userMessage === "yes" ||
     userMessage === "confirm" ||
@@ -46,11 +68,7 @@ export async function confirmNode(
       mode: "query",
       waitingForConfirmation: false,
       pendingEdit: null,
-      messages: [
-        new AIMessage(
-          "No problem! Your plan remains unchanged. Is there anything else I can help you with?"
-        ),
-      ],
+      messages: [new AIMessage(HARD_CODED_MESSAGES.CONFIRMATION_CANCEL)],
     };
   }
 
@@ -58,7 +76,7 @@ export async function confirmNode(
   return {
     messages: [
       new AIMessage(
-        'Please confirm by typing **"yes"** to proceed or **"no"** to cancel.'
+        'Please use the **Apply Changes** or **Cancel** buttons, or type **"yes"** to proceed or **"no"** to cancel.'
       ),
     ],
   };

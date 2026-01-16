@@ -146,6 +146,14 @@ export function usePlanChatbotSession() {
     [state.input, state.threadId]
   );
 
+  // Handle action button clicks
+  const handleActionClick = useCallback(
+    (action: string) => {
+      handleSend(action);
+    },
+    [handleSend]
+  );
+
   const handleInputKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter" && !state.loading) {
@@ -163,6 +171,7 @@ export function usePlanChatbotSession() {
     ...state,
     handleSend,
     handleInputKeyDown,
+    handleActionClick,
     setInput,
     initializeChat,
   };

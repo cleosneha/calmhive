@@ -27,6 +27,10 @@ export interface OnboardingQuestion {
 export interface OnboardingMessage {
   role: "assistant" | "user";
   content: string;
+  actions?: Array<{
+    type: "confirm" | "cancel" | "undo";
+    label: string;
+  }>;
 }
 
 /**

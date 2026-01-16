@@ -1,18 +1,23 @@
 "use client";
 import ReactMarkdown from "react-markdown";
 import ThreeDotAnimation from "@/components/onboarding/three-dot-animation";
+import { Button } from "@/components/ui/button";
 import type { OnboardingMessage } from "@/types";
 
 interface ChatMessagesProps {
   messages: OnboardingMessage[];
   loading: boolean;
   chatEndRef: React.RefObject<HTMLDivElement>;
+  onActionClick?: (action: string) => void;
+  compact?: boolean;
 }
 
 export default function ChatMessages({
   messages,
   loading,
   chatEndRef,
+  onActionClick,
+  compact = false,
 }: ChatMessagesProps) {
   return (
     <div className="relative z-30 flex flex-col flex-1">
@@ -24,33 +29,68 @@ export default function ChatMessages({
           } mb-4`}
         >
           <div
-            className={`rounded-2xl px-3 py-2 lg:px-4 lg:py-3 max-w-[85%] lg:max-w-[80%] text-sm lg:text-base shadow-sm ${
+            className={`rounded-2xl px-3 py-2 lg:px-4 lg:py-3 max-w-[85%] lg:max-w-[80%] ${
+              compact ? "text-xs lg:text-sm" : "text-sm lg:text-base"
+            } shadow-sm ${
               msg.role === "assistant"
                 ? "bg-[var(--ch-sage-light)] text-black prose prose-sm max-w-none"
                 : "bg-white text-black"
             }`}
           >
             {msg.role === "assistant" ? (
-              <ReactMarkdown
-                components={{
-                  p: ({ children }) => (
-                    <p className="mb-2 last:mb-0">{children}</p>
-                  ),
-                  strong: ({ children }) => (
-                    <strong className="font-bold">{children}</strong>
-                  ),
-                  em: ({ children }) => <em className="italic">{children}</em>,
-                  ul: ({ children }) => (
-                    <ul className="list-disc ml-4 mb-2">{children}</ul>
-                  ),
-                  ol: ({ children }) => (
-                    <ol className="list-decimal ml-4 mb-2">{children}</ol>
-                  ),
-                  li: ({ children }) => <li className="mb-1">{children}</li>,
-                }}
-              >
-                {msg.content}
-              </ReactMarkdown>
+              <>
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => (
+                      <p className="mb-2 last:mb-0">{children}</p>
+                    ),
+                    strong: ({ children }) => (
+                      <strong className="font-bold">{children}</strong>
+                    ),
+                    em: ({ children }) => (
+                      <em className="italic">{children}</em>
+                    ),
+                    ul: ({ children }) => (
+                      <ul className="list-disc ml-4 mb-2">{children}</ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className="list-decimal ml-4 mb-2">{children}</ol>
+                    ),
+                    li: ({ children }) => <li className="mb-1">{children}</li>,
+                  }}
+                >
+                  {msg.content}
+                </ReactMarkdown>
+
+                {/* Render action buttons if present */}
+                {msg.actions && msg.actions.length > 0 && (
+                  <div className="flex gap-2 mt-3">
+                    {msg.actions.map((action, actionIdx) => (
+                      <Button
+                        key={actionIdx}
+                        onClick={() => onActionClick?.(`action:${action.type}`)}
+                        size="sm"
+                        variant={
+                          action.type === "confirm"
+                            ? "default"
+                            : action.type === "undo"
+                            ? "outline"
+                            : "ghost"
+                        }
+                        className={
+                          action.type === "confirm"
+                            ? "bg-[var(--ch-sage-dark)] text-white hover:bg-[var(--ch-sage-dark)]/90"
+                            : action.type === "undo"
+                            ? "border-[var(--ch-sage-dark)] text-[var(--ch-sage-dark)] hover:bg-[var(--ch-sage-dark)]/10"
+                            : ""
+                        }
+                      >
+                        {action.label}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </>
             ) : (
               <div className="whitespace-pre-wrap">{msg.content}</div>
             )}
