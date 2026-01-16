@@ -111,7 +111,7 @@ export default function PlanChatbot({
       {/* Background image (show when chat has started) */}
       {messages.length > 0 && (
         <div className="pointer-events-none absolute inset-0 flex items-start justify-center z-0">
-          <div className="hidden lg:block w-56 h-48 mt-12 opacity-10">
+          <div className="hidden lg:block w-56 h-48 mt-12 opacity-40">
             <Image
               src="/assets/plan-chatbot.png"
               alt="Plan Assistant Background"
