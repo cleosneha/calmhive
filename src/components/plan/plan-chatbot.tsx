@@ -55,8 +55,8 @@ export default function PlanChatbot({
   // Show initialization screen if not initialized
   if (!isInitialized) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
-        <div className="px-4 py-3 border-b border-[var(--ch-sage-dark)]/10 flex items-center justify-between">
+      <div className="rounded-lg border border-slate-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] h-full flex flex-col">
+        <div className="px-4 py-3 border-b border-[var(--ch-sage-dark)]/10 flex items-center justify-between flex-shrink-0">
           <div>
             <h2 className="text-sm font-semibold text-[var(--ch-sage-dark)]">
               Plan Assistant
@@ -67,7 +67,7 @@ export default function PlanChatbot({
           </div>
         </div>
 
-        <div className="px-4 py-8 h-64 lg:h-72 flex flex-col items-center justify-center gap-8">
+        <div className="px-4 py-8 flex-1 flex flex-col items-center justify-center gap-8">
           {/* Plan chatbot illustration */}
           <div className="relative w-56 h-48">
             <Image
