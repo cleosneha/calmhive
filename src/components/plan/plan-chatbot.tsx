@@ -94,7 +94,7 @@ export default function PlanChatbot({
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white shadow-sm flex-1 min-h-0 flex flex-col relative">
+    <div className="rounded-lg border border-slate-200 bg-white shadow-sm flex-1 min-h-0 flex flex-col relative overflow-hidden">
       {/* Background image (show when chat has started) */}
       {messages.length > 0 && (
         <div className="pointer-events-none absolute inset-0 flex items-start justify-center z-0">
@@ -109,7 +109,7 @@ export default function PlanChatbot({
           </div>
         </div>
       )}{" "}
-      <div className="px-4 py-3 border-b border-[var(--ch-sage-dark)]/10 flex items-center justify-between relative z-10">
+      <div className="px-4 py-3 border-b border-[var(--ch-sage-dark)]/10 flex items-center justify-between relative z-10 flex-shrink-0">
         <div>
           <h2 className="text-sm font-semibold text-[var(--ch-sage-dark)]">
             Plan Assistant
@@ -119,7 +119,7 @@ export default function PlanChatbot({
           </p>
         </div>
       </div>
-      <div className="px-4 py-3 flex-1 flex flex-col min-h-0 relative z-10">
+      <div className="px-4 py-3 flex-1 flex flex-col min-h-0 relative z-10 overflow-hidden">
         <div className="flex-1 overflow-y-auto pb-2">
           <ChatMessages
             messages={messages}

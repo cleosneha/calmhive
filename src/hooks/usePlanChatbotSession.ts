@@ -124,7 +124,7 @@ export function usePlanChatbotSession() {
         setState((prev) => ({
           ...prev,
           messages: Array.isArray(result.messages)
-            ? result.messages
+            ? [...prev.messages, ...result.messages]
             : prev.messages,
           loading: false,
         }));
