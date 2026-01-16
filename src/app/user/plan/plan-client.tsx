@@ -174,7 +174,7 @@ export default function PlanClient({ plan: initialPlan, userId }: Props) {
         ></div>
 
         {/* Modal centered on screen */}
-        <div className="relative w-full sm:w-140 sm:max-h-[90vh] bg-white rounded-lg shadow-2xl max-h-[100vh] flex flex-col z-50 overflow-hidden min-h-0 ">
+        <div className="relative w-full sm:w-140 h-[90vh] max-h-[90vh] bg-white rounded-lg shadow-2xl flex flex-col z-50 overflow-hidden">
           {/* Close Button */}
           <Button
             onClick={() => setIsChatbotOpen(false)}

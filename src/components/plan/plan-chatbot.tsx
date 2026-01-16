@@ -94,7 +94,7 @@ export default function PlanChatbot({
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white shadow-sm flex-1 min-h-0 flex flex-col relative overflow-hidden">
+    <div className="rounded-lg border border-slate-200 bg-white shadow-sm h-full flex flex-col relative">
       {/* Background image (show when chat has started) */}
       {messages.length > 0 && (
         <div className="pointer-events-none absolute inset-0 flex items-start justify-center z-0">
@@ -108,8 +108,10 @@ export default function PlanChatbot({
             />
           </div>
         </div>
-      )}{" "}
-      <div className="px-4 py-3 border-b border-[var(--ch-sage-dark)]/10 flex items-center justify-between relative z-10 flex-shrink-0">
+      )}
+
+      {/* Fixed Header */}
+      <div className="px-4 py-3 border-b border-[var(--ch-sage-dark)]/10 flex items-center justify-between bg-white z-10 flex-shrink-0">
         <div>
           <h2 className="text-sm font-semibold text-[var(--ch-sage-dark)]">
             Plan Assistant
@@ -119,22 +121,25 @@ export default function PlanChatbot({
           </p>
         </div>
       </div>
-      <div className="px-4 py-3 flex-1 flex flex-col min-h-0 relative z-10 overflow-hidden">
-        <div className="flex-1 overflow-y-auto pb-2">
-          <ChatMessages
-            messages={messages}
-            loading={loading}
-            chatEndRef={chatEndRef}
-            onActionClick={handleActionClick}
-            compact
-          />
-        </div>
 
+      {/* Scrollable Messages Area */}
+      <div className="flex-1 overflow-y-auto px-4 py-3 relative z-10">
+        <ChatMessages
+          messages={messages}
+          loading={loading}
+          chatEndRef={chatEndRef}
+          onActionClick={handleActionClick}
+          compact
+        />
+      </div>
+
+      {/* Fixed Input Area */}
+      <div className="px-4 py-3 border-t border-[var(--ch-sage-dark)]/10 bg-white z-10 flex-shrink-0">
         {/* Action buttons when waiting for confirmation */}
         {waitingForConfirmation &&
           messages[messages.length - 1].actions &&
           messages[messages.length - 1].actions?.map((action, index) => (
-            <div key={index} className="mt-3 flex gap-2">
+            <div key={index} className="mb-2 flex gap-2">
               <Button
                 type="button"
                 onClick={() => handleActionClick(action.label)}
@@ -152,7 +157,7 @@ export default function PlanChatbot({
 
         {/* Input area (disabled when waiting for confirmation) */}
         {!waitingForConfirmation && (
-          <div className="mt-2 flex gap-2">
+          <div className="flex gap-2">
             <Input
               placeholder="Type a message..."
               value={input}
