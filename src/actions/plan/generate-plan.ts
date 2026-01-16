@@ -23,7 +23,6 @@ export async function generatePlan(): Promise<
       };
     }
 
-    console.log("🚀 Starting plan generation for user:", user.id);
 
     // 2. Check if plan already exists
     const existingPlan = await prisma.plan.findUnique({
@@ -31,7 +30,6 @@ export async function generatePlan(): Promise<
     });
 
     if (existingPlan) {
-      console.log("⚠️ Plan already exists for user:", user.id);
       return {
         status: "success",
         data: { planId: existingPlan.id },
@@ -65,8 +63,6 @@ export async function generatePlan(): Promise<
         },
       }
     );
-
-    console.log("📊 Plan generation result:", result);
 
     // 5. Check for errors
     if (result.error) {
@@ -116,8 +112,6 @@ export async function generatePlan(): Promise<
       },
     });
 
-    console.log("✅ Plan created successfully:", plan.id);
-
     // 8. Embed plan in vector store
     // Use the DB tasks (which now have IDs) instead of LLM tasks
     const { embedPlan } = await import("./process-embedding");
@@ -151,7 +145,6 @@ export async function generatePlan(): Promise<
         [`plan-${user.id}%`]
       );
 
-      console.log("✅ Cleaned up checkpoints for user:", user.id);
       await pool.end();
     } catch (error) {
       console.warn("⚠️ Failed to clean up checkpoints:", error);

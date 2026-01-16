@@ -1,11 +1,11 @@
 import type { PlanChatbotStateType } from "../state";
-import type { EditAnalysisResult, EditPreview } from "../types";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import { processUserMessage, HARD_CODED_MESSAGES } from "../utils";
 import {
-  processUserMessage,
-  buildEditConfirmation,
-  HARD_CODED_MESSAGES,
-} from "../utils";
+  buildEditPreview,
+  buildPreviewMessage,
+  checkTimeConflict,
+} from "../helpers";
 
 /**
  * Analyze Node: Analyze user's message to determine intent
@@ -27,12 +27,19 @@ export async function analyzeNode(
 
   console.log("  💬 User message:", userMessage);
 
-  // Check for undo request
+  // Check for undo request - updates are irreversible
   const undoKeywords = ["undo", "revert", "go back", "reverse"];
   if (undoKeywords.some((kw) => userMessage.toLowerCase().includes(kw))) {
-    console.log("  🔄 Undo request detected");
+    console.log(
+      "  🔄 Undo request detected - informing user it's irreversible"
+    );
     return {
-      isUndoRequest: true,
+      messages: [
+        new AIMessage(
+          "Plan updates are irreversible. I cannot undo changes once they've been applied. However, you can always request new changes to adjust your plan!"
+        ),
+      ],
+      responseHandled: true,
     };
   }
 
@@ -78,23 +85,47 @@ export async function analyzeNode(
   // PRIORITY 3: Handle edit requests with confirmation
   if (analysis.isEditRequest && analysis.extractedEdit) {
     console.log("  ✏️ EDIT REQUEST - preparing confirmation");
-    const confirmation = buildEditConfirmation(analysis);
 
-    // Build preview based on edit type
+    // Check for time conflicts if it's a modify_task with time change
+    if (
+      analysis.editType === "modify_task" &&
+      analysis.extractedEdit.timeRange &&
+      analysis.extractedEdit.day
+    ) {
+      const conflictCheck = await checkTimeConflict(
+        state.userId,
+        analysis.extractedEdit.day,
+        analysis.extractedEdit.timeRange,
+        analysis.extractedEdit.oldActivity
+      );
+
+      if (conflictCheck.hasConflict) {
+        console.log("  ⚠️ TIME CONFLICT DETECTED - cannot proceed");
+        return {
+          mode: "query",
+          messages: [
+            new AIMessage(
+              `**Cannot make this change.** There's already a **${conflictCheck.conflictingActivity}** scheduled on **${analysis.extractedEdit.day}** at **${analysis.extractedEdit.timeRange}**.\n\nPlease choose a different time slot or remove the conflicting activity first.`
+            ),
+          ],
+          responseHandled: true,
+        };
+      }
+    }
+
+    // Build preview and message
     const preview = buildEditPreview(analysis);
-    const previewMessage = buildPreviewMessage(analysis, preview);
+    const previewMessage = buildPreviewMessage(analysis);
 
     return {
       waitingForConfirmation: true,
       pendingEdit: {
         type: analysis.editType || "other",
         data: analysis.extractedEdit,
-        description: confirmation,
+        description: previewMessage,
         preview,
       },
-      messages: [
-        new AIMessage(`${previewMessage}\n\n[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`),
-      ],
+      messages: [new AIMessage(previewMessage)],
     };
   }
 
@@ -102,142 +133,6 @@ export async function analyzeNode(
   console.log("  💬 QUERY - passing to respond node");
   return {
     mode: "query",
-    cachedAnswer: answer, // Store answer from combined LLM call
+    cachedAnswer: answer,
   };
-}
-
-/**
- * Build preview for edit
- */
-function buildEditPreview(analysis: EditAnalysisResult): EditPreview {
-  if (!analysis.extractedEdit) return {};
-
-  const { editType, extractedEdit } = analysis;
-
-  switch (editType) {
-    case "add_task":
-      return {
-        after: `New Activity: **${extractedEdit.activity || "Activity"}**\n   ${
-          extractedEdit.day || "Day"
-        } at ${extractedEdit.timeRange || "Time"}${
-          extractedEdit.notes ? `\n\nNotes:\n${extractedEdit.notes}` : ""
-        }`,
-        changes: [
-          {
-            field: "Activity",
-            newValue: extractedEdit.activity || "",
-          },
-          {
-            field: "Day",
-            newValue: extractedEdit.day || "",
-          },
-          {
-            field: "Time",
-            newValue: extractedEdit.timeRange || "",
-          },
-        ],
-      };
-
-    case "remove_task":
-      return {
-        before: `Task to remove: **${extractedEdit.activity || "Task"}**`,
-      };
-
-    case "modify_task":
-      const changes = [];
-      if (extractedEdit.oldActivity && extractedEdit.activity) {
-        changes.push({
-          field: "Activity",
-          oldValue: extractedEdit.oldActivity,
-          newValue: extractedEdit.activity,
-        });
-      } else if (extractedEdit.activity) {
-        changes.push({ field: "Activity", newValue: extractedEdit.activity });
-      }
-      if (extractedEdit.day)
-        changes.push({ field: "Day", newValue: extractedEdit.day });
-      if (extractedEdit.timeRange)
-        changes.push({ field: "Time", newValue: extractedEdit.timeRange });
-
-      const modifyPreview: EditPreview = { changes };
-
-      // Structure: Old activity, Time, Notes | Changes suggested | New Activity, Time, Notes
-      if (extractedEdit.oldActivity && extractedEdit.activity) {
-        modifyPreview.before = `Old Activity: **${
-          extractedEdit.oldActivity
-        }**\n   ${extractedEdit.day || "Day"} at ${
-          extractedEdit.timeRange || "Time"
-        }`;
-        modifyPreview.after = `New Activity: **${
-          extractedEdit.activity
-        }**\n   ${extractedEdit.day || "Day"} at ${
-          extractedEdit.timeRange || "Time"
-        }${extractedEdit.notes ? `\n\nNotes:\n${extractedEdit.notes}` : ""}`;
-      }
-
-      return modifyPreview;
-
-    case "change_days_off":
-      return {
-        after: `New days off: **${
-          extractedEdit.daysOff?.join(", ") || "None"
-        }**`,
-        changes: [
-          {
-            field: "Days Off",
-            newValue: extractedEdit.daysOff?.join(", ") || "None",
-          },
-        ],
-      };
-
-    default:
-      return {};
-  }
-}
-
-/**
- * Build conversational preview message
- */
-function buildPreviewMessage(
-  analysis: EditAnalysisResult,
-  preview: EditPreview
-): string {
-  const { editType, extractedEdit } = analysis;
-
-  if (!extractedEdit) return "";
-
-  switch (editType) {
-    case "add_task":
-      return `I have detected a new activity: **${
-        extractedEdit.activity
-      }** on **${extractedEdit.day}** at **${extractedEdit.timeRange}**${
-        extractedEdit.notes
-          ? `\n\nNow as per your request, suggestions according to me is you should do **${extractedEdit.activity}** at **${extractedEdit.timeRange}** by following these:\n${extractedEdit.notes}`
-          : ""
-      }\n\nShould I proceed?`;
-
-    case "modify_task":
-      return `I have detected **${extractedEdit.oldActivity}** on **${
-        extractedEdit.day
-      }** at **${extractedEdit.timeRange}**${
-        extractedEdit.activity
-          ? `\n\nNow as per your request, suggestions according to me is you should do **${
-              extractedEdit.activity
-            }** at **${extractedEdit.timeRange}** by following these:\n${
-              extractedEdit.notes || ""
-            }`
-          : ""
-      }\n\nShould I proceed?`;
-
-    case "remove_task":
-      return `I have detected **${extractedEdit.activity}** which you want to remove.\n\nShould I proceed?`;
-
-    case "change_days_off":
-      return `I have detected you want to set days off as: **${
-        extractedEdit.daysOff?.join(", ") || "None"
-      }**\n\nShould I proceed?`;
-
-    default:
-      return "";
-  }
 }

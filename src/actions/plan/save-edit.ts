@@ -247,8 +247,6 @@ export async function saveTaskEdit(
             process.env.PINECONE_INDEX_NAME || "calmhive-embeddings"
           );
 
-          console.log("🔍 Checking for existing plan document in Pinecone...");
-
           // Query for vectors with matching userId metadata
           try {
             const queryResults = await pineconeIndex.namespace("plans").query({
@@ -261,16 +259,9 @@ export async function saveTaskEdit(
             // Delete found vectors by their actual Pinecone IDs
             const vectorIdsToDelete = queryResults.matches.map((m) => m.id);
             if (vectorIdsToDelete.length > 0) {
-              console.log(
-                "📍 Found existing documents, deleting count:",
-                vectorIdsToDelete.length,
-                "IDs:",
-                vectorIdsToDelete
-              );
-              const deleteResult = await pineconeIndex
+              await pineconeIndex
                 .namespace("plans")
                 .deleteMany(vectorIdsToDelete);
-              console.log("🗑️ Delete result:", deleteResult);
             } else {
               console.log("ℹ️ No existing documents found to delete");
             }
@@ -280,25 +271,14 @@ export async function saveTaskEdit(
 
           // Generate embeddings and upsert new document
           try {
-            console.log("🔄 Generating embedding for updated content...");
             const embeddingModel = (await import("@/ai/config/embedding"))
               .default;
             const vector = await embeddingModel.embedQuery(updatedContent);
-
-            console.log(
-              "✅ Embedding generated, dimensions:",
-              Array.isArray(vector) ? vector.length : "unknown"
-            );
 
             if (!vector || (Array.isArray(vector) && vector.length === 0)) {
               console.error("❌ Embedding generation returned empty vector!");
               throw new Error("Empty embedding vector generated");
             }
-
-            console.log("📝 Upserting new plan document to Pinecone...");
-            console.log("  Document ID: user-" + user.id);
-            console.log("  Vector dimensions:", vector.length || "unknown");
-            console.log("  Content length:", updatedContent.length);
 
             const upsertResult = await pineconeIndex.namespace("plans").upsert([
               {
@@ -314,15 +294,8 @@ export async function saveTaskEdit(
               },
             ]);
 
-            console.log(
-              "✅ Plan document upserted in Pinecone for userId:",
-              user.id,
-              "Result:",
-              upsertResult
-            );
-
             // Verify the upsert by fetching the document back
-            console.log("🔍 Verifying upsert by fetching document...");
+
             const verifyResults = await pineconeIndex.namespace("plans").query({
               vector: new Array(1024).fill(0),
               filter: { userId: { $eq: user.id } },
@@ -344,8 +317,6 @@ export async function saveTaskEdit(
           // Qdrant: Use stable UUID and upsert
           const store = await vectorStore;
           const pointId = generatePlanPointId(user.id);
-
-          console.log("📝 Upserting plan document to Qdrant...");
 
           await store.addDocuments(
             [

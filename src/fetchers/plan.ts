@@ -62,7 +62,6 @@ export async function fetchUserPlan(userId: string): Promise<
           hoursSummaryHuman,
         }
       : null;
-    console.log("Fetched plan for user:", userId, plan);
     return {
       status: "success",
       data: { plan },

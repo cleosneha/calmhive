@@ -121,11 +121,15 @@ export function usePlanChatbotSession() {
           return;
         }
 
+        // Only add assistant messages from the server response, not user messages
+        // (user message was already added locally above)
+        const assistantMessages = Array.isArray(result.messages)
+          ? result.messages.filter((msg) => msg.role === "assistant")
+          : [];
+
         setState((prev) => ({
           ...prev,
-          messages: Array.isArray(result.messages)
-            ? [...prev.messages, ...result.messages]
-            : prev.messages,
+          messages: [...prev.messages, ...assistantMessages],
           loading: false,
         }));
       } catch (error) {
@@ -149,9 +153,74 @@ export function usePlanChatbotSession() {
   // Handle action button clicks
   const handleActionClick = useCallback(
     (action: string) => {
-      handleSend(action);
+      // Extract readable label from action
+      const displayText = action.startsWith("action:")
+        ? action.replace("action:", "").charAt(0).toUpperCase() +
+          action.replace("action:", "").slice(1)
+        : action;
+
+      // Add user message with readable text
+      setState((prev) => ({
+        ...prev,
+        messages: [
+          ...prev.messages,
+          {
+            role: "user",
+            content: displayText,
+          },
+        ],
+        loading: true,
+      }));
+
+      // Send the actual action to backend
+      (async () => {
+        try {
+          const result = await processPlanChatMessage(action, state.threadId);
+
+          // Check if result is an error response
+          if (isErrorResponse(result)) {
+            setState((prev) => ({
+              ...prev,
+              messages: [
+                ...prev.messages,
+                {
+                  role: "assistant",
+                  content:
+                    result.error || "I encountered an error. Please try again.",
+                },
+              ],
+              loading: false,
+            }));
+            return;
+          }
+
+          // Only add assistant messages from the server response
+          const assistantMessages = Array.isArray(result.messages)
+            ? result.messages.filter((msg) => msg.role === "assistant")
+            : [];
+
+          setState((prev) => ({
+            ...prev,
+            messages: [...prev.messages, ...assistantMessages],
+            loading: false,
+          }));
+        } catch (error) {
+          console.error("Failed to process plan chat message:", error);
+          setState((prev) => ({
+            ...prev,
+            messages: [
+              ...prev.messages,
+              {
+                role: "assistant",
+                content: "An error occurred. Please try again.",
+              },
+            ],
+            loading: false,
+          }));
+        }
+      })();
     },
-    [handleSend]
+    [state.threadId]
   );
 
   const handleInputKeyDown = useCallback(

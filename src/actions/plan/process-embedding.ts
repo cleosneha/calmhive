@@ -66,13 +66,6 @@ export async function embedPlan(
           },
         },
       ]);
-
-      console.log(
-        "✅ Plan embedded in Pinecone with ID:",
-        documentId,
-        "planId:",
-        planId
-      );
     } else {
       // Qdrant for local development
       const vectorStore = await QdrantVectorStore.fromExistingCollection(
@@ -97,8 +90,6 @@ export async function embedPlan(
           ids: [pointId],
         }
       );
-
-      console.log("✅ Plan embedded in Qdrant:", planId);
     }
 
     return { success: true };
@@ -130,8 +121,6 @@ export async function deletePlanEmbedding(
 
       const documentId = `user-${userId}`;
       await pineconeIndex.namespace("plans").deleteOne(documentId);
-
-      console.log("✅ Plan embedding deleted from Pinecone (id):", documentId);
     } else {
       // Qdrant for local development
       const qdrantClient = (await import("@/ai/config/qdrant")).default;
@@ -142,11 +131,6 @@ export async function deletePlanEmbedding(
       await qdrantClient.delete("calmhive", {
         points: [pointId],
       });
-
-      console.log(
-        "✅ Plan embedding deleted from Qdrant (pointId = userId):",
-        userId
-      );
     }
 
     return { success: true };

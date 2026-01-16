@@ -63,9 +63,28 @@ export async function processUserMessage(
       }
 
       // Add notes if provided (ALWAYS include for add/modify tasks)
-      if (parsed.NOTES && parsed.NOTES !== "none") {
-        extractedEdit.notes = parsed.NOTES;
-        console.log("  📝 Notes extracted:", extractedEdit.notes);
+      // Support multi-line NOTES blocks by collecting lines after the NOTES: key
+      const notesIndex = lines.findIndex((line) => line.startsWith("NOTES:"));
+      if (notesIndex !== -1) {
+        const noteLines: string[] = [];
+        // First line may contain content after `NOTES:`
+        const firstLineContent = lines[notesIndex].replace(/^NOTES:\s*/i, "");
+        if (firstLineContent) noteLines.push(firstLineContent);
+
+        // Collect subsequent lines until next KEY: value line
+        for (let i = notesIndex + 1; i < lines.length; i++) {
+          const line = lines[i];
+          if (line.match(/^[A-Z_]+:\s*.+$/)) break; // next key
+          noteLines.push(line);
+        }
+
+        const notesCombined = noteLines.join("\n").trim();
+        if (notesCombined && notesCombined.toLowerCase() !== "none") {
+          extractedEdit.notes = notesCombined;
+          console.log("  📝 Notes extracted:", extractedEdit.notes);
+        } else {
+          console.log("  ⚠️ NOTES not found or set to 'none'");
+        }
       } else {
         console.log("  ⚠️ NOTES not found or set to 'none'");
       }

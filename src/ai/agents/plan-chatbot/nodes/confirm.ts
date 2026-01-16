@@ -11,6 +11,7 @@ export async function confirmNode(
   // Get last user message
   const lastMessage = state.messages[state.messages.length - 1];
   if (!lastMessage || lastMessage._getType() !== "human") {
+    console.log("[confirmNode] No human message found");
     return {};
   }
 
@@ -19,18 +20,30 @@ export async function confirmNode(
       ? lastMessage.content.toString().toLowerCase().trim()
       : "";
 
+  console.log("[confirmNode] User message:", userMessage);
+  console.log(
+    "[confirmNode] Waiting for confirmation:",
+    state.waitingForConfirmation
+  );
+  console.log("[confirmNode] Has pending edit:", !!state.pendingEdit);
+
   // Check for button actions (prefixed with ACTION:)
   if (userMessage.startsWith("action:confirm") || userMessage === "[confirm]") {
+    console.log("[confirmNode] CONFIRM action detected");
     // User confirmed via button
     if (state.pendingEdit) {
+      console.log("[confirmNode] Proceeding with edit execution");
       return {
         mode: "edit",
         waitingForConfirmation: false,
       };
+    } else {
+      console.log("[confirmNode] WARNING: No pending edit to confirm!");
     }
   }
 
   if (userMessage.startsWith("action:cancel") || userMessage === "[cancel]") {
+    console.log("[confirmNode] CANCEL action detected");
     // User cancelled via button
     return {
       mode: "query",

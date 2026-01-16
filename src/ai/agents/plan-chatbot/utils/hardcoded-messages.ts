@@ -18,7 +18,7 @@ export const HARD_CODED_MESSAGES = {
     "There's no recent change to undo. Make an edit first, then you can undo it within 5 minutes.",
 
   CONFIRMATION_CANCEL:
-    "No worries! Your plan remains unchanged. Feel free to ask me anything else. 🤍",
+    "That's totally fine. Please let me know if there is anything else that could be done. 🤍",
 
   EXECUTE_ERROR:
     "Sorry, I couldn't complete that change right now. Please try again.",

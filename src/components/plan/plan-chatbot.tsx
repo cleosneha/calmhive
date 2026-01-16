@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FiSend, FiPlay } from "react-icons/fi";
 import Image from "next/image";
 import ChatMessages from "@/components/onboarding/chat-messages";
@@ -28,6 +28,9 @@ export default function PlanChatbot({
     null
   ) as React.RefObject<HTMLDivElement>;
 
+  // Track if we've already triggered onPlanUpdate for the current success message
+  const [lastSuccessMessageId, setLastSuccessMessageId] = useState<string>("");
+
   // Check if waiting for confirmation
   const waitingForConfirmation =
     messages.length > 0 &&
@@ -39,18 +42,28 @@ export default function PlanChatbot({
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Check if plan was updated and trigger refresh
+  // Check if plan was updated and trigger refresh (only once per message)
   useEffect(() => {
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
+      const messageId = `${lastMessage.role}-${lastMessage.content.substring(
+        0,
+        50
+      )}`;
+
       if (
         lastMessage.role === "assistant" &&
-        lastMessage.content.includes("Plan updated successfully")
+        lastMessage.content.includes("Plan updated successfully") &&
+        lastSuccessMessageId !== messageId
       ) {
-        onPlanUpdate?.();
+        // Use a microtask to avoid cascading renders
+        Promise.resolve().then(() => {
+          setLastSuccessMessageId(messageId);
+          onPlanUpdate?.();
+        });
       }
     }
-  }, [messages, onPlanUpdate]);
+  }, [messages, onPlanUpdate, lastSuccessMessageId]);
 
   // Show initialization screen if not initialized
   if (!isInitialized) {
@@ -135,48 +148,49 @@ export default function PlanChatbot({
 
       {/* Fixed Input Area */}
       <div className="px-4 py-3 border-t border-[var(--ch-sage-dark)]/10 bg-white z-10 flex-shrink-0">
-        {/* Action buttons when waiting for confirmation */}
-        {waitingForConfirmation &&
-          messages[messages.length - 1].actions &&
-          messages[messages.length - 1].actions?.map((action, index) => (
-            <div key={index} className="mb-2 flex gap-2">
-              <Button
-                type="button"
-                onClick={() => handleActionClick(action.label)}
-                disabled={loading}
-                className={`flex-1 px-4 py-2 rounded-lg font-medium transition ${
-                  action.type === "confirm"
-                    ? "bg-[var(--ch-sage-dark)] text-white hover:bg-[var(--ch-sage-dark)]/90"
-                    : "bg-slate-200 text-slate-700 hover:bg-slate-300"
-                }`}
-              >
-                {action.label}
-              </Button>
-            </div>
-          ))}
+        {/* Input area - always show but disabled when waiting for confirmation */}
+        <div className="flex gap-2">
+          <Input
+            placeholder="Type a message..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleInputKeyDown}
+            disabled={loading || waitingForConfirmation}
+            className="flex-1 rounded-xl border border-[var(--ch-sage-dark)]/20 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ch-sage-dark)]"
+          />
+          <Button
+            type="button"
+            onClick={() => handleSend()}
+            disabled={loading || !input.trim() || waitingForConfirmation}
+            className="bg-[var(--ch-sage-dark)] text-white rounded-xl w-9 h-9 flex items-center justify-center hover:bg-[var(--ch-sage-dark)]/90"
+            aria-label="Send"
+          >
+            <FiSend className="text-base" />
+          </Button>
+        </div>
 
-        {/* Input area (disabled when waiting for confirmation) */}
-        {!waitingForConfirmation && (
-          <div className="flex gap-2">
-            <Input
-              placeholder="Type a message..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleInputKeyDown}
-              disabled={loading}
-              className="flex-1 rounded-xl border border-[var(--ch-sage-dark)]/20 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ch-sage-dark)]"
-            />
-            <Button
-              type="button"
-              onClick={() => handleSend()}
-              disabled={loading || !input.trim()}
-              className="bg-[var(--ch-sage-dark)] text-white rounded-xl w-9 h-9 flex items-center justify-center hover:bg-[var(--ch-sage-dark)]/90"
-              aria-label="Send"
-            >
-              <FiSend className="text-base" />
-            </Button>
-          </div>
-        )}
+        {/* Action buttons when waiting for confirmation - show once below input */}
+        {waitingForConfirmation &&
+          messages[messages.length - 1]?.actions &&
+          (messages[messages.length - 1]?.actions?.length ?? 0) > 0 && (
+            <div className="mt-3 flex gap-2">
+              {messages[messages.length - 1]?.actions?.map((action, index) => (
+                <Button
+                  key={index}
+                  type="button"
+                  onClick={() => handleActionClick(`action:${action.type}`)}
+                  disabled={loading}
+                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition ${
+                    action.type === "confirm"
+                      ? "bg-[var(--ch-sage-dark)] text-white hover:bg-[var(--ch-sage-dark)]/90"
+                      : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+                  }`}
+                >
+                  {action.label}
+                </Button>
+              ))}
+            </div>
+          )}
       </div>
     </div>
   );

@@ -25,7 +25,6 @@ export async function initQdrantCollection() {
           distance: "Cosine",
         },
       });
-      console.log("✅ Qdrant collection created:", QDRANT_COLLECTION_NAME);
     } else {
       console.log(
         "✅ Qdrant collection already exists:",

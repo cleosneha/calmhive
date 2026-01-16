@@ -38,25 +38,54 @@ export async function processPlanChatMessage(
 
     const currentState = await graph.getState(config);
 
-    // Initialize state if first message
-    const initialState = currentState.values.userId
-      ? {}
-      : {
-          userId: user.id,
-          userName: user.name || "there",
-        };
+    console.log("[processPlanChatMessage] Current state loaded:");
+    console.log("  - userId:", currentState.values.userId);
+    console.log(
+      "  - waitingForConfirmation:",
+      currentState.values.waitingForConfirmation
+    );
+    console.log(
+      "  - pendingEdit:",
+      currentState.values.pendingEdit ? "EXISTS" : "NULL"
+    );
+    console.log("  - mode:", currentState.values.mode);
+    console.log(
+      "  - messages count:",
+      currentState.values.messages?.length || 0
+    );
+
+    // Only initialize userId/userName on first message
+    // For subsequent messages, the checkpointer will load previous state automatically
+    const shouldInitialize = !currentState.values.userId;
+
+    console.log(
+      "[processPlanChatMessage] Should initialize:",
+      shouldInitialize
+    );
+
+    // Track initial message count to return only new messages
+    const initialMessageCount = currentState.values.messages?.length || 0;
 
     // Invoke graph with user message
+    // If first time, provide userId/userName. Otherwise, just the message.
     const result = await graph.invoke(
-      {
-        ...initialState,
-        messages: [new HumanMessage(userMessage)],
-      },
+      shouldInitialize
+        ? {
+            userId: user.id,
+            userName: user.name || "there",
+            messages: [new HumanMessage(userMessage)],
+          }
+        : {
+            messages: [new HumanMessage(userMessage)],
+          },
       config
     );
 
-    // Extract messages and parse action buttons
-    const messages: PlanChatMessage[] = result.messages.map((msg) => {
+    // Extract only NEW messages (those added during this invocation)
+    // This prevents duplicate/repetitive messages from being returned
+    const newMessages = (result.messages || []).slice(initialMessageCount);
+
+    const messages: PlanChatMessage[] = newMessages.map((msg) => {
       const content = msg.content.toString();
       const actions = parseActionButtons(content);
 

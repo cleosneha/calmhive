@@ -23,8 +23,7 @@ export async function executeEditNode(
     const result = await executePlanEdit(
       state.userId,
       state.pendingEdit.type,
-      state.pendingEdit.data,
-      state.planId
+      state.pendingEdit.data
     );
 
     if (!result.success) {
@@ -51,11 +50,11 @@ export async function executeEditNode(
       pendingEdit: null,
       lastEdit,
       messages: [
-        new AIMessage({
-          content: `✅ **Plan updated successfully!**\n\n${
+        new AIMessage(
+          `✅ **Plan updated successfully!**\n\n${
             result.message || "Your changes have been applied."
-          }\n\n[UNDO_BUTTON]`,
-        }),
+          }`
+        ),
       ],
     };
   } catch (error) {

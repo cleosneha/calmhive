@@ -12,8 +12,7 @@ export async function executePlanEdit(
     | "modify_task"
     | "change_days_off"
     | "other",
-  data: Record<string, unknown>,
-  planId?: number | null
+  data: Record<string, unknown>
 ): Promise<{
   success: boolean;
   message?: string;
@@ -103,28 +102,64 @@ export async function executePlanEdit(
       }
 
       case "modify_task": {
-        const { taskId, day, timeRange, activity } = data as {
-          taskId?: number;
-          day?: string;
-          timeRange?: string;
-          activity?: string;
-        };
-
-        if (!taskId) {
-          return { success: false, error: "Task ID is required" };
-        }
-
-        // Verify task belongs to user's plan
-        const task = await prisma.task.findUnique({
-          where: { id: taskId },
-          include: { plan: true },
-        });
-
-        if (!task || task.plan.userId !== userId) {
-          return {
-            success: false,
-            error: "Task not found or doesn't belong to this user",
+        const { taskId, day, timeRange, activity, oldActivity, notes } =
+          data as {
+            taskId?: number;
+            day?: string;
+            timeRange?: string;
+            activity?: string;
+            oldActivity?: string;
+            notes?: string;
           };
+
+        let task;
+
+        // If taskId is provided, use it directly
+        if (taskId) {
+          task = await prisma.task.findUnique({
+            where: { id: taskId },
+            include: { plan: true },
+          });
+
+          if (!task || task.plan.userId !== userId) {
+            return {
+              success: false,
+              error: "Task not found or doesn't belong to this user",
+            };
+          }
+        } else {
+          // Find task by matching oldActivity, day, and timeRange
+          if (!oldActivity || !day || !timeRange) {
+            return {
+              success: false,
+              error:
+                "Task identification info (oldActivity, day, timeRange) is required",
+            };
+          }
+
+          // Find matching task in user's plan
+          const tasks = plan.tasks.filter(
+            (t) =>
+              t.day.toLowerCase() === day.toLowerCase() &&
+              t.timeRange === timeRange &&
+              t.activity.toLowerCase().includes(oldActivity.toLowerCase())
+          );
+
+          if (tasks.length === 0) {
+            return {
+              success: false,
+              error: `Could not find task "${oldActivity}" on ${day} at ${timeRange}`,
+            };
+          }
+
+          if (tasks.length > 1) {
+            return {
+              success: false,
+              error: "Multiple matching tasks found. Please be more specific.",
+            };
+          }
+
+          task = tasks[0];
         }
 
         // Store previous task data for undo
@@ -133,14 +168,16 @@ export async function executePlanEdit(
           day: task.day,
           timeRange: task.timeRange,
           activity: task.activity,
+          notes: task.notes,
         };
 
         const updated = await prisma.task.update({
-          where: { id: taskId },
+          where: { id: task.id },
           data: {
             ...(day && { day }),
             ...(timeRange && { timeRange }),
             ...(activity && { activity }),
+            ...(notes && { notes }),
           },
         });
 
@@ -197,7 +234,6 @@ export async function executePlanEdit(
           updatedPlan.tasks,
           updatedPlan.daysOff
         );
-        console.log("✅ Embeddings updated after plan edit");
       }
     }
 

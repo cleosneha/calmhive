@@ -261,7 +261,7 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
                               }}
                               task={task}
                               onSave={async (updatedTask) => {
-                                console.log("Task saved:", updatedTask);
+                                setEditingTaskId(null);
                               }}
                               onTaskSaved={onRefresh}
                             />

@@ -61,35 +61,6 @@ export default function ChatMessages({
                 >
                   {msg.content}
                 </ReactMarkdown>
-
-                {/* Render action buttons if present */}
-                {msg.actions && msg.actions.length > 0 && (
-                  <div className="flex gap-2 mt-3">
-                    {msg.actions.map((action, actionIdx) => (
-                      <Button
-                        key={actionIdx}
-                        onClick={() => onActionClick?.(`action:${action.type}`)}
-                        size="sm"
-                        variant={
-                          action.type === "confirm"
-                            ? "default"
-                            : action.type === "undo"
-                            ? "outline"
-                            : "ghost"
-                        }
-                        className={
-                          action.type === "confirm"
-                            ? "bg-[var(--ch-sage-dark)] text-white hover:bg-[var(--ch-sage-dark)]/90"
-                            : action.type === "undo"
-                            ? "border-[var(--ch-sage-dark)] text-[var(--ch-sage-dark)] hover:bg-[var(--ch-sage-dark)]/10"
-                            : ""
-                        }
-                      >
-                        {action.label}
-                      </Button>
-                    ))}
-                  </div>
-                )}
               </>
             ) : (
               <div className="whitespace-pre-wrap">{msg.content}</div>
