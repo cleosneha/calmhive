@@ -30,7 +30,7 @@ model User {
     updatedAt DateTime @updatedAt
 
     onboarding     Onboarding?
-    plan           Plan
+    plan           Plan?
     journalEntries JournalEntry[]
     insights       Insight[]
     accounts       Account[]
@@ -105,8 +105,6 @@ model Plan {
     userId       String
     daysOff      String[] @default([])
     hoursSummary Json? // { "Monday": 8, "Tuesday": 7, ..., "weekTotal": 40 }
-    startDate    DateTime
-    endDate      DateTime
     createdAt    DateTime @default(now())
     updatedAt    DateTime @updatedAt
 
