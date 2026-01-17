@@ -5,7 +5,7 @@ import { formatHoursHuman } from "@/utils/formatting";
 import type { ApiResponse, ApiError } from "@/types/api";
 
 /**
- * Fetch user's active plan with tasks
+ * Fetch user's plan with tasks
  * @param userId - The user ID (passed from authenticated context)
  */
 export async function fetchUserPlan(userId: string): Promise<
@@ -17,68 +17,55 @@ export async function fetchUserPlan(userId: string): Promise<
         hoursSummary: Record<string, number> | null;
         createdAt: Date;
         updatedAt: Date;
-        tasks: Array<{
+        tasks: {
           id: number;
-          planId: number;
           day: string;
           timeRange: string;
           activity: string;
           status: string;
           notes: string | null;
-          personalNotes: string;
-        }>;
+        }[];
       } | null;
     }>
   | ApiError
 > {
   try {
+    // userId is already authenticated by the layout (requireOnboarding)
+    // No need to call getCurrentUser() which uses headers()
+
     const planData = await prisma.plan.findUnique({
       where: {
         userId,
       },
-      select: {
-        id: true,
-        userId: true,
-        daysOff: true,
-        hoursSummary: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
         tasks: {
-          select: {
-            id: true,
-            planId: true,
-            day: true,
-            timeRange: true,
-            activity: true,
-            status: true,
-            notes: true,
-            personalNotes: true,
-          },
           orderBy: [{ day: "asc" }, { timeRange: "asc" }],
         },
       },
     });
 
-    if (!planData) {
-      return {
-        status: "success",
-        data: { plan: null },
-        message: "No plan found",
-      };
-    }
+    // Type cast hoursSummary to ensure TypeScript compatibility
+    const numericHours = planData
+      ? (planData.hoursSummary as Record<string, number> | null) || null
+      : null;
 
-    const hoursSummary =
-      (planData.hoursSummary as Record<string, number> | null) || null;
+    const hoursSummaryHuman = numericHours
+      ? Object.fromEntries(
+          Object.entries(numericHours).map(([k, v]) => [k, formatHoursHuman(v)])
+        )
+      : null;
 
+    const plan = planData
+      ? {
+          ...planData,
+          hoursSummary: numericHours,
+          hoursSummaryHuman,
+        }
+      : null;
     return {
       status: "success",
-      data: {
-        plan: {
-          ...planData,
-          hoursSummary,
-        },
-      },
-      message: "Plan fetched successfully",
+      data: { plan },
+      message: plan ? "Plan fetched successfully" : "No plan found",
     };
   } catch (error) {
     console.error("Error fetching plan:", error);
