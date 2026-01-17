@@ -34,7 +34,13 @@ export function buildEditPreview(analysis: EditAnalysisResult): EditPreview {
 
     case "remove_task":
       return {
-        before: `Task to remove: **${extractedEdit.activity || "Task"}**`,
+        before: `Task to remove: **${extractedEdit.activity || "Task"}**\n   ${
+          extractedEdit.day || "Day"
+        } at ${extractedEdit.timeRange || "Time"}${
+          extractedEdit.isLastTask
+            ? "\n\n⚠️ This will delete your entire plan"
+            : ""
+        }`,
       };
 
     case "modify_task": {
@@ -142,7 +148,13 @@ export function buildPreviewMessage(analysis: EditAnalysisResult): string {
     }
 
     case "remove_task":
-      return `I have detected **${extractedEdit.activity}** which you want to remove.\n\n[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`;
+      return `I have detected **${extractedEdit.activity}** on **${
+        extractedEdit.day
+      }** at **${extractedEdit.timeRange}** which you want to remove.${
+        extractedEdit.isLastTask
+          ? "\n\n⚠️ **Warning:** This is the only task in your plan. Deleting it will remove your entire plan. You will need to create a new plan afterwards."
+          : "\n\n⚠️ **Note:** This action is irreversible."
+      }\n\n[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`;
 
     case "change_days_off":
       return `I have detected you want to set days off as: **${

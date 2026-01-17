@@ -1,6 +1,11 @@
 import type { PlanChatbotStateType } from "../state";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
-import { processUserMessage, HARD_CODED_MESSAGES } from "../utils";
+import {
+  processUserMessage,
+  HARD_CODED_MESSAGES,
+  validateAddTask,
+  validateRemoveTask,
+} from "../utils";
 import {
   buildEditPreview,
   buildPreviewMessage,
@@ -85,6 +90,128 @@ export async function analyzeNode(
   // PRIORITY 3: Handle edit requests with confirmation
   if (analysis.isEditRequest && analysis.extractedEdit) {
     console.log("  ✏️ EDIT REQUEST - preparing confirmation");
+
+    // VALIDATION FOR ADD_TASK
+    if (analysis.editType === "add_task") {
+      const { day, timeRange, activity } = analysis.extractedEdit;
+
+      // Check if all required fields are present
+      if (!day || !timeRange || !activity) {
+        console.log("  ❌ ADD_TASK - missing required fields");
+        const missingFields = [];
+        if (!day) missingFields.push("day");
+        if (!timeRange) missingFields.push("time range");
+        if (!activity) missingFields.push("activity title");
+
+        return {
+          mode: "query",
+          messages: [
+            new AIMessage(
+              `I need more information to add this task. Please provide:\n${missingFields.map((f) => `- ${f}`).join("\n")}\n\nExample: "Add morning yoga on Monday from 7:00 AM to 8:00 AM"`
+            ),
+          ],
+          responseHandled: true,
+        };
+      }
+
+      // Validate the task data
+      const validation = await validateAddTask(
+        state.userId,
+        day,
+        timeRange,
+        activity
+      );
+
+      if (!validation.isValid) {
+        console.log("  ❌ ADD_TASK - validation failed:", validation.errors);
+        return {
+          mode: "query",
+          messages: [
+            new AIMessage(
+              `**Cannot add this task.** ${validation.errors.join(" ")}\n\nPlease try again with valid information.`
+            ),
+          ],
+          responseHandled: true,
+        };
+      }
+
+      // Use normalized day from validation
+      if (validation.normalizedDay) {
+        analysis.extractedEdit.day = validation.normalizedDay;
+      }
+
+      // Check for time conflicts
+      if (
+        typeof analysis.extractedEdit.day === "string" &&
+        typeof analysis.extractedEdit.timeRange === "string"
+      ) {
+        const conflictCheck = await checkTimeConflict(
+          state.userId,
+          analysis.extractedEdit.day,
+          analysis.extractedEdit.timeRange
+        );
+
+        if (conflictCheck.hasConflict) {
+          console.log("  ⚠️ TIME CONFLICT DETECTED - cannot add task");
+          return {
+            mode: "query",
+            messages: [
+              new AIMessage(
+                `**Cannot add this task.** There's already a **${conflictCheck.conflictingActivity}** scheduled on **${analysis.extractedEdit.day}** at **${analysis.extractedEdit.timeRange}**.\n\nPlease choose a different time slot.`
+              ),
+            ],
+            responseHandled: true,
+          };
+        }
+      }
+    }
+
+    // VALIDATION FOR REMOVE_TASK
+    if (analysis.editType === "remove_task") {
+      const { oldActivity, day, timeRange } = analysis.extractedEdit;
+
+      // Check if activity is provided
+      if (!oldActivity) {
+        console.log("  ❌ REMOVE_TASK - missing activity name");
+        return {
+          mode: "query",
+          messages: [
+            new AIMessage(
+              'I need to know which task you want to remove. Please specify the activity name.\n\nExample: "Remove morning yoga" or "Delete the 7 AM workout"'
+            ),
+          ],
+          responseHandled: true,
+        };
+      }
+
+      // Validate and find the task
+      const validation = await validateRemoveTask(
+        state.userId,
+        oldActivity,
+        day,
+        timeRange
+      );
+
+      if (!validation.isValid) {
+        console.log("  ❌ REMOVE_TASK - validation failed:", validation.error);
+        return {
+          mode: "query",
+          messages: [
+            new AIMessage(
+              `**Cannot remove this task.** ${validation.error}\n\nPlease check your plan and try again.`
+            ),
+          ],
+          responseHandled: true,
+        };
+      }
+
+      // Store the full task details and isLastTask flag for preview
+      analysis.extractedEdit.taskId = validation.taskId;
+      analysis.extractedEdit.activity = validation.taskActivity;
+      analysis.extractedEdit.day = validation.taskDay;
+      analysis.extractedEdit.timeRange = validation.taskTimeRange;
+      analysis.extractedEdit.isLastTask = validation.isLastTask;
+    }
 
     // Check for time conflicts if it's a modify_task with time change
     if (

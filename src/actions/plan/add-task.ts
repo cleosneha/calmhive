@@ -3,6 +3,7 @@
 import { getCurrentUser } from "@/actions/auth";
 import prisma from "@/lib/db";
 import { embedPlan } from "@/actions/plan/process-embedding";
+import { calculateHoursSummaryFromTasks } from "@/utils/duration";
 
 interface AddTaskInput {
   day: string;
@@ -85,13 +86,25 @@ export async function addTask(input: AddTaskInput): Promise<AddTaskResult> {
       },
     });
 
-    // Get updated tasks for embedding
+    // Get updated tasks for embedding and hours summary calculation
     const updatedPlan = await prisma.plan.findUnique({
       where: { id: plan.id },
       include: { tasks: true },
     });
 
     if (updatedPlan) {
+      // Calculate and update hoursSummary
+      const newHoursSummary = calculateHoursSummaryFromTasks(
+        updatedPlan.tasks,
+        updatedPlan.daysOff
+      );
+
+      // Update plan with new hoursSummary
+      await prisma.plan.update({
+        where: { id: plan.id },
+        data: { hoursSummary: newHoursSummary },
+      });
+
       // Update embeddings
       await embedPlan(user.id, plan.id, updatedPlan.tasks, updatedPlan.daysOff);
     }

@@ -3,6 +3,7 @@
 import { getCurrentUser } from "@/actions/auth";
 import prisma from "@/lib/db";
 import vectorStore from "@/ai/config/vector-store";
+import { calculateHoursSummaryFromTasks } from "@/utils/duration";
 import { v5 as uuidv5 } from "uuid";
 
 const PLAN_NAMESPACE = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
@@ -165,6 +166,30 @@ export async function saveTaskEdit(
         personalNotes: taskInput.personalNotes || "",
       },
     });
+
+    // Get updated plan data including all tasks and days off
+    const updatedPlan = await prisma.plan.findUnique({
+      where: { id: existingTask.planId },
+      include: { tasks: true },
+    });
+
+    // Calculate and update hoursSummary if timeRange or day changed
+    if (
+      updatedPlan &&
+      (taskInput.timeRange !== existingTask.timeRange ||
+        taskInput.day !== existingTask.day)
+    ) {
+      const newHoursSummary = calculateHoursSummaryFromTasks(
+        updatedPlan.tasks,
+        updatedPlan.daysOff
+      );
+
+      // Update plan with new hoursSummary
+      await prisma.plan.update({
+        where: { id: existingTask.planId },
+        data: { hoursSummary: newHoursSummary },
+      });
+    }
 
     // Update vector stores (Pinecone for prod, Qdrant for dev)
     try {

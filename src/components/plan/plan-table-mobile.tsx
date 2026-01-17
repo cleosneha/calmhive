@@ -15,10 +15,19 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { updateTaskStatus } from "@/actions/plan/update-task-status";
+import { removeTask } from "@/actions/plan/remove-task";
 import TaskEditDialog from "@/components/plan/task-edit";
 import { toast } from "sonner";
-import { FiEdit2 } from "react-icons/fi";
+import { FiEdit2, FiTrash2 } from "react-icons/fi";
 
 interface Task {
   id: number;
@@ -49,6 +58,8 @@ interface Props {
 export default function PlanTableMobile({ plan, onRefresh }: Props) {
   const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Sort tasks by day and time
   const sortedTasks = plan.tasks
@@ -99,6 +110,37 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
       toast.error("Failed to update status");
     } finally {
       setUpdatingStatusId(null);
+    }
+  };
+
+  const handleDeleteTask = async (taskId: number) => {
+    setIsDeleting(true);
+    try {
+      const result = await removeTask({ taskId });
+
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      if (result.data?.planDeleted) {
+        toast.success(
+          "Task removed! Your entire plan has been deleted. You can create a new one."
+        );
+      } else {
+        toast.success("Task removed successfully");
+      }
+
+      // Refresh plan data
+      if (onRefresh) {
+        await onRefresh();
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      toast.error("Failed to delete task");
+    } finally {
+      setDeleteConfirmId(null);
+      setIsDeleting(false);
     }
   };
 
@@ -253,6 +295,17 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
                               Edit Task
                             </button>
 
+                            {/* Delete Button */}
+                            <button
+                              type="button"
+                              onClick={() => setDeleteConfirmId(task.id)}
+                              className="w-full px-3 py-2 text-sm font-medium border border-red-300 rounded-md hover:bg-red-50 hover:shadow-sm transition-all flex items-center justify-center gap-2 text-red-600 hover:text-red-700"
+                              disabled={isDeleting}
+                            >
+                              <FiTrash2 className="w-4 h-4" />
+                              Delete Task
+                            </button>
+
                             {/* Task Edit Dialog */}
                             <TaskEditDialog
                               open={editingTaskId === task.id}
@@ -276,6 +329,37 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
           );
         })}
       </Accordion>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={deleteConfirmId !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteConfirmId(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogTitle>Delete Task</AlertDialogTitle>
+          <AlertDialogDescription>
+            {plan.tasks.length === 1
+              ? "This is the only task in your plan. Deleting it will remove your entire plan. You can create a new plan afterwards. Are you sure you want to proceed?"
+              : "Are you sure you want to delete this task? This action cannot be undone."}
+          </AlertDialogDescription>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteConfirmId) {
+                  handleDeleteTask(deleteConfirmId);
+                }
+              }}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

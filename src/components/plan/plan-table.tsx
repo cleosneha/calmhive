@@ -10,8 +10,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { updateTaskStatus } from "@/actions/plan/update-task-status";
+import { removeTask } from "@/actions/plan/remove-task";
 import { toast } from "sonner";
+import { FiTrash2 } from "react-icons/fi";
 
 interface Task {
   id: number;
@@ -41,6 +51,8 @@ interface Props {
 
 export default function PlanTable({ plan, onEdit, onRefresh }: Props) {
   const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Sort tasks by day and time
   const sortedTasks = plan.tasks
@@ -92,6 +104,37 @@ export default function PlanTable({ plan, onEdit, onRefresh }: Props) {
       toast.error("Failed to update status");
     } finally {
       setUpdatingStatusId(null);
+    }
+  };
+
+  const handleDeleteTask = async (taskId: number) => {
+    setIsDeleting(true);
+    try {
+      const result = await removeTask({ taskId });
+
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      if (result.data?.planDeleted) {
+        toast.success(
+          "Task removed! Your entire plan has been deleted. You can create a new one."
+        );
+      } else {
+        toast.success("Task removed successfully");
+      }
+
+      // Refresh plan data
+      if (onRefresh) {
+        await onRefresh();
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      toast.error("Failed to delete task");
+    } finally {
+      setDeleteConfirmId(null);
+      setIsDeleting(false);
     }
   };
 
@@ -212,47 +255,58 @@ export default function PlanTable({ plan, onEdit, onRefresh }: Props) {
                           </p>
                         </TaskHoverCard>
 
-                        <Select
-                          value={task.status}
-                          onValueChange={(value) =>
-                            handleStatusChange(task.id, value)
-                          }
-                          disabled={updatingStatusId === task.id}
-                        >
-                          <SelectTrigger
-                            className={`w-auto px-2 py-0.5 text-xs font-medium border-0 shadow-none ${
-                              statusClasses[task.status] ?? ""
-                            }`}
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={task.status}
+                            onValueChange={(value) =>
+                              handleStatusChange(task.id, value)
+                            }
+                            disabled={updatingStatusId === task.id}
                           >
-                            <SelectValue placeholder="Status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending">
-                              <div className="flex items-center gap-2">
-                                <span className="inline-block w-2 h-2 rounded-full bg-amber-500" />
-                                Pending
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="done">
-                              <div className="flex items-center gap-2">
-                                <span className="inline-block w-2 h-2 rounded-full bg-emerald-600" />
-                                Done
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="partial">
-                              <div className="flex items-center gap-2">
-                                <span className="inline-block w-2 h-2 rounded-full bg-yellow-500" />
-                                Partially Done
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="skipped">
-                              <div className="flex items-center gap-2">
-                                <span className="inline-block w-2 h-2 rounded-full bg-red-500" />
-                                Skipped
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
+                            <SelectTrigger
+                              className={`w-auto px-2 py-0.5 text-xs font-medium border-0 shadow-none ${
+                                statusClasses[task.status] ?? ""
+                              }`}
+                            >
+                              <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">
+                                <div className="flex items-center gap-2">
+                                  <span className="inline-block w-2 h-2 rounded-full bg-amber-500" />
+                                  Pending
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="done">
+                                <div className="flex items-center gap-2">
+                                  <span className="inline-block w-2 h-2 rounded-full bg-emerald-600" />
+                                  Done
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="partial">
+                                <div className="flex items-center gap-2">
+                                  <span className="inline-block w-2 h-2 rounded-full bg-yellow-500" />
+                                  Partially Done
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="skipped">
+                                <div className="flex items-center gap-2">
+                                  <span className="inline-block w-2 h-2 rounded-full bg-red-500" />
+                                  Skipped
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          <button
+                            onClick={() => setDeleteConfirmId(task.id)}
+                            className="p-1.5 hover:bg-red-50 rounded transition-colors text-red-600 hover:text-red-700"
+                            title="Delete task"
+                            disabled={isDeleting}
+                          >
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </td>
 
@@ -268,6 +322,37 @@ export default function PlanTable({ plan, onEdit, onRefresh }: Props) {
           </tbody>
         </table>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={deleteConfirmId !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteConfirmId(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogTitle>Delete Task</AlertDialogTitle>
+          <AlertDialogDescription>
+            {plan.tasks.length === 1
+              ? "This is the only task in your plan. Deleting it will remove your entire plan. You can create a new plan afterwards. Are you sure you want to proceed?"
+              : "Are you sure you want to delete this task? This action cannot be undone."}
+          </AlertDialogDescription>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteConfirmId) {
+                  handleDeleteTask(deleteConfirmId);
+                }
+              }}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

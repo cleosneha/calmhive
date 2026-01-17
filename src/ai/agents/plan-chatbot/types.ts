@@ -38,6 +38,7 @@ export interface EditAnalysisResult {
     notes?: string; // AI-generated notes for the activity
     taskId?: number;
     daysOff?: string[];
+    isLastTask?: boolean; // For remove_task - indicates if this is the last task in plan
   };
   safetyIssue?: string;
   suggestion?: string;

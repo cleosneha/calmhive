@@ -1,8 +1,12 @@
 import prisma from "@/lib/db";
 import { embedPlan } from "@/actions/plan/process-embedding";
+import { calculateHoursSummaryFromTasks } from "@/utils/duration";
+import { addTask } from "@/actions/plan/add-task";
+import { removeTask } from "@/actions/plan/remove-task";
 
 /**
  * Execute plan edit in database and vector store
+ * Also updates hoursSummary when plan is modified
  */
 export async function executePlanEdit(
   userId: string,
@@ -38,26 +42,32 @@ export async function executePlanEdit(
 
     switch (editType) {
       case "add_task": {
-        const { day, timeRange, activity } = data as {
+        const { day, timeRange, activity, notes } = data as {
           day: string;
           timeRange: string;
           activity: string;
+          notes?: string;
         };
 
-        const newTask = await prisma.task.create({
-          data: {
-            planId: plan.id,
-            day,
-            timeRange,
-            activity,
-            status: "pending",
-          },
+        // Use the addTask action which handles all validations, embedding, and hoursSummary
+        const addResult = await addTask({
+          day,
+          timeRange,
+          activity,
+          notes: notes || null,
         });
+
+        if (!addResult.success) {
+          return {
+            success: false,
+            error: addResult.message || "Failed to add task",
+          };
+        }
 
         result = {
           success: true,
           message: `Added **${activity}** on **${day}** at **${timeRange}**.`,
-          previousData: { taskId: newTask.id }, // Store new task ID for undo (removal)
+          previousData: { taskId: addResult.data?.taskId },
         };
         break;
       }
@@ -69,35 +79,31 @@ export async function executePlanEdit(
           return { success: false, error: "Task ID is required" };
         }
 
-        // Verify task belongs to user's plan
-        const task = await prisma.task.findUnique({
-          where: { id: taskId },
-          include: { plan: true },
-        });
+        // Use the removeTask action which handles all validations, embedding, and hoursSummary
+        const removeResult = await removeTask({ taskId });
 
-        if (!task || task.plan.userId !== userId) {
+        if (!removeResult.success) {
           return {
             success: false,
-            error: "Task not found or doesn't belong to this user",
+            error: removeResult.message || "Failed to remove task",
           };
         }
 
-        // Store task data for undo (re-adding)
-        const previousData = {
-          day: task.day,
-          timeRange: task.timeRange,
-          activity: task.activity,
-        };
-
-        await prisma.task.delete({
-          where: { id: taskId },
-        });
-
-        result = {
-          success: true,
-          message: `Removed **${task.activity}** from **${task.day}**.`,
-          previousData,
-        };
+        // Check if plan was deleted (last task)
+        if (removeResult.data?.planDeleted) {
+          result = {
+            success: true,
+            message:
+              "Task removed and your plan has been deleted as it had no other tasks.",
+            previousData: { planDeleted: true },
+          };
+        } else {
+          result = {
+            success: true,
+            message: `Task removed successfully.`,
+            previousData: { taskId },
+          };
+        }
         break;
       }
 
@@ -181,6 +187,23 @@ export async function executePlanEdit(
           },
         });
 
+        // Recalculate hoursSummary if timeRange or day changed
+        if (timeRange || day) {
+          const updatedTasksForModify = plan.tasks.map((t) =>
+            t.id === task.id ? updated : t
+          );
+          const newHoursSummary = calculateHoursSummaryFromTasks(
+            updatedTasksForModify,
+            plan.daysOff
+          );
+
+          // Update plan with new hoursSummary
+          await prisma.plan.update({
+            where: { id: plan.id },
+            data: { hoursSummary: newHoursSummary },
+          });
+        }
+
         result = {
           success: true,
           message: `Updated task on **${updated.day}**: **${updated.activity}**.`,
@@ -201,9 +224,15 @@ export async function executePlanEdit(
           daysOff: plan.daysOff,
         };
 
+        // Recalculate hoursSummary with new days off
+        const newHoursSummary = calculateHoursSummaryFromTasks(
+          plan.tasks,
+          daysOff
+        );
+
         await prisma.plan.update({
           where: { id: plan.id },
-          data: { daysOff },
+          data: { daysOff, hoursSummary: newHoursSummary },
         });
 
         result = {
