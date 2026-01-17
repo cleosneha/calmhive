@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { getCurrentUser } from "@/actions/auth";
 import { fetchUserPlan } from "@/fetchers/plan";
-import PlanClient from "./plan-client";
+import PlanClient from "./client";
 import NoPlanUI from "./no-plan-ui";
 import Loading from "@/app/loading";
 
