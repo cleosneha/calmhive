@@ -114,7 +114,7 @@ export default function TaskEditDialog({
         day: task.day,
         timeRange: data.timeRange,
         activity: data.activity,
-        status: task.status as "pending" | "done" | "skipped" | "partial",
+        status: task.status as "pending" | "done" | "partial",
         notes: data.notes || null,
         personalNotes: data.selfNotes || null,
       };
@@ -259,9 +259,8 @@ export default function TaskEditDialog({
                               }
 
                               // Generate notes
-                              const res = await generateNotesSuggestion(
-                                activity
-                              );
+                              const res =
+                                await generateNotesSuggestion(activity);
                               if (!res.success) {
                                 toast.error(
                                   res.message || "Failed to generate notes"

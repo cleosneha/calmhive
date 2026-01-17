@@ -21,7 +21,7 @@ interface TaskUpdateInput {
   day: string;
   timeRange: string;
   activity: string;
-  status: "pending" | "done" | "skipped" | "partial";
+  status: "pending" | "done" | "partial";
   notes: string | null;
   personalNotes?: string | null;
 }
@@ -372,10 +372,24 @@ export async function saveTaskEdit(
       // Continue with success response since DB update succeeded
     }
 
+    // Only return allowed status values for TaskUpdateInput
+    const allowedStatuses = ["pending", "done", "partial"] as const;
+    const safeStatus = allowedStatuses.includes(updatedTask.status as typeof allowedStatuses[number])
+      ? (updatedTask.status as typeof allowedStatuses[number])
+      : "pending";
+
     return {
       success: true,
       message: "Task updated successfully",
-      data: updatedTask,
+      data: {
+        id: updatedTask.id,
+        day: updatedTask.day,
+        timeRange: updatedTask.timeRange,
+        activity: updatedTask.activity,
+        status: safeStatus,
+        notes: updatedTask.notes,
+        personalNotes: updatedTask.personalNotes,
+      },
     };
   } catch (error) {
     console.error("Error saving task edit:", error);

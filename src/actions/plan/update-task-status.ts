@@ -5,7 +5,7 @@ import prisma from "@/lib/db";
 
 interface UpdateTaskStatusInput {
   taskId: number;
-  status: "pending" | "done" | "skipped" | "partial";
+  status: "pending" | "done" | "partial";
 }
 
 interface UpdateTaskStatusResponse {
@@ -33,7 +33,7 @@ export async function updateTaskStatus(
     const { taskId, status } = input;
 
     // Validate status value
-    const validStatuses = ["pending", "done", "skipped", "partial"];
+    const validStatuses = ["pending", "done", "partial"];
     if (!validStatuses.includes(status)) {
       return {
         success: false,

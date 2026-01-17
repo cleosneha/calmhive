@@ -84,7 +84,6 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
     done: "text-emerald-700 bg-emerald-50",
     partial: "text-yellow-600 bg-yellow-50",
     pending: "text-amber-600 bg-amber-50",
-    skipped: "text-red-600 bg-red-50",
   };
 
   const handleStatusChange = async (taskId: number, newStatus: string) => {
@@ -92,7 +91,7 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
     try {
       const result = await updateTaskStatus({
         taskId,
-        status: newStatus as "pending" | "done" | "skipped" | "partial",
+        status: newStatus as "pending" | "done" | "partial",
       });
 
       if (!result.success) {
@@ -261,12 +260,6 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
                                     <div className="flex items-center gap-2">
                                       <span className="inline-block w-1.5 h-1.5 rounded-full bg-yellow-500" />
                                       Partially Done
-                                    </div>
-                                  </SelectItem>
-                                  <SelectItem value="skipped">
-                                    <div className="flex items-center gap-2">
-                                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500" />
-                                      Skipped
                                     </div>
                                   </SelectItem>
                                 </SelectContent>

@@ -54,7 +54,6 @@ function getStatusLabel(status?: string): string {
   if (s === "pending") return "Pending";
   if (s === "partial") return "Partially Done";
   if (s === "done") return "Done";
-  if (s === "skipped") return "Skipped";
   return status;
 }
 
@@ -65,7 +64,6 @@ function StatusBadge({ status }: { status?: string }): React.ReactNode {
   if (s === "pending") cls = "text-amber-600";
   else if (s === "partial") cls = "text-yellow-600";
   else if (s === "done") cls = "text-emerald-600";
-  else if (s === "skipped") cls = "text-slate-400";
 
   return <span className={`text-sm font-medium ${cls}`}>{label}</span>;
 }
