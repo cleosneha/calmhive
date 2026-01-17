@@ -43,7 +43,6 @@ import { useRouter } from "next/navigation";
 import { deleteUserAccount } from "@/actions/auth";
 
 const navLinks = [
-  { href: "/user", icon: <FiHome />, label: "Home" },
   { href: "/user/journal", icon: <FiBook />, label: "Journal" },
   { href: "/user/plan", icon: <FiCalendar />, label: "Plan" },
   { href: "/user/insights", icon: <FiBarChart2 />, label: "Insights" },
