@@ -5,7 +5,7 @@ import { formatHoursHuman } from "@/utils/formatting";
 import type { ApiResponse, ApiError } from "@/types/api";
 
 /**
- * Fetch user's plan with tasks
+ * Fetch user's plan with tasks and holidays for current week
  * @param userId - The user ID (passed from authenticated context)
  */
 export async function fetchUserPlan(userId: string): Promise<
@@ -25,24 +25,55 @@ export async function fetchUserPlan(userId: string): Promise<
           status: string;
           notes: string | null;
         }[];
+        holidays: Array<{
+          id: number;
+          date: Date;
+          reason: string | null;
+        }>;
       } | null;
     }>
   | ApiError
 > {
   try {
-    // userId is already authenticated by the layout (requireOnboarding)
-    // No need to call getCurrentUser() which uses headers()
+    // Calculate current week's date range (Sunday to Saturday)
+    const today = new Date();
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay());
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
 
-    const planData = await prisma.plan.findUnique({
-      where: {
-        userId,
-      },
-      include: {
-        tasks: {
-          orderBy: [{ day: "asc" }, { timeRange: "asc" }],
+    // Fetch plan and holidays in parallel for optimal performance
+    const [planData, holidays] = await Promise.all([
+      prisma.plan.findUnique({
+        where: {
+          userId,
         },
-      },
-    });
+        include: {
+          tasks: {
+            orderBy: [{ day: "asc" }, { timeRange: "asc" }],
+          },
+        },
+      }),
+      prisma.holiday.findMany({
+        where: {
+          userId,
+          date: {
+            gte: weekStart,
+            lte: weekEnd,
+          },
+        },
+        select: {
+          id: true,
+          date: true,
+          reason: true,
+        },
+        orderBy: {
+          date: "asc",
+        },
+      }),
+    ]);
 
     // Type cast hoursSummary to ensure TypeScript compatibility
     const numericHours = planData
@@ -51,7 +82,10 @@ export async function fetchUserPlan(userId: string): Promise<
 
     const hoursSummaryHuman = numericHours
       ? Object.fromEntries(
-          Object.entries(numericHours).map(([k, v]) => [k, formatHoursHuman(v)])
+          Object.entries(numericHours).map(([k, v]) => [
+            k,
+            formatHoursHuman(v),
+          ]),
         )
       : null;
 
@@ -60,8 +94,10 @@ export async function fetchUserPlan(userId: string): Promise<
           ...planData,
           hoursSummary: numericHours,
           hoursSummaryHuman,
+          holidays,
         }
       : null;
+
     return {
       status: "success",
       data: { plan },

@@ -5,7 +5,7 @@ import PlanTable from "@/components/plan/plan-table";
 import PlanTableMobile from "@/components/plan/plan-table-mobile";
 import PlanChatbot from "@/components/plan/plan-chatbot";
 import AddTaskDialog from "@/components/plan/add-task";
-import { fetchUserPlan } from "@/fetchers/plan";
+import { usePlanData } from "@/hooks/use-plan-data";
 import { Button } from "@/components/ui/button";
 import { BsStars } from "react-icons/bs";
 import { FiX } from "react-icons/fi";
@@ -29,6 +29,11 @@ interface Plan {
   createdAt: Date;
   updatedAt: Date;
   tasks: Task[];
+  holidays: Array<{
+    id: number;
+    date: Date;
+    reason: string | null;
+  }>;
 }
 
 interface Props {
@@ -39,7 +44,7 @@ interface Props {
 // Status icons and labels removed; only activity name is displayed in table cells.
 
 export default function PlanClient({ plan: initialPlan, userId }: Props) {
-  const [plan, setPlan] = useState<Plan>(initialPlan);
+  const { plan, refreshPlan, isRefreshing } = usePlanData(initialPlan);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -58,14 +63,7 @@ export default function PlanClient({ plan: initialPlan, userId }: Props) {
   }, [isChatbotOpen]);
 
   const handleRefresh = async () => {
-    try {
-      const res = await fetchUserPlan(userId);
-      if (res.status === "success" && res.data.plan) {
-        setPlan(res.data.plan);
-      }
-    } catch (error) {
-      console.error("Failed to refresh plan:", error);
-    }
+    await refreshPlan();
   };
 
   return (

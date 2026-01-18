@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import TaskHoverCard from "@/components/plan/hover-card";
 import {
@@ -18,9 +18,9 @@ import {
   AlertDialogDescription,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { updateTaskStatus } from "@/actions/plan/update-task-status";
-import { removeTask } from "@/actions/plan/remove-task";
-import { toast } from "sonner";
+import { HolidayPopup } from "@/components/plan/holiday-popup";
+import { usePlanTable } from "@/hooks/use-plan-table";
+import { Button } from "@/components/ui/button";
 import { FiTrash2 } from "react-icons/fi";
 
 interface Task {
@@ -41,6 +41,11 @@ interface Plan {
   createdAt: Date;
   updatedAt: Date;
   tasks: Task[];
+  holidays: Array<{
+    id: number;
+    date: Date;
+    reason: string | null;
+  }>;
 }
 
 interface Props {
@@ -50,92 +55,36 @@ interface Props {
 }
 
 export default function PlanTable({ plan, onEdit, onRefresh }: Props) {
-  const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const {
+    updatingStatusId,
+    deleteConfirmId,
+    setDeleteConfirmId,
+    isDeleting,
+    holidayPopupOpen,
+    setHolidayPopupOpen,
+    selectedDate,
+    isRemovingHoliday,
+    dayOrder,
+    statusClasses,
+    sortedTasks,
+    handleStatusChange,
+    handleDeleteTask,
+    handleRemoveHoliday,
+    openHolidayPopup,
+    isDayHoliday,
+    getDayDate,
+    getDayDateStr,
+  } = usePlanTable(plan, onRefresh);
 
-  // Sort tasks by day and time
-  const sortedTasks = plan.tasks
-    .filter((task) => !plan.daysOff.includes(task.day))
-    .sort((a, b) => {
-      const dayOrder = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-      ];
-      const dayA = dayOrder.indexOf(a.day);
-      const dayB = dayOrder.indexOf(b.day);
-      if (dayA !== dayB) return dayA - dayB;
-      return a.timeRange.localeCompare(b.timeRange);
+  // Convert holidays array to a Set of date strings for O(1) lookup
+  const holidayDates = useMemo(() => {
+    const dateSet = new Set<string>();
+    plan.holidays.forEach((holiday) => {
+      const d = new Date(holiday.date);
+      dateSet.add(d.toISOString().split("T")[0]);
     });
-
-  const statusClasses: Record<string, string> = {
-    done: "text-emerald-700 bg-emerald-50",
-    partial: "text-yellow-600 bg-yellow-50",
-    pending: "text-amber-600 bg-amber-50",
-  };
-
-  const handleStatusChange = async (taskId: number, newStatus: string) => {
-    setUpdatingStatusId(taskId);
-    try {
-      const result = await updateTaskStatus({
-        taskId,
-        status: newStatus as "pending" | "done" | "partial",
-      });
-
-      if (!result.success) {
-        toast.error(result.message);
-        return;
-      }
-
-      toast.success("Status updated successfully");
-
-      // Refresh plan data
-      if (onRefresh) {
-        await onRefresh();
-      }
-    } catch (error) {
-      console.error("Error updating status:", error);
-      toast.error("Failed to update status");
-    } finally {
-      setUpdatingStatusId(null);
-    }
-  };
-
-  const handleDeleteTask = async (taskId: number) => {
-    setIsDeleting(true);
-    try {
-      const result = await removeTask({ taskId });
-
-      if (!result.success) {
-        toast.error(result.message);
-        return;
-      }
-
-      if (result.data?.planDeleted) {
-        toast.success(
-          "Task removed! Your entire plan has been deleted. You can create a new one."
-        );
-      } else {
-        toast.success("Task removed successfully");
-      }
-
-      // Refresh plan data
-      if (onRefresh) {
-        await onRefresh();
-      }
-    } catch (error) {
-      console.error("Error deleting task:", error);
-      toast.error("Failed to delete task");
-    } finally {
-      setDeleteConfirmId(null);
-      setIsDeleting(false);
-    }
-  };
+    return dateSet;
+  }, [plan.holidays]);
 
   return (
     <div className="shadow-lg overflow-hidden hidden md:block">
@@ -203,32 +152,60 @@ export default function PlanTable({ plan, onEdit, onRefresh }: Props) {
                         className="border border-slate-200 px-4 py-3 align-top"
                         rowSpan={tasks.length}
                       >
-                        <div className="flex flex-col">
-                          <div className="font-semibold text-[var(--ch-sage-dark)]">
-                            {day}
-                          </div>
-                          {plan.hoursSummaryHuman &&
-                          plan.hoursSummaryHuman[day] ? (
-                            <Badge
-                              variant="secondary"
-                              className="mt-2 bg-[var(--ch-sage-dark)]/10 text-sm"
-                            >
-                              {plan.hoursSummaryHuman[day]}
-                            </Badge>
-                          ) : plan.hoursSummary &&
-                            plan.hoursSummary[day] != null ? (
-                            <Badge
-                              variant="secondary"
-                              className="mt-2 bg-[var(--ch-sage-dark)]/10 text-sm"
-                            >
-                              {plan.hoursSummary[day].toFixed(2)} hrs
-                            </Badge>
-                          ) : (
-                            <div className="text-[var(--foreground)]/30 text-sm mt-2">
-                              —
+                        {(() => {
+                          const dayDate = getDayDate(day);
+                          const dayDateStr = getDayDateStr(day);
+                          const isDayHolidayFlag = isDayHoliday(day);
+
+                          return (
+                            <div className="flex flex-col gap-2">
+                              <div className="font-semibold text-[var(--ch-sage-dark)]">
+                                {day}
+                              </div>
+                              {plan.hoursSummaryHuman &&
+                              plan.hoursSummaryHuman[day] ? (
+                                <Badge
+                                  variant="secondary"
+                                  className="mt-0 bg-[var(--ch-sage-dark)]/10 text-sm w-fit"
+                                >
+                                  {plan.hoursSummaryHuman[day]}
+                                </Badge>
+                              ) : plan.hoursSummary &&
+                                plan.hoursSummary[day] != null ? (
+                                <Badge
+                                  variant="secondary"
+                                  className="mt-0 bg-[var(--ch-sage-dark)]/10 text-sm w-fit"
+                                >
+                                  {plan.hoursSummary[day].toFixed(2)} hrs
+                                </Badge>
+                              ) : (
+                                <div className="text-[var(--foreground)]/30 text-sm">
+                                  —
+                                </div>
+                              )}
+                              {isDayHolidayFlag ? (
+                                <Button
+                                  onClick={() =>
+                                    handleRemoveHoliday(dayDateStr)
+                                  }
+                                  disabled={isRemovingHoliday}
+                                  size="xs"
+                                  className="rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 transition-colors w-fit shadow-sm"
+                                >
+                                  Remove Holiday
+                                </Button>
+                              ) : (
+                                <Button
+                                  onClick={() => openHolidayPopup(dayDate)}
+                                  size="xs"
+                                  className="rounded-2xl bg-slate-50 text-black border border-slate-500 hover:bg-slate-100 transition-colors w-fit shadow-md"
+                                >
+                                  Mark as Holiday
+                                </Button>
+                              )}
                             </div>
-                          )}
-                        </div>
+                          );
+                        })()}
                       </td>
                     )}
 
@@ -346,6 +323,16 @@ export default function PlanTable({ plan, onEdit, onRefresh }: Props) {
           </div>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Holiday Popup */}
+      {selectedDate && (
+        <HolidayPopup
+          open={holidayPopupOpen}
+          onOpenChange={setHolidayPopupOpen}
+          date={selectedDate}
+          onSuccess={onRefresh}
+        />
+      )}
     </div>
   );
 }

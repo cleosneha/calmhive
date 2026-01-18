@@ -36,7 +36,8 @@ model User {
     accounts       Account[]
     sessions       Session[]
 
-    image String?
+    image    String?
+    holidays Holiday[]
 
     @@index([emailVerified])
     @@map("user")
@@ -236,4 +237,21 @@ model CheckpointWrite {
 
     @@id([threadId, checkpointNs, checkpointId, taskId, idx])
     @@map("checkpoint_writes")
+}
+
+model Holiday {
+    id        Int      @id @default(autoincrement())
+    userId    String
+    date      DateTime @db.Date // Specific date (e.g., 2025-01-15)
+    reason    String? // Optional: e.g., "Meeting", "Sick leave"
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relations
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    // Constraints: One holiday per user per date
+    @@unique([userId, date])
+    @@index([userId])
+    @@map("holiday")
 }

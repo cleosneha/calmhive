@@ -57,17 +57,6 @@ function getStatusLabel(status?: string): string {
   return status;
 }
 
-function StatusBadge({ status }: { status?: string }): React.ReactNode {
-  const label = getStatusLabel(status);
-  const s = (status ?? "").toLowerCase();
-  let cls = "text-[var(--foreground)]/80";
-  if (s === "pending") cls = "text-amber-600";
-  else if (s === "partial") cls = "text-yellow-600";
-  else if (s === "done") cls = "text-emerald-600";
-
-  return <span className={`text-sm font-medium ${cls}`}>{label}</span>;
-}
-
 function EditIcon() {
   return <FiEdit className="w-4 h-4" />;
 }
@@ -249,9 +238,8 @@ export default function TaskHoverCard({
               )}
             </div>
 
-            {/* Status centered */}
-            <div className="px-3 pt-1 flex items-center justify-between ">
-              <StatusBadge status={status} />
+            {/* Edit Button */}
+            <div className="px-3 pt-1 flex items-center justify-end gap-2 pb-2">
               <Button
                 size="sm"
                 variant="ghost"

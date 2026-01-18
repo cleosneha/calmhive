@@ -23,10 +23,10 @@ import {
   AlertDialogDescription,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { updateTaskStatus } from "@/actions/plan/update-task-status";
-import { removeTask } from "@/actions/plan/remove-task";
 import TaskEditDialog from "@/components/plan/task-edit";
-import { toast } from "sonner";
+import { HolidayPopup } from "@/components/plan/holiday-popup";
+import { usePlanTable } from "@/hooks/use-plan-table";
+import { getDateForDayOfWeek, dateToISOString } from "@/utils/date";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 
 interface Task {
@@ -47,6 +47,11 @@ interface Plan {
   createdAt: Date;
   updatedAt: Date;
   tasks: Task[];
+  holidays: Array<{
+    id: number;
+    date: Date;
+    reason: string | null;
+  }>;
 }
 
 interface Props {
@@ -56,114 +61,34 @@ interface Props {
 }
 
 export default function PlanTableMobile({ plan, onRefresh }: Props) {
-  const [updatingStatusId, setUpdatingStatusId] = useState<number | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Sort tasks by day and time
-  const sortedTasks = plan.tasks
-    .filter((task) => !plan.daysOff.includes(task.day))
-    .sort((a, b) => {
-      const dayOrder = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-      ];
-      const dayA = dayOrder.indexOf(a.day);
-      const dayB = dayOrder.indexOf(b.day);
-      if (dayA !== dayB) return dayA - dayB;
-      return a.timeRange.localeCompare(b.timeRange);
-    });
-
-  const statusClasses: Record<string, string> = {
-    done: "text-emerald-700 bg-emerald-50",
-    partial: "text-yellow-600 bg-yellow-50",
-    pending: "text-amber-600 bg-amber-50",
-  };
-
-  const handleStatusChange = async (taskId: number, newStatus: string) => {
-    setUpdatingStatusId(taskId);
-    try {
-      const result = await updateTaskStatus({
-        taskId,
-        status: newStatus as "pending" | "done" | "partial",
-      });
-
-      if (!result.success) {
-        toast.error(result.message);
-        return;
-      }
-
-      toast.success("Status updated successfully");
-
-      if (onRefresh) {
-        await onRefresh();
-      }
-    } catch (error) {
-      console.error("Error updating status:", error);
-      toast.error("Failed to update status");
-    } finally {
-      setUpdatingStatusId(null);
-    }
-  };
-
-  const handleDeleteTask = async (taskId: number) => {
-    setIsDeleting(true);
-    try {
-      const result = await removeTask({ taskId });
-
-      if (!result.success) {
-        toast.error(result.message);
-        return;
-      }
-
-      if (result.data?.planDeleted) {
-        toast.success(
-          "Task removed! Your entire plan has been deleted. You can create a new one."
-        );
-      } else {
-        toast.success("Task removed successfully");
-      }
-
-      // Refresh plan data
-      if (onRefresh) {
-        await onRefresh();
-      }
-    } catch (error) {
-      console.error("Error deleting task:", error);
-      toast.error("Failed to delete task");
-    } finally {
-      setDeleteConfirmId(null);
-      setIsDeleting(false);
-    }
-  };
-
-  const dayOrder = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
-
-  const grouped: Record<string, Task[]> = {};
-  for (const t of sortedTasks) {
-    grouped[t.day] = grouped[t.day] || [];
-    grouped[t.day].push(t);
-  }
+  const {
+    updatingStatusId,
+    deleteConfirmId,
+    setDeleteConfirmId,
+    isDeleting,
+    holidayPopupOpen,
+    setHolidayPopupOpen,
+    selectedDate,
+    isRemovingHoliday,
+    dayOrder,
+    statusClasses,
+    groupedTasks,
+    handleStatusChange,
+    handleDeleteTask,
+    handleRemoveHoliday,
+    openHolidayPopup,
+    isDayHoliday,
+    getDayDate,
+    getDayDateStr,
+  } = usePlanTable(plan, onRefresh);
 
   return (
     <div className="space-y-4 py-4 w-full">
       <Accordion type="single" collapsible className="w-full">
         {dayOrder.map((day) => {
-          const tasks = grouped[day];
+          const tasks = groupedTasks[day];
           if (!tasks || tasks.length === 0) return null;
 
           const dayHours =
@@ -172,35 +97,60 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
               ? `${plan.hoursSummary[day].toFixed(2)} hrs`
               : null);
 
+          const dayDate = getDayDate(day);
+          const dayDateStr = getDayDateStr(day);
+          const isDayHolidayFlag = isDayHoliday(day);
+
           return (
             <AccordionItem
               key={day}
               value={day}
               className="border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-shadow mb-4 last:mb-0 bg-white"
             >
-              <AccordionTrigger className="px-4 py-3.5 hover:bg-[var(--ch-sage-dark)]/5 [&[data-state=open]>svg]:pr-2">
-                <div className="text-left flex-1">
-                  <h3 className="font-semibold text-base text-[var(--ch-sage-dark)]">
-                    {day}
-                  </h3>
-                  {dayHours && (
-                    <p className="text-sm text-[var(--foreground)]/60 mt-1">
-                      {dayHours}
-                    </p>
-                  )}
-                </div>
-              </AccordionTrigger>
+              <div className="flex items-center justify-between px-4 py-3.5 hover:bg-[var(--ch-sage-dark)]/5">
+                <AccordionTrigger className="flex-1 px-0 py-0 hover:bg-transparent [&[data-state=open]>svg]:pr-2">
+                  <div className="text-left flex-1">
+                    <h3 className="font-semibold text-base text-[var(--ch-sage-dark)]">
+                      {day}
+                    </h3>
+                    {dayHours && (
+                      <p className="text-sm text-[var(--foreground)]/60 mt-1">
+                        {dayHours}
+                      </p>
+                    )}
+                  </div>
+                </AccordionTrigger>
+
+                {isDayHolidayFlag ? (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveHoliday(dayDateStr);
+                    }}
+                    disabled={isRemovingHoliday}
+                    className="ml-2 text-xs px-2 py-1 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 transition-colors shadow-sm flex-shrink-0"
+                  >
+                    Remove Holiday
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openHolidayPopup(dayDate);
+                    }}
+                    className="ml-2 text-xs px-2 py-1 rounded-2xl bg-slate-50 text-black border border-slate-500 hover:bg-slate-100 transition-colors shadow-md flex-shrink-0"
+                  >
+                    Mark as Holiday
+                  </button>
+                )}
+              </div>
 
               <AccordionContent className="pt-3 pb-4 px-4">
-                <div className="space-y-3">
-                  {tasks.map((task) => (
-                    <Accordion
-                      key={task.id}
-                      type="single"
-                      collapsible
-                      className="w-full"
-                    >
+                <Accordion type="single" collapsible className="w-full">
+                  <div className="space-y-3">
+                    {tasks.map((task) => (
                       <AccordionItem
+                        key={task.id}
                         value={`task-${task.id}`}
                         className="border border-slate-200 rounded-md px-3 py-2.5 shadow-sm hover:shadow-md transition-shadow bg-white mb-3 last:mb-0"
                       >
@@ -278,26 +228,27 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
                               </div>
                             )}
 
-                            {/* Edit Button */}
-                            <button
-                              type="button"
-                              onClick={() => setEditingTaskId(task.id)}
-                              className="w-full px-3 py-2 text-sm font-medium border border-slate-300 rounded-md hover:bg-slate-100 hover:shadow-sm transition-all flex items-center justify-center gap-2"
-                            >
-                              <FiEdit2 className="w-4 h-4" />
-                              Edit Task
-                            </button>
+                            {/* Edit and Delete Buttons - Horizontal */}
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setEditingTaskId(task.id)}
+                                className="flex-1 px-3 py-2 text-xs font-medium border border-slate-300 rounded-md hover:bg-slate-100 hover:shadow-sm transition-all flex items-center justify-center gap-2"
+                              >
+                                <FiEdit2 className="w-4 h-4" />
+                                Edit
+                              </button>
 
-                            {/* Delete Button */}
-                            <button
-                              type="button"
-                              onClick={() => setDeleteConfirmId(task.id)}
-                              className="w-full px-3 py-2 text-sm font-medium border border-red-300 rounded-md hover:bg-red-50 hover:shadow-sm transition-all flex items-center justify-center gap-2 text-red-600 hover:text-red-700"
-                              disabled={isDeleting}
-                            >
-                              <FiTrash2 className="w-4 h-4" />
-                              Delete Task
-                            </button>
+                              <button
+                                type="button"
+                                onClick={() => setDeleteConfirmId(task.id)}
+                                className="flex-1 px-3 py-2 text-xs font-medium border border-red-300 rounded-md hover:bg-red-50 hover:shadow-sm transition-all flex items-center justify-center gap-2 text-red-600 hover:text-red-700"
+                                disabled={isDeleting}
+                              >
+                                <FiTrash2 className="w-4 h-4" />
+                                Delete
+                              </button>
+                            </div>
 
                             {/* Task Edit Dialog */}
                             <TaskEditDialog
@@ -314,9 +265,9 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
                           </div>
                         </AccordionContent>
                       </AccordionItem>
-                    </Accordion>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </Accordion>
               </AccordionContent>
             </AccordionItem>
           );
@@ -353,6 +304,16 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
           </div>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Holiday Popup */}
+      {selectedDate && (
+        <HolidayPopup
+          open={holidayPopupOpen}
+          onOpenChange={setHolidayPopupOpen}
+          date={selectedDate}
+          onSuccess={onRefresh}
+        />
+      )}
     </div>
   );
 }

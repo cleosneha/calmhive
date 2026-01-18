@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { MetricsCard } from "@/components/insights/metrics-card";
 import { CompletionTrendGraph } from "@/components/insights/completion-trend-graph";
 import { TimeSpentGraph } from "@/components/insights/time-spent-graph";
@@ -21,10 +20,6 @@ interface InsightsClientProps {
 }
 
 export default function InsightsClient({ userId }: InsightsClientProps) {
-  const [filterType, setFilterType] = useState<"week" | "month" | "year">(
-    "week"
-  );
-
   // TODO: Fetch data based on userId and filterType
   // For now, showing empty state UI
 
