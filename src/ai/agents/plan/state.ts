@@ -9,6 +9,12 @@ export const PlanState = Annotation.Root({
   // User identification
   userId: Annotation<string>,
 
+  // Optional AI plan suggestions (when regenerating from insights)
+  planSuggestions: Annotation<string | null>({
+    reducer: (_, value) => value,
+    default: () => null,
+  }),
+
   // Onboarding data fetched from DB
   onboardingData: Annotation<OnboardingData | null>({
     reducer: (_, value) => value,

@@ -29,7 +29,7 @@ export function MetricsCard({
 }: MetricsCardProps) {
   return (
     <Card
-      className={`bg-white border-slate-200 hover:shadow-md transition-shadow ${className}`}
+      className={`bg-white border-slate-200 box-shadow: rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.04) 0px 10px 10px -5px; ${className}`}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">

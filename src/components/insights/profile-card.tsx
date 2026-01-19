@@ -1,6 +1,10 @@
+"use client";
+
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FiUser, FiAward } from "react-icons/fi";
+import { useSession } from "@/hooks/useSession";
 
 interface ProfileCardProps {
   userName?: string;
@@ -9,17 +13,34 @@ interface ProfileCardProps {
   isLoading?: boolean;
 }
 
+function getInitials(name?: string | null) {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
+}
+
 export function ProfileCard({
   userName,
   userEmail,
   badges = [],
   isLoading = false,
 }: ProfileCardProps) {
+  const { data } = useSession();
+  const user = data?.user;
+  const avatar = user?.image;
+  const initials = getInitials(userName || user?.name || user?.email || "");
+
   if (isLoading) {
     return (
       <Card className="bg-white border-slate-200 h-full">
         <CardHeader>
-          <CardTitle>Your Profile</CardTitle>
+          <div className="flex items-center justify-between w-full">
+            <CardTitle>Your Profile</CardTitle>
+            <div className="w-10 h-10 rounded-full bg-slate-100 animate-pulse" />
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="h-12 bg-slate-100 rounded-lg animate-pulse" />
@@ -33,19 +54,41 @@ export function ProfileCard({
   return (
     <Card className="bg-white border-slate-200 h-full">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FiUser className="w-5 h-5" />
-          Your Profile
-        </CardTitle>
+        <div className="flex items-center justify-between w-full">
+          <CardTitle className="flex items-center gap-2">
+            <FiUser className="w-5 h-5" />
+            Your Profile
+          </CardTitle>
+
+          {/* Avatar on the right side */}
+          {avatar ? (
+            <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+              <Image
+                src={avatar}
+                alt={`${userName || user?.name || "User"} avatar`}
+                width={48}
+                height={48}
+                className="object-cover w-full h-full"
+              />
+            </div>
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-[var(--ch-sage-dark)] text-white flex items-center justify-center font-bold">
+              {initials}
+            </div>
+          )}
+        </div>
       </CardHeader>
+
       <CardContent className="space-y-6">
         {/* User Info */}
         <div className="border-b border-slate-200 pb-4">
           <p className="text-sm font-semibold text-slate-600 mb-1">Name</p>
           <p className="text-base font-medium text-slate-900">
-            {userName || "User"}
+            {userName || user?.name || "User"}
           </p>
-          <p className="text-xs text-slate-500 mt-1">{userEmail}</p>
+          <p className="text-xs text-slate-500 mt-1">
+            {userEmail || user?.email}
+          </p>
         </div>
 
         {/* Badges */}

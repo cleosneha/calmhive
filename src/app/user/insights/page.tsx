@@ -1,13 +1,15 @@
 import { Suspense } from "react";
 import { getCurrentUser } from "@/actions/auth";
+import { getDashboardInsights } from "@/fetchers/insights";
 import InsightsClient from "./client";
 
 export default async function InsightsPage() {
   const user = await getCurrentUser();
+  const dashboardData = await getDashboardInsights(user!.id);
 
   return (
     <Suspense fallback={<InsightsPageSkeleton />}>
-      <InsightsClient userId={user!.id} />
+      <InsightsClient dashboardData={dashboardData} userId={user!.id} />
     </Suspense>
   );
 }

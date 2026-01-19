@@ -1,8 +1,9 @@
 import HeaderLoggedOut from "@/components/shared/header/header-logged-out";
 import Footer from "@/components/shared/footer/footer";
 import HeroSection from "@/components/landing-page/hero-section";
-import HowItWorks from "@/components/landing-page/how-it-works";
 import Purpose from "@/components/landing-page/purpose";
+import CTA from "@/components/landing-page/CTA";
+import FAQ from "@/components/landing-page/FAQ";
 
 export default function HomePage() {
   return (
@@ -10,7 +11,8 @@ export default function HomePage() {
       <HeaderLoggedOut />
       <HeroSection />
       <Purpose />
-      <HowItWorks />
+      <FAQ />
+      <CTA />
       <Footer />
     </>
   );

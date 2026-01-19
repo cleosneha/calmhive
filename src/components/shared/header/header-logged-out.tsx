@@ -9,54 +9,32 @@ export default function HeaderLoggedOut() {
         <div className="flex items-center gap-2">
           <Link
             href="/"
-            className="text-2xl font-bold text-white drop-shadow-lg tracking-tight select-none"
+            className="text-2xl font-bold text-white drop-shadow-lg tracking-tight select-none hover:text-white/80 transition hover:drop-shadow-2xl"
           >
-            CalmHive
+            Calmhive
           </Link>
         </div>
 
         {/* Center: Navigation */}
         <ul className="hidden md:flex gap-8 items-center justify-center flex-1">
-          <li>
-            <Link
-              href="/"
-              className="nav-link text-white drop-shadow-md hover:text-white/80 transition"
-            >
-              Home
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="#purpose"
-              className="nav-link text-white drop-shadow-md hover:text-white/80 transition"
-            >
-              Purpose
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="#guide"
-              className="nav-link text-white drop-shadow-md hover:text-white/80 transition"
-            >
-              Guide
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="#pricing"
-              className="nav-link text-white drop-shadow-md hover:text-white/80 transition"
-            >
-              Pricing
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="#contact"
-              className="nav-link text-white drop-shadow-md hover:text-white/80 transition"
-            >
-              Contact
-            </Link>
-          </li>
+          {(
+            [
+              { href: "/", label: "Home" },
+              { href: "#purpose", label: "Purpose" },
+              { href: "#guide", label: "Guide" },
+              { href: "#pricing", label: "Pricing" },
+              { href: "#contact", label: "Contact" },
+            ] as const
+          ).map((link) => (
+            <li key={link.href}>
+              <Link
+                href={link.href}
+                className="nav-link text-[var(--ch-sage-dark)] drop-shadow-md hover:text-[var(--ch-sage-dark)]/80 transition"
+              >
+                {link.label}
+              </Link>
+            </li>
+          ))}
         </ul>
 
         {/* Right: Get Started Button */}
@@ -64,9 +42,9 @@ export default function HeaderLoggedOut() {
           <Button
             asChild
             variant="white"
-            className="bg-[var(--ch-sage-light)]/70 hover:bg-[var(--ch-sage-dark)] shadow-lg hover:shadow-xl"
+            className="bg-[var(--ch-sage-dark)] shadow-[inset_0_2px_8px_rgba(0,0,0,0.18)] hover:shadow-[inset_0_3px_10px_rgba(0,0,0,0.22)] hover:bg-[var(--ch-sage-light)] transition-shadow rounded-2xl text-white font-semibold px-4 py-2"
           >
-            <Link href="/login">Sign in</Link>
+            <Link href="/login">GET STARTED</Link>
           </Button>
         </div>
       </nav>

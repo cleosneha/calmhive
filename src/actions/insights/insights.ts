@@ -16,7 +16,7 @@ import {
   roundTo,
   validateInsightData,
   createTaskSummary,
-} from "./insights/helper";
+} from "./helper";
 
 interface InsightData {
   userId: string;
@@ -69,6 +69,22 @@ async function fetchPreviousInsight(userId: string, previousWeekStart: Date) {
 }
 
 /**
+ * Fetch user's onboarding data for personalized suggestions
+ */
+async function fetchOnboardingData(userId: string) {
+  return prisma.onboarding.findUnique({
+    where: { userId },
+    select: {
+      goals: true,
+      activities: true,
+      timeAvailability: true,
+      energeticTime: true,
+      daysOff: true,
+    },
+  });
+}
+
+/**
  * Calculate insights for a single user's weekly performance
  */
 async function calculateUserInsights(
@@ -99,6 +115,16 @@ async function calculateUserInsights(
     const partialTaskActivities = tasks
       .filter((task) => task.status === "partial")
       .map((task) => `${task.activity} (${task.timeRange})`);
+
+    // Fetch onboarding data for personalized suggestions
+    const onboardingData = await fetchOnboardingData(userId);
+
+    // Get current plan tasks for context
+    const currentPlanTasks = plan.tasks.map((t) => ({
+      day: t.day,
+      activity: t.activity,
+      timeRange: t.timeRange,
+    }));
 
     // Get previous week's data for trending calculation
     const { weekStart: previousWeekStart } = getPreviousWeekBounds(weekStart);
@@ -131,7 +157,7 @@ async function calculateUserInsights(
       return null;
     }
 
-    // Generate AI suggestions using LLM
+    // Generate AI feedback and plan suggestions using LLM (single call)
     const aiResponse = await generateWeeklySuggestions({
       totalTasks: stats.total,
       completedTasks: stats.completed,
@@ -142,14 +168,16 @@ async function calculateUserInsights(
       topPerformingDay,
       averageTimeSpent: roundTo(averageTimeSpent),
       tasks: createTaskSummary(tasks),
-      onboardingData: {
-        goals: "",
-        activities: "",
-        timeAvailability: 0,
-        energeticTime: "",
-        daysOff: [],
-      },
-      currentPlan: [],
+      onboardingData: onboardingData
+        ? {
+            goals: onboardingData.goals,
+            activities: onboardingData.activities,
+            timeAvailability: onboardingData.timeAvailability,
+            energeticTime: onboardingData.energeticTime,
+            daysOff: onboardingData.daysOff,
+          }
+        : undefined,
+      currentPlan: currentPlanTasks,
     });
 
     return {
@@ -287,68 +315,6 @@ export async function generateWeeklyInsights() {
     };
   } catch (error) {
     console.error("[INSIGHTS] Error generating weekly insights:", error);
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : "Unknown error",
-      data: null,
-    };
-  }
-}
-
-/**
- * Fetch insights for a specific user and week
- */
-export async function getUserInsights(userId: string, weekStart: Date) {
-  try {
-    const insight = await prisma.insight.findUnique({
-      where: {
-        userId_weekStartDate: {
-          userId,
-          weekStartDate: weekStart,
-        },
-      },
-    });
-
-    if (!insight) {
-      return {
-        success: false,
-        message: "No insights found for this week",
-        data: null,
-      };
-    }
-
-    return {
-      success: true,
-      message: "Insights fetched successfully",
-      data: insight,
-    };
-  } catch (error) {
-    console.error("[INSIGHTS] Error fetching user insights:", error);
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : "Unknown error",
-      data: null,
-    };
-  }
-}
-
-/**
- * Get all insights for a user (ordered by week)
- */
-export async function getAllUserInsights(userId: string) {
-  try {
-    const insights = await prisma.insight.findMany({
-      where: { userId },
-      orderBy: { weekStartDate: "desc" },
-    });
-
-    return {
-      success: true,
-      message: "All insights fetched successfully",
-      data: insights,
-    };
-  } catch (error) {
-    console.error("[INSIGHTS] Error fetching all insights:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",

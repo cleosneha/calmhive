@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   BarChart,
   Bar,
@@ -12,6 +13,8 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NoDataGraph } from "./no-data-graph";
+import { InsightsFilter, PeriodFilter, YearFilter } from "./insights-filter";
+import { getFilteredHolidaysData } from "@/fetchers/insights-filtered";
 
 interface HolidaysData {
   week: string;
@@ -19,21 +22,56 @@ interface HolidaysData {
 }
 
 interface HolidaysGraphProps {
-  data?: HolidaysData[];
+  userId: string;
+  initialData?: HolidaysData[];
   totalHolidaysThisWeek?: number;
   isLoading?: boolean;
 }
 
 export function HolidaysGraph({
-  data,
+  userId,
+  initialData,
   totalHolidaysThisWeek = 0,
-  isLoading = false,
+  isLoading: initialLoading = false,
 }: HolidaysGraphProps) {
+  const [data, setData] = useState<HolidaysData[]>(initialData || []);
+  const [isLoading, setIsLoading] = useState(initialLoading);
+
+  const fetchFilteredData = async (
+    newPeriod: PeriodFilter,
+    newYear: YearFilter,
+  ) => {
+    setIsLoading(true);
+    try {
+      const filterType =
+        newYear && newYear !== new Date().getFullYear()
+          ? "previous-year"
+          : newPeriod;
+
+      const filteredData = await getFilteredHolidaysData(
+        userId,
+        filterType,
+        newYear || undefined,
+      );
+      setData(filteredData);
+    } catch (error) {
+      console.error("Error fetching filtered holidays data:", error);
+      setData([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFilterChange = (newPeriod: PeriodFilter, newYear: YearFilter) => {
+    fetchFilteredData(newPeriod, newYear);
+  };
+
   if (isLoading) {
     return (
       <Card className="bg-white border-slate-200">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Holidays Taken</CardTitle>
+          <div className="h-9 w-[140px] bg-slate-100 rounded-lg animate-pulse" />
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -47,18 +85,27 @@ export function HolidaysGraph({
 
   if (!data || data.length === 0) {
     return (
-      <NoDataGraph
-        title="Holidays Taken"
-        description="No historical data available"
-        pattern="holidays"
-      />
+      <Card className="bg-white border-slate-200">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Holidays Taken</CardTitle>
+          <InsightsFilter onFilterChange={handleFilterChange} />
+        </CardHeader>
+        <CardContent>
+          <NoDataGraph
+            title=""
+            description="No historical data available"
+            pattern="holidays"
+          />
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <Card className="bg-white border-slate-200">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
         <CardTitle>Holidays Taken</CardTitle>
+        <InsightsFilter onFilterChange={handleFilterChange} />
       </CardHeader>
       <CardContent>
         <p className="text-sm text-slate-500 mb-2">
@@ -69,6 +116,16 @@ export function HolidaysGraph({
             data={data}
             margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
           >
+            <defs>
+              <linearGradient id="colorHolidays" x1="0" y1="0" x2="0" y2="1">
+                <stop
+                  offset="0%"
+                  stopColor="var(--ch-sage-light)"
+                  stopOpacity={0.95}
+                />
+                <stop offset="100%" stopColor="#ffffff" stopOpacity={1} />
+              </linearGradient>
+            </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis
               dataKey="week"
@@ -87,9 +144,10 @@ export function HolidaysGraph({
             <Legend />
             <Bar
               dataKey="holidays"
-              fill="#f59e0b"
+              fill="url(#colorHolidays)"
               name="Days Off"
               radius={[8, 8, 0, 0]}
+              isAnimationActive={false}
             />
           </BarChart>
         </ResponsiveContainer>

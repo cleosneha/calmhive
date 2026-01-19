@@ -29,12 +29,13 @@ model User {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    onboarding     Onboarding?
-    plan           Plan?
-    journalEntries JournalEntry[]
-    insights       Insight[]
-    accounts       Account[]
-    sessions       Session[]
+    onboarding      Onboarding?
+    plan            Plan?
+    journalEntries  JournalEntry[]
+    insights        Insight[]
+    monthlyInsights MonthlyInsight[]
+    accounts        Account[]
+    sessions        Session[]
 
     image    String?
     holidays Holiday[]
@@ -166,11 +167,13 @@ model Insight {
     weekEndDate        DateTime
     totalTasks         Int?
     completedTasks     Int?
+    partialTasks       String[] @default([])
     averageTimeSpent   Float?
     consistencyScore   Float?
     trendingCompletion Float?
     topPerformingDay   String?
     suggestions        String?
+    planSuggestions    String?  @db.Text
     createdAt          DateTime @default(now())
 
     // Relations
@@ -179,6 +182,29 @@ model Insight {
     // Constraints
     @@unique([userId, weekStartDate])
     @@index([userId])
+}
+
+model MonthlyInsight {
+    id               Int      @id @default(autoincrement())
+    userId           String
+    year             Int
+    month            Int // 1-12
+    totalTasks       Int      @default(0)
+    completedTasks   Int      @default(0)
+    partialTasks     Int      @default(0)
+    averageTimeSpent Float    @default(0)
+    completionRate   Float    @default(0)
+    holidaysTaken    Int      @default(0)
+    createdAt        DateTime @default(now())
+    updatedAt        DateTime @updatedAt
+
+    // Relations
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    // Constraints: One record per user per month per year
+    @@unique([userId, year, month])
+    @@index([userId, year])
+    @@map("monthly_insight")
 }
 
 model Verification {

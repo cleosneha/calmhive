@@ -21,10 +21,8 @@ const FACTS: string[] = [
 ];
 
 export default function Loading() {
-  // Choose a random fact once on mount
-  const [factIndex] = useState<number>(() =>
-    Math.floor(Math.random() * FACTS.length)
-  );
+  // Use first fact for consistent rendering
+  const factIndex = 0;
 
   return (
     <div className="min-h-screen flex items-center justify-center  p-6">

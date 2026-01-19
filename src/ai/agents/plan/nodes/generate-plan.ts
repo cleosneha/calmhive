@@ -9,7 +9,7 @@ import { handleAIError } from "@/utils/ai-error-handler";
  * Uses the onboarding data to create a personalized weekly plan
  */
 export async function generatePlanNode(
-  state: PlanStateType
+  state: PlanStateType,
 ): Promise<Partial<PlanStateType>> {
   try {
     const { onboardingData } = state;
@@ -23,8 +23,11 @@ export async function generatePlanNode(
 
     console.log("🤖 Generating plan for user:", onboardingData.userId);
 
-    // Build prompt
-    const prompt = buildPlanGenerationPrompt(onboardingData);
+    // Build prompt (with optional plan suggestions)
+    const prompt = buildPlanGenerationPrompt(
+      onboardingData,
+      state.planSuggestions,
+    );
 
     // Call LLM
     const response = await model.invoke(prompt);

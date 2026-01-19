@@ -27,6 +27,7 @@ import TaskEditDialog from "@/components/plan/task-edit";
 import { HolidayPopup } from "@/components/plan/holiday-popup";
 import { usePlanTable } from "@/hooks/use-plan-table";
 import { getDateForDayOfWeek, dateToISOString } from "@/utils/date";
+import { Button } from "@/components/ui/button";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 
 interface Task {
@@ -122,26 +123,28 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
                 </AccordionTrigger>
 
                 {isDayHolidayFlag ? (
-                  <button
+                  <Button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleRemoveHoliday(dayDateStr);
                     }}
                     disabled={isRemovingHoliday}
-                    className="ml-2 text-xs px-2 py-1 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 transition-colors shadow-sm flex-shrink-0"
+                    size="xs"
+                    className="ml-2 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 transition-colors shadow-sm flex-shrink-0"
                   >
                     Remove Holiday
-                  </button>
+                  </Button>
                 ) : (
-                  <button
+                  <Button
                     onClick={(e) => {
                       e.stopPropagation();
                       openHolidayPopup(dayDate);
                     }}
-                    className="ml-2 text-xs px-2 py-1 rounded-2xl bg-slate-50 text-black border border-slate-500 hover:bg-slate-100 transition-colors shadow-md flex-shrink-0"
+                    size="xs"
+                    className="ml-2 rounded-2xl bg-slate-50 text-black border border-slate-500 hover:bg-slate-100 transition-colors shadow-md flex-shrink-0"
                   >
                     Mark as Holiday
-                  </button>
+                  </Button>
                 )}
               </div>
 
