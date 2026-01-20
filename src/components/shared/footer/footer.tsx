@@ -26,16 +26,13 @@ const SOCIAL_LINKS = [
 
 export default function Footer() {
   return (
-    <footer
-      className="w-full mt-6 text-sm rounded-t-3xl"
-      style={{
-        backgroundImage: "url('/assets/Footer.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        opacity: 0.9,
-      }}
-    >
-      <div className=" border-t border-[var(--ch-sage-light)]/10">
+    <footer className="w-full mt-6 text-sm  relative overflow-hidden">
+      {/* Decorative Gradient Background (centered semicircular gradient from bottom) */}
+      <div className="absolute inset-0 -z-10 pointer-events-none">
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[80%] h-44 rounded-t-full bg-gradient-to-t from-[var(--ch-sage-dark)]/25 to-white/0 opacity-60 blur-3xl pointer-events-none" />
+      </div>
+
+      <div className=" border-t border-[var(--ch-sage-light)]/40">
         <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-4 gap-8 text-gray-700">
           {/* Brand */}
           <div className="flex flex-col gap-4">

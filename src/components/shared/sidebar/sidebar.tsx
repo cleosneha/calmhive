@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { useSession } from "@/hooks/useSession";
-import {
-  FiHome,
-  FiBook,
-  FiCalendar,
-  FiBarChart2,
-  FiSettings,
-} from "react-icons/fi";
+import { FiBook, FiCalendar, FiBarChart2, FiSettings } from "react-icons/fi";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
@@ -85,7 +79,7 @@ export default function Sidebar() {
         toast.error(
           "message" in result
             ? result.message
-            : "Failed to delete account. Please try again."
+            : "Failed to delete account. Please try again.",
         );
         setIsDeleting(false);
       }
@@ -108,14 +102,16 @@ export default function Sidebar() {
     >
       {/* Logo */}
       <div className="flex flex-col items-center justify-center h-20 w-full border-b border-[var(--sidebar-border)] mb-2">
-        <Image
-          src="/calmhive.png"
-          alt="CalmHive Logo"
-          width={40}
-          height={40}
-          className="transition-all duration-200"
-          priority
-        />
+        <Link href="/">
+          <Image
+            src="/calmhive.png"
+            alt="CalmHive Logo"
+            width={40}
+            height={40}
+            className="transition-all duration-200"
+            priority
+          />
+        </Link>
       </div>
       {/* Navigation */}
       <nav className="flex-1 flex flex-col gap-2 mt-4 w-full items-center">
