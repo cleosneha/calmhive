@@ -9,9 +9,15 @@ export default function Purpose() {
   return (
     <section id="purpose" className="w-full py-16 bg-transparent">
       <div className="max-w-6xl mx-auto px-4">
-        <p className="text-lg text-[var(--ch-muted)] mb-3 md:mb-6 text-center">
-          What we help you let go of
-        </p>
+        <div className="text-center max-w-4xl mx-auto">
+          <h3 className="text-3xl font-semibold text-[var(--ch-sage-dark)]">
+            Find clarity and balance
+          </h3>
+          <p className="text-lg text-[var(--ch-muted)] mb-3 md:mb-6 mt-3">
+            What we help you let go of
+          </p>
+        </div>
+
         <div className="hidden md:flex items-center justify-center gap-4 md:gap-12 max-w-6xl mx-auto">
           {/* Left: Vertical stack with indicators and animated connectors */}
           <div className="flex-1 h-full max-w-6xl">

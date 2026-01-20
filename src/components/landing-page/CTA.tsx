@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 
 export default function CTA() {
   return (
-    <div className="relative max-w-6xl mx-auto overflow-hidden rounded-2xl border border-[var(--ch-sage-light)]/50 shadow-[inset_0_2px_8px_rgba(0,0,0,0.18)] hover:shadow-[inset_0_3px_10px_rgba(0,0,0,0.22)]">
+    <div className="relative max-w-[90vw] mx-auto overflow-hidden rounded-2xl border border-[var(--ch-sage-light)]/50 shadow-[inset_0_2px_8px_rgba(0,0,0,0.18)] hover:shadow-[inset_0_3px_10px_rgba(0,0,0,0.22)]">
       {/* Decorative Gradient Background (wave-like layered blobs) */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute -left-1/3 top-0 w-[60%] h-full rounded-full bg-gradient-to-br from-[var(--ch-sage-light)]/70 to-white opacity-90 transform -skew-y-12 blur-3xl" />

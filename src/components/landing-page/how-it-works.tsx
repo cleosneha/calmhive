@@ -5,6 +5,8 @@ import { GiNotebook } from "react-icons/gi";
 import { MdOutlineCalendarToday } from "react-icons/md";
 import { AiOutlineBulb } from "react-icons/ai";
 import { SiGnuprivacyguard } from "react-icons/si";
+import { BiBarChartAlt2 } from "react-icons/bi";
+import { BsCheck2Circle } from "react-icons/bs";
 
 const steps = [
   {
@@ -31,70 +33,86 @@ const steps = [
     title: "Privacy First",
     text: "Your reflections are private and secure — we design insights with privacy and safety in mind.",
   },
+  {
+    id: 5,
+    Icon: BiBarChartAlt2,
+    title: "Report Generation",
+    text: "Automatically generate weekly and monthly reports summarizing progress and insights — exportable as PDF for sharing or personal review.",
+  },
+  {
+    id: 6,
+    Icon: BsCheck2Circle,
+    title: "Habit-Friendly Tasks",
+    text: "Small, consistent tasks and gentle streaks to help you build habits without pressure.",
+  },
 ];
 
 export default function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="max-w-6xl mx-auto my-14 px-6 bg-white/80 backdrop-blur-sm rounded-2xl"
+      className="my-15 py-14 bg-white/80 backdrop-blur-sm rounded-2xl"
     >
-      <div className="max-w-6xl mx-auto text-center">
-        <h3 className="text-2xl font-semibold text-[var(--ch-sage-dark)]">
-          Your Calm Routine
-        </h3>
-        <p className="mt-3 text-sm text-muted-foreground">
-          A simple, mindful routine: journal a little, plan thoughtfully, and
-          get calm, useful insights.
-        </p>
-      </div>
+      <div className="max-w-[90vw] mx-auto px-6 lg:px-8">
+        <div className="text-center max-w-4xl mx-auto">
+          <h3 className="text-3xl font-semibold text-[var(--ch-sage-dark)]">
+            Your Calm Routine
+          </h3>
+          <p className="mt-4 text-base text-muted-foreground">
+            A simple, mindful routine: journal a little, plan thoughtfully, and
+            get calm, useful insights.
+          </p>
+        </div>
 
-      <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {steps.map((step, i) => {
-          const Icon = step.Icon;
-          return (
-            <motion.div
-              key={step.id}
-              initial={{ y: 18, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              viewport={{ once: true, amount: 0.25 }}
-              transition={{
-                duration: 0.5,
-                delay: i * 0.08,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className="relative overflow-hidden flex flex-col gap-3 rounded-xl border border-[var(--ch-sage-light)]/40 bg-white/60 p-5 shadow-[10px_12px_18px_-5px_rgba(2,_31,_0,_0.1)] backdrop-blur-sm"
-            >
-              {/* Subtle, centered gradient circle (background of card) */}
-              <motion.div
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-56 w-56 rounded-full blur-2xl opacity-60 pointer-events-none"
-                style={{
-                  background:
-                    "radial-gradient(circle at 50% 50%, rgba(47,160,127,0.35) 0%, rgba(47,160,127,0.18) 35%, rgba(255,255,255,0) 65%)",
-                }}
-                animate={{ opacity: [0.55, 0.85, 0.55], scale: [1, 1.02, 1] }}
-                transition={{
-                  duration: 8,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
+        <div className="mt-12 flex justify-center">
+          <div className="flex flex-wrap gap-6 w-full justify-center">
+            {steps.map((step, i) => {
+              const Icon = step.Icon;
+              return (
+                <motion.div
+                  key={step.id}
+                  initial={{ y: 18, opacity: 0 }}
+                  whileInView={{ y: 0, opacity: 1 }}
+                  viewport={{ once: true, amount: 0.25 }}
+                  transition={{
+                    duration: 0.5,
+                    delay: i * 0.08,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  className="relative overflow-hidden flex flex-col gap-8 rounded-2xl border border-[var(--ch-sage-light)]/30 bg-white/60 p-10 md:p-12 shadow-[22px_26px_36px_-12px_rgba(2,_31,_0,_0.08)] backdrop-blur-sm w-[calc(33.333%-1rem)] min-h-70"
+                >
+                  {/* Subtle, centered gradient circle (background of card) */}
+                  <motion.div
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-80 w-80 rounded-full blur-3xl opacity-50 pointer-events-none"
+                    style={{
+                      background:
+                        "radial-gradient(circle at 50% 50%, rgba(47,160,127,0.32) 0%, rgba(47,160,127,0.12) 38%, rgba(255,255,255,0) 72%)",
+                    }}
+                    animate={{ opacity: [0.5, 0.8, 0.5], scale: [1, 1.015, 1] }}
+                    transition={{
+                      duration: 10,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
 
-              <div className="relative z-10 flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--ch-sage-light)]/10">
-                  <Icon className="text-[var(--ch-sage-dark)] w-6 h-6" />
-                </div>
-                <h4 className="text-sm font-semibold text-black">
-                  {step.title}
-                </h4>
-              </div>
+                  <div className="relative z-10 flex  items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--ch-sage-light)]/10">
+                      <Icon className="text-[var(--ch-sage-dark)] w-6 h-6" />
+                    </div>
+                    <h4 className="text-sm font-semibold text-black">
+                      {step.title}
+                    </h4>
+                  </div>
 
-              <p className="relative z-10 text-sm text-muted-foreground mt-1">
-                {step.text}
-              </p>
-            </motion.div>
-          );
-        })}
+                  <p className="relative z-10 text-sm text-muted-foreground ">
+                    {step.text}
+                  </p>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </section>
   );
