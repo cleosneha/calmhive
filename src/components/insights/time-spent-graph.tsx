@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -13,8 +13,8 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NoDataGraph } from "./no-data-graph";
-import { InsightsFilter, PeriodFilter, YearFilter } from "./insights-filter";
-import { getFilteredTimeSpentData } from "@/fetchers/insights-filtered";
+import { getTimeSpentData } from "@/actions/insights/filtered-insights";
+import type { FilterChangeParams } from "@/types/insights-filter";
 
 interface TimeSpentData {
   week: string;
@@ -23,53 +23,47 @@ interface TimeSpentData {
 
 interface TimeSpentGraphProps {
   userId: string;
+  filterParams: FilterChangeParams;
   initialData?: TimeSpentData[];
   isLoading?: boolean;
 }
 
 export function TimeSpentGraph({
   userId,
+  filterParams,
   initialData,
   isLoading: initialLoading = false,
 }: TimeSpentGraphProps) {
   const [data, setData] = useState<TimeSpentData[]>(initialData || []);
   const [isLoading, setIsLoading] = useState(initialLoading);
 
-  const fetchFilteredData = async (
-    newPeriod: PeriodFilter,
-    newYear: YearFilter,
-  ) => {
-    setIsLoading(true);
-    try {
-      const filterType =
-        newYear && newYear !== new Date().getFullYear()
-          ? "previous-year"
-          : newPeriod;
+  // Fetch data when filter changes
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const response = await getTimeSpentData(
+          userId,
+          filterParams.year,
+          filterParams.period,
+        );
+        setData(response.data || []);
+      } catch (error) {
+        console.error("Error fetching filtered time spent data:", error);
+        setData([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-      const filteredData = await getFilteredTimeSpentData(
-        userId,
-        filterType,
-        newYear || undefined,
-      );
-      setData(filteredData);
-    } catch (error) {
-      console.error("Error fetching filtered time spent data:", error);
-      setData([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleFilterChange = (newPeriod: PeriodFilter, newYear: YearFilter) => {
-    fetchFilteredData(newPeriod, newYear);
-  };
+    fetchData();
+  }, [userId, filterParams.year, filterParams.period]);
 
   if (isLoading) {
     return (
       <Card className="bg-white border-slate-200">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader>
           <CardTitle>Time Spent Trend</CardTitle>
-          <div className="h-9 w-[140px] bg-slate-100 rounded-lg animate-pulse" />
         </CardHeader>
         <CardContent>
           <div className="h-64 bg-slate-100 rounded-lg animate-pulse" />
@@ -81,9 +75,8 @@ export function TimeSpentGraph({
   if (!data || data.length === 0) {
     return (
       <Card className="bg-white border-slate-200">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader>
           <CardTitle>Time Spent Trend</CardTitle>
-          <InsightsFilter onFilterChange={handleFilterChange} />
         </CardHeader>
         <CardContent>
           <NoDataGraph
@@ -98,9 +91,8 @@ export function TimeSpentGraph({
 
   return (
     <Card className="bg-white border-slate-200">
-      <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
+      <CardHeader>
         <CardTitle>Time Spent Trend</CardTitle>
-        <InsightsFilter onFilterChange={handleFilterChange} />
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>

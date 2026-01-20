@@ -4,19 +4,19 @@ import {
   getFilteredTimeSpentData,
   getFilteredCompletionData,
   getFilteredHolidaysData,
-  FilterType,
 } from "@/fetchers/insights-filtered";
+import { YearOption, PeriodOption } from "@/types/insights-filter";
 
 /**
  * Server action to fetch filtered time spent data
  */
 export async function getTimeSpentData(
   userId: string,
-  filterType: FilterType,
-  year?: number,
+  year: YearOption,
+  period: PeriodOption,
 ) {
   try {
-    const data = await getFilteredTimeSpentData(userId, filterType, year);
+    const data = await getFilteredTimeSpentData(userId, year, period);
     return { success: true, data };
   } catch (error) {
     console.error("[ACTION] Error fetching time spent data:", error);
@@ -33,11 +33,11 @@ export async function getTimeSpentData(
  */
 export async function getCompletionData(
   userId: string,
-  filterType: FilterType,
-  year?: number,
+  year: YearOption,
+  period: PeriodOption,
 ) {
   try {
-    const data = await getFilteredCompletionData(userId, filterType, year);
+    const data = await getFilteredCompletionData(userId, year, period);
     return { success: true, data };
   } catch (error) {
     console.error("[ACTION] Error fetching completion data:", error);
@@ -54,11 +54,11 @@ export async function getCompletionData(
  */
 export async function getHolidaysData(
   userId: string,
-  filterType: FilterType,
-  year?: number,
+  year: YearOption,
+  period: PeriodOption,
 ) {
   try {
-    const data = await getFilteredHolidaysData(userId, filterType, year);
+    const data = await getFilteredHolidaysData(userId, year, period);
     return { success: true, data };
   } catch (error) {
     console.error("[ACTION] Error fetching holidays data:", error);

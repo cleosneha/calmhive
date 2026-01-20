@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -13,8 +13,8 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NoDataGraph } from "./no-data-graph";
-import { InsightsFilter, PeriodFilter, YearFilter } from "./insights-filter";
-import { getFilteredHolidaysData } from "@/fetchers/insights-filtered";
+import { getHolidaysData } from "@/actions/insights/filtered-insights";
+import type { FilterChangeParams } from "@/types/insights-filter";
 
 interface HolidaysData {
   week: string;
@@ -23,6 +23,7 @@ interface HolidaysData {
 
 interface HolidaysGraphProps {
   userId: string;
+  filterParams: FilterChangeParams;
   initialData?: HolidaysData[];
   totalHolidaysThisWeek?: number;
   isLoading?: boolean;
@@ -30,6 +31,7 @@ interface HolidaysGraphProps {
 
 export function HolidaysGraph({
   userId,
+  filterParams,
   initialData,
   totalHolidaysThisWeek = 0,
   isLoading: initialLoading = false,
@@ -37,41 +39,33 @@ export function HolidaysGraph({
   const [data, setData] = useState<HolidaysData[]>(initialData || []);
   const [isLoading, setIsLoading] = useState(initialLoading);
 
-  const fetchFilteredData = async (
-    newPeriod: PeriodFilter,
-    newYear: YearFilter,
-  ) => {
-    setIsLoading(true);
-    try {
-      const filterType =
-        newYear && newYear !== new Date().getFullYear()
-          ? "previous-year"
-          : newPeriod;
+  // Fetch data when filter changes
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const response = await getHolidaysData(
+          userId,
+          filterParams.year,
+          filterParams.period,
+        );
+        setData(response.data || []);
+      } catch (error) {
+        console.error("Error fetching filtered holidays data:", error);
+        setData([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-      const filteredData = await getFilteredHolidaysData(
-        userId,
-        filterType,
-        newYear || undefined,
-      );
-      setData(filteredData);
-    } catch (error) {
-      console.error("Error fetching filtered holidays data:", error);
-      setData([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleFilterChange = (newPeriod: PeriodFilter, newYear: YearFilter) => {
-    fetchFilteredData(newPeriod, newYear);
-  };
+    fetchData();
+  }, [userId, filterParams.year, filterParams.period]);
 
   if (isLoading) {
     return (
       <Card className="bg-white border-slate-200">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader>
           <CardTitle>Holidays Taken</CardTitle>
-          <div className="h-9 w-[140px] bg-slate-100 rounded-lg animate-pulse" />
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -86,9 +80,8 @@ export function HolidaysGraph({
   if (!data || data.length === 0) {
     return (
       <Card className="bg-white border-slate-200">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader>
           <CardTitle>Holidays Taken</CardTitle>
-          <InsightsFilter onFilterChange={handleFilterChange} />
         </CardHeader>
         <CardContent>
           <NoDataGraph
@@ -103,9 +96,8 @@ export function HolidaysGraph({
 
   return (
     <Card className="bg-white border-slate-200">
-      <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
+      <CardHeader>
         <CardTitle>Holidays Taken</CardTitle>
-        <InsightsFilter onFilterChange={handleFilterChange} />
       </CardHeader>
       <CardContent>
         <p className="text-sm text-slate-500 mb-2">

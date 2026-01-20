@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,10 +29,17 @@ export function ProfileCard({
   badges = [],
   isLoading = false,
 }: ProfileCardProps) {
+  const [isHydrated, setIsHydrated] = useState(false);
   const { data } = useSession();
   const user = data?.user;
   const avatar = user?.image;
   const initials = getInitials(userName || user?.name || user?.email || "");
+
+  useEffect(() => {
+    // Mark as hydrated after component mounts on client
+    const timer = setTimeout(() => setIsHydrated(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (isLoading) {
     return (
@@ -61,7 +69,7 @@ export function ProfileCard({
           </CardTitle>
 
           {/* Avatar on the right side */}
-          {avatar ? (
+          {isHydrated && avatar ? (
             <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
               <Image
                 src={avatar}

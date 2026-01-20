@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Select,
   SelectContent,
@@ -9,83 +9,96 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getAvailableYears } from "@/utils/insights-date-helper";
-
-export type PeriodFilter = "current-month" | "current-year";
-export type YearFilter = number | null;
+import {
+  YearOption,
+  PeriodOption,
+  FilterChangeParams,
+  getYearLabel,
+  getPeriodLabel,
+  getAvailablePeriods,
+} from "@/types/insights-filter";
 
 interface InsightsFilterProps {
-  onFilterChange: (period: PeriodFilter, year: YearFilter) => void;
+  onFilterChange: (params: FilterChangeParams) => void;
 }
 
 export function InsightsFilter({ onFilterChange }: InsightsFilterProps) {
-  const [periodFilter, setPeriodFilter] =
-    useState<PeriodFilter>("current-month");
-  const [yearFilter, setYearFilter] = useState<YearFilter>(null);
-  const availableYears = getAvailableYears();
   const currentYear = new Date().getFullYear();
+  const [year, setYear] = useState<YearOption>(currentYear);
+  const [period, setPeriod] = useState<PeriodOption>("current-month");
+  const availableYears = getAvailableYears();
+  const availablePeriods = getAvailablePeriods(year);
+  const isInitialLoad = useRef(true);
 
-  const handlePeriodChange = (value: PeriodFilter) => {
-    setPeriodFilter(value);
-    // Reset year filter when changing period
-    if (value !== "current-year") {
-      setYearFilter(null);
-      onFilterChange(value, null);
-    } else {
-      onFilterChange(value, yearFilter);
+  // Trigger initial filter on mount only once
+  useEffect(() => {
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      onFilterChange({ year, period });
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleYearChange = (value: string) => {
-    const year = parseInt(value);
-    setYearFilter(year);
-    onFilterChange(periodFilter, year);
+    const newYear = parseInt(value) as YearOption;
+    setYear(newYear);
+
+    // Auto-adjust period if not available for selected year
+    const newAvailablePeriods = getAvailablePeriods(newYear);
+    const newPeriod = newAvailablePeriods.includes(period)
+      ? period
+      : newAvailablePeriods[0];
+
+    if (newPeriod !== period) {
+      setPeriod(newPeriod);
+    }
+
+    onFilterChange({ year: newYear, period: newPeriod });
+  };
+
+  const handlePeriodChange = (value: string) => {
+    const newPeriod = value as PeriodOption;
+    setPeriod(newPeriod);
+    onFilterChange({ year, period: newPeriod });
   };
 
   return (
     <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-      {/* Period Filter */}
-      <Select value={periodFilter} onValueChange={handlePeriodChange}>
-        <SelectTrigger className="w-[140px] h-9 text-sm bg-white border-slate-300 hover:border-[var(--ch-sage-dark)] focus:ring-[var(--ch-sage-dark)]">
-          <SelectValue placeholder="Select period" />
+      {/* Year Filter */}
+      <Select value={year.toString()} onValueChange={handleYearChange}>
+        <SelectTrigger className="w-[100px] sm:w-[110px] h-9 text-xs sm:text-sm bg-white border-slate-300 hover:border-[var(--ch-sage-dark)] focus:ring-[var(--ch-sage-dark)]">
+          <SelectValue placeholder="Select year" />
         </SelectTrigger>
         <SelectContent className="bg-white">
-          <SelectItem
-            value="current-month"
-            className="text-sm cursor-pointer hover:bg-[var(--ch-sage-light)]/20"
-          >
-            Current Month
-          </SelectItem>
-          <SelectItem
-            value="current-year"
-            className="text-sm cursor-pointer hover:bg-[var(--ch-sage-light)]/20"
-          >
-            Current Year
-          </SelectItem>
+          {availableYears.map((y) => (
+            <SelectItem
+              key={y}
+              value={y.toString()}
+              className="text-xs sm:text-sm cursor-pointer hover:bg-[var(--ch-sage-light)]/20"
+            >
+              {getYearLabel(y)}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
 
-      {/* Year Filter - Only show if current-year is selected */}
-      {periodFilter === "current-year" && (
-        <Select
-          value={yearFilter?.toString() || currentYear.toString()}
-          onValueChange={handleYearChange}
-        >
-          <SelectTrigger className="w-[100px] h-9 text-sm bg-white border-slate-300 hover:border-[var(--ch-sage-dark)] focus:ring-[var(--ch-sage-dark)]">
-            <SelectValue placeholder="Year" />
-          </SelectTrigger>
-          <SelectContent className="bg-white">
-            {availableYears.map((year) => (
-              <SelectItem
-                key={year}
-                value={year.toString()}
-                className="text-sm cursor-pointer hover:bg-[var(--ch-sage-light)]/20"
-              >
-                {year}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
+      {/* Period Filter */}
+      <Select value={period} onValueChange={handlePeriodChange}>
+        <SelectTrigger className="w-[140px] sm:w-[150px] h-9 text-xs sm:text-sm bg-white border-slate-300 hover:border-[var(--ch-sage-dark)] focus:ring-[var(--ch-sage-dark)]">
+          <SelectValue placeholder="Select period" />
+        </SelectTrigger>
+        <SelectContent className="bg-white">
+          {availablePeriods.map((p) => (
+            <SelectItem
+              key={p}
+              value={p}
+              className="text-xs sm:text-sm cursor-pointer hover:bg-[var(--ch-sage-light)]/20"
+            >
+              {getPeriodLabel(p)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

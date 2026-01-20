@@ -1,3 +1,5 @@
+"use cache";
+
 /**
  * Fetchers for filtered insights data
  * Handles data retrieval based on time period filters
@@ -9,8 +11,7 @@ import {
   getMonthsInYear,
   getCurrentMonthYear,
 } from "@/utils/insights-date-helper";
-
-export type FilterType = "current-month" | "current-year" | "previous-year";
+import { YearOption, PeriodOption } from "@/types/insights-filter";
 
 interface FilteredTimeSpentData {
   week: string;
@@ -32,17 +33,15 @@ interface FilteredHolidaysData {
  */
 export async function getFilteredTimeSpentData(
   userId: string,
-  filterType: FilterType,
-  year?: number,
+  year: YearOption,
+  period: PeriodOption,
 ): Promise<FilteredTimeSpentData[]> {
-  if (filterType === "current-month") {
+  if (period === "current-month") {
     return await getCurrentMonthTimeSpent(userId);
-  } else if (filterType === "current-year") {
-    return await getCurrentYearTimeSpent(userId);
-  } else if (filterType === "previous-year" && year) {
-    return await getPreviousYearTimeSpent(userId, year);
+  } else {
+    // Current Year view - monthly breakdown
+    return await getYearTimeSpent(userId, year);
   }
-  return [];
 }
 
 /**
@@ -50,17 +49,14 @@ export async function getFilteredTimeSpentData(
  */
 export async function getFilteredCompletionData(
   userId: string,
-  filterType: FilterType,
-  year?: number,
+  year: YearOption,
+  period: PeriodOption,
 ): Promise<FilteredCompletionData[]> {
-  if (filterType === "current-month") {
+  if (period === "current-month") {
     return await getCurrentMonthCompletion(userId);
-  } else if (filterType === "current-year") {
-    return await getCurrentYearCompletion(userId);
-  } else if (filterType === "previous-year" && year) {
-    return await getPreviousYearCompletion(userId, year);
+  } else {
+    return await getYearCompletion(userId, year);
   }
-  return [];
 }
 
 /**
@@ -68,17 +64,14 @@ export async function getFilteredCompletionData(
  */
 export async function getFilteredHolidaysData(
   userId: string,
-  filterType: FilterType,
-  year?: number,
+  year: YearOption,
+  period: PeriodOption,
 ): Promise<FilteredHolidaysData[]> {
-  if (filterType === "current-month") {
+  if (period === "current-month") {
     return await getCurrentMonthHolidays(userId);
-  } else if (filterType === "current-year") {
-    return await getCurrentYearHolidays(userId);
-  } else if (filterType === "previous-year" && year) {
-    return await getPreviousYearHolidays(userId, year);
+  } else {
+    return await getYearHolidays(userId, year);
   }
-  return [];
 }
 
 /**
@@ -121,10 +114,11 @@ async function getCurrentMonthTimeSpent(
 }
 
 /**
- * CURRENT YEAR - Time Spent (Monthly)
+ * CURRENT YEAR/PREVIOUS YEAR - Time Spent (Monthly)
  */
-async function getCurrentYearTimeSpent(
+async function getYearTimeSpent(
   userId: string,
+  year: number,
 ): Promise<FilteredTimeSpentData[]> {
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -133,44 +127,11 @@ async function getCurrentYearTimeSpent(
   const result: FilteredTimeSpentData[] = [];
 
   for (const monthData of months) {
-    // Skip future months
-    if (monthData.month > currentMonth) {
+    // Skip future months for current year
+    if (year === currentYear && monthData.month > currentMonth) {
       continue;
     }
 
-    const monthlyInsight = await prisma.monthlyInsight.findUnique({
-      where: {
-        userId_year_month: {
-          userId,
-          year: currentYear,
-          month: monthData.month,
-        },
-      },
-      select: {
-        averageTimeSpent: true,
-      },
-    });
-
-    result.push({
-      week: monthData.label,
-      timeSpent: Math.round(monthlyInsight?.averageTimeSpent || 0),
-    });
-  }
-
-  return result;
-}
-
-/**
- * PREVIOUS YEAR - Time Spent (Monthly)
- */
-async function getPreviousYearTimeSpent(
-  userId: string,
-  year: number,
-): Promise<FilteredTimeSpentData[]> {
-  const months = getMonthsInYear();
-  const result: FilteredTimeSpentData[] = [];
-
-  for (const monthData of months) {
     const monthlyInsight = await prisma.monthlyInsight.findUnique({
       where: {
         userId_year_month: {
@@ -240,10 +201,11 @@ async function getCurrentMonthCompletion(
 }
 
 /**
- * CURRENT YEAR - Completion Rate (Monthly)
+ * CURRENT YEAR/PREVIOUS YEAR - Completion Rate (Monthly)
  */
-async function getCurrentYearCompletion(
+async function getYearCompletion(
   userId: string,
+  year: number,
 ): Promise<FilteredCompletionData[]> {
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -252,43 +214,10 @@ async function getCurrentYearCompletion(
   const result: FilteredCompletionData[] = [];
 
   for (const monthData of months) {
-    if (monthData.month > currentMonth) {
+    if (year === currentYear && monthData.month > currentMonth) {
       continue;
     }
 
-    const monthlyInsight = await prisma.monthlyInsight.findUnique({
-      where: {
-        userId_year_month: {
-          userId,
-          year: currentYear,
-          month: monthData.month,
-        },
-      },
-      select: {
-        completionRate: true,
-      },
-    });
-
-    result.push({
-      week: monthData.label,
-      completionRate: Math.round(monthlyInsight?.completionRate || 0),
-    });
-  }
-
-  return result;
-}
-
-/**
- * PREVIOUS YEAR - Completion Rate (Monthly)
- */
-async function getPreviousYearCompletion(
-  userId: string,
-  year: number,
-): Promise<FilteredCompletionData[]> {
-  const months = getMonthsInYear();
-  const result: FilteredCompletionData[] = [];
-
-  for (const monthData of months) {
     const monthlyInsight = await prisma.monthlyInsight.findUnique({
       where: {
         userId_year_month: {
@@ -343,10 +272,11 @@ async function getCurrentMonthHolidays(
 }
 
 /**
- * CURRENT YEAR - Holidays (Monthly)
+ * CURRENT YEAR/PREVIOUS YEAR - Holidays (Monthly)
  */
-async function getCurrentYearHolidays(
+async function getYearHolidays(
   userId: string,
+  year: number,
 ): Promise<FilteredHolidaysData[]> {
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -355,43 +285,10 @@ async function getCurrentYearHolidays(
   const result: FilteredHolidaysData[] = [];
 
   for (const monthData of months) {
-    if (monthData.month > currentMonth) {
+    if (year === currentYear && monthData.month > currentMonth) {
       continue;
     }
 
-    const monthlyInsight = await prisma.monthlyInsight.findUnique({
-      where: {
-        userId_year_month: {
-          userId,
-          year: currentYear,
-          month: monthData.month,
-        },
-      },
-      select: {
-        holidaysTaken: true,
-      },
-    });
-
-    result.push({
-      week: monthData.label,
-      holidays: monthlyInsight?.holidaysTaken || 0,
-    });
-  }
-
-  return result;
-}
-
-/**
- * PREVIOUS YEAR - Holidays (Monthly)
- */
-async function getPreviousYearHolidays(
-  userId: string,
-  year: number,
-): Promise<FilteredHolidaysData[]> {
-  const months = getMonthsInYear();
-  const result: FilteredHolidaysData[] = [];
-
-  for (const monthData of months) {
     const monthlyInsight = await prisma.monthlyInsight.findUnique({
       where: {
         userId_year_month: {

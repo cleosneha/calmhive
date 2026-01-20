@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { MetricsCard } from "@/components/insights/metrics-card";
 import { CompletionTrendGraph } from "@/components/insights/completion-trend-graph";
 import { TimeSpentGraph } from "@/components/insights/time-spent-graph";
@@ -8,6 +9,8 @@ import { ProfileCard } from "@/components/insights/profile-card";
 import { AIFeedback } from "@/components/insights/ai-feedback";
 import { InsightsHeader } from "@/components/insights/insights-header";
 import { PlanSuggestionsCard } from "@/components/insights/plan-suggestions-card";
+import { InsightsFilter } from "@/components/insights/insights-filter";
+import type { FilterChangeParams } from "@/types/insights-filter";
 import {
   FiCheckCircle,
   FiBook,
@@ -57,6 +60,17 @@ export default function InsightsClient({
 }: InsightsClientProps) {
   const { currentWeek, trendData, holidaysThisWeek, journal, profile } =
     dashboardData;
+
+  // Shared filter state for all graphs
+  const [filterParams, setFilterParams] = useState<FilterChangeParams>({
+    year: new Date().getFullYear(),
+    period: "current-month",
+  });
+
+  // Memoized callback to prevent unnecessary re-renders
+  const handleFilterChange = useCallback((params: FilterChangeParams) => {
+    setFilterParams(params);
+  }, []);
 
   // Format completion rate
   const completionPercentage = currentWeek
@@ -176,15 +190,20 @@ export default function InsightsClient({
 
         {/* Graphs Section */}
         <div>
-          <h2 className="text-xl font-semibold text-slate-900 mb-4">
-            Performance Trends
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <h2 className="text-xl font-semibold text-slate-900">
+              Performance Trends
+            </h2>
+            {/* Single shared filter for all graphs */}
+            <InsightsFilter onFilterChange={handleFilterChange} />
+          </div>
 
           {/* Two-column grid for main graphs */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {/* Completion Trend Graph */}
             <CompletionTrendGraph
               userId={userId}
+              filterParams={filterParams}
               initialData={trendData.map((d) => ({
                 week: d.week,
                 completionRate: d.completionRate,
@@ -194,6 +213,7 @@ export default function InsightsClient({
             {/* Time Spent Graph */}
             <TimeSpentGraph
               userId={userId}
+              filterParams={filterParams}
               initialData={trendData.map((d) => ({
                 week: d.week,
                 timeSpent: d.timeSpent,
@@ -204,6 +224,7 @@ export default function InsightsClient({
           {/* Holidays Graph - full width below */}
           <HolidaysGraph
             userId={userId}
+            filterParams={filterParams}
             initialData={trendData.map((d) => ({
               week: d.week,
               holidays: d.holidays,
