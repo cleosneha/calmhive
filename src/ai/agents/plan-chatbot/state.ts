@@ -81,7 +81,14 @@ export const PlanChatbotState = Annotation.Root({
 
   // Track awaiting clarification for multi-step operations
   awaitingClarification: Annotation<{
-    operation: "swap_days" | "remove_days" | "copy_day" | "rename_day" | null;
+    operation:
+      | "swap_days"
+      | "remove_days"
+      | "copy_day"
+      | "rename_day"
+      | "add_task"
+      | "modify_task"
+      | null;
     context?: Record<string, unknown>;
   } | null>({
     reducer: (_, value) => value,

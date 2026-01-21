@@ -188,32 +188,40 @@ export async function validateRemoveDays(
 }
 
 /**
- * Validate copying day plan to another day
+ * Validate copying day plan to another day or multiple days
  */
 export async function validateCopyDay(
   userId: string,
   sourceDay: string,
-  targetDay: string,
+  targetDays: string | string[],
 ): Promise<DayOperationValidation> {
   const errors: string[] = [];
 
-  // Normalize day names
+  // Normalize source day
   const normalizedSource = normalizeDayName(sourceDay);
-  const normalizedTarget = normalizeDayName(targetDay);
-
   if (!normalizedSource) {
     errors.push(`Invalid source day: "${sourceDay}"`);
-  }
-  if (!normalizedTarget) {
-    errors.push(`Invalid target day: "${targetDay}"`);
-  }
-
-  if (errors.length > 0) {
     return { isValid: false, errors };
   }
 
-  if (normalizedSource === normalizedTarget) {
-    errors.push("Source and target days cannot be the same.");
+  // Normalize target days (support both single and multiple)
+  const targetDaysList = Array.isArray(targetDays) ? targetDays : [targetDays];
+  const normalizedTargets: string[] = [];
+
+  for (const target of targetDaysList) {
+    const normalized = normalizeDayName(target);
+    if (!normalized) {
+      errors.push(`Invalid target day: "${target}"`);
+    } else if (normalized === normalizedSource) {
+      errors.push(`Cannot copy ${normalizedSource} to itself.`);
+    } else if (normalizedTargets.includes(normalized)) {
+      errors.push(`Duplicate target day: "${normalized}"`);
+    } else {
+      normalizedTargets.push(normalized);
+    }
+  }
+
+  if (errors.length > 0) {
     return { isValid: false, errors };
   }
 
@@ -235,15 +243,16 @@ export async function validateCopyDay(
     return { isValid: false, errors };
   }
 
-  // Check if target day already exists
-  const targetTasks = plan.tasks.filter((t) => t.day === normalizedTarget);
-  const targetExists = targetTasks.length > 0;
+  // Check which target days already exist
+  const existingTargets = normalizedTargets.filter((target) =>
+    plan.tasks.some((t) => t.day === target),
+  );
 
   return {
     isValid: true,
     errors: [],
-    normalizedDays: [normalizedSource!, normalizedTarget!],
-    existingDays: targetExists ? [normalizedTarget!] : [],
+    normalizedDays: [normalizedSource, ...normalizedTargets],
+    existingDays: existingTargets,
   };
 }
 

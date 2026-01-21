@@ -55,12 +55,58 @@ export async function executePlanEdit(
 
     switch (editType) {
       case "add_task": {
-        const { day, timeRange, activity, notes } = data as {
+        const {
+          day,
+          timeRange,
+          activity,
+          notes,
+          shouldOverwrite,
+          conflictingActivity,
+          conflictingTime,
+        } = data as {
           day: string;
           timeRange: string;
           activity: string;
           notes?: string;
+          shouldOverwrite?: boolean;
+          conflictingActivity?: string;
+          conflictingTime?: string;
         };
+
+        // If overwrite is requested, remove the conflicting task first
+        if (shouldOverwrite && conflictingActivity && conflictingTime) {
+          console.log(
+            "[executePlanEdit] Overwrite requested - removing conflicting task",
+          );
+
+          // Find and remove the conflicting task
+          const conflictingTask = plan.tasks.find(
+            (task) =>
+              task.day.toLowerCase() === day.toLowerCase() &&
+              task.timeRange === conflictingTime &&
+              task.activity === conflictingActivity,
+          );
+
+          if (conflictingTask) {
+            console.log(
+              "[executePlanEdit] Found conflicting task:",
+              conflictingTask.id,
+            );
+            const removeResult = await removeTask({
+              taskId: conflictingTask.id,
+            });
+
+            if (!removeResult.success) {
+              return {
+                success: false,
+                error: `Failed to remove conflicting task: ${removeResult.message}`,
+              };
+            }
+            console.log(
+              "[executePlanEdit] Conflicting task removed successfully",
+            );
+          }
+        }
 
         // Use the addTask action which handles all validations, embedding, and hoursSummary
         const addResult = await addTask({
@@ -79,7 +125,9 @@ export async function executePlanEdit(
 
         result = {
           success: true,
-          message: `Added **${activity}** on **${day}** at **${timeRange}**.`,
+          message: shouldOverwrite
+            ? `Replaced **${conflictingActivity}** with **${activity}** on **${day}** at **${timeRange}**.`
+            : `Added **${activity}** on **${day}** at **${timeRange}**.`,
           previousData: { taskId: addResult.data?.taskId },
         };
         break;
@@ -267,16 +315,29 @@ export async function executePlanEdit(
       }
 
       case "copy_day": {
-        const { sourceDay, targetDay, deleteExisting } = data as {
+        const {
+          sourceDay,
+          targetDays,
+          targetDay,
+          deleteExisting,
+          existingTargets,
+        } = data as {
           sourceDay: string;
-          targetDay: string;
+          targetDays?: string[];
+          targetDay?: string; // Legacy single target support
           deleteExisting?: boolean;
+          existingTargets?: string[];
         };
+
+        // Support both new (targetDays array) and legacy (targetDay string) formats
+        const targets = targetDays || (targetDay ? [targetDay] : []);
+
         return await executeCopyDay(
           userId,
           sourceDay,
-          targetDay,
+          targets,
           deleteExisting,
+          existingTargets || [],
         );
       }
 

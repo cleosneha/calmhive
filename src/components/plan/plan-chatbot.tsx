@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { FiSend, FiPlay } from "react-icons/fi";
 import Image from "next/image";
 import ChatMessages from "@/components/onboarding/chat-messages";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { usePlanChatbotSession } from "@/hooks/usePlanChatbotSession";
 
@@ -172,14 +171,24 @@ export default function PlanChatbot({
         ) : (
           /* Input area - show when NOT waiting for confirmation */
           <div className="flex gap-2">
-            <Input
-              placeholder="Type a message..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleInputKeyDown}
-              disabled={loading}
-              className="flex-1 rounded-xl border border-[var(--ch-sage-dark)]/20 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ch-sage-dark)]"
-            />
+            <div className="flex-1 relative">
+              {/* Character counter top-right */}
+              <div className="absolute right-2 top-2 text-xs text-[var(--foreground)]/60 z-10 pointer-events-none">
+                {`${input.length}/725`}
+              </div>
+
+              <textarea
+                placeholder="Type a message..."
+                value={input}
+                onChange={(e) => setInput(e.currentTarget.value.slice(0, 725))}
+                onKeyDown={handleInputKeyDown}
+                disabled={loading}
+                maxLength={725}
+                aria-label="Message"
+                className="w-full min-h-[44px] rounded-xl border border-[var(--ch-sage-dark)]/20 px-3 pt-6 pb-2 pr-10 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[var(--ch-sage-dark)]"
+              />
+            </div>
+
             <Button
               type="button"
               onClick={() => handleSend()}

@@ -1,7 +1,7 @@
 // Centralized hardcoded messages used across plan chatbot nodes
 export const HARD_CODED_MESSAGES = {
   IRRELEVANT:
-    "I can only help with questions or edits related to your wellness plan. Please ask about your schedule, tasks, or request plan changes.",
+    "I can help you with your wellness plan, but I can't assist with that request. Please ask about your schedule, tasks, or request plan changes.",
 
   SAFETY:
     "I appreciate you sharing that, but I want to make sure we're aligned. 🤍\n\n" +

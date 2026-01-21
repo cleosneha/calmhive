@@ -131,13 +131,14 @@ export async function executeRemoveDays(
 }
 
 /**
- * Copy day plan to another day
+ * Copy day plan to another day or multiple days
  */
 export async function executeCopyDay(
   userId: string,
   sourceDay: string,
-  targetDay: string,
+  targetDays: string | string[],
   deleteExisting: boolean = false,
+  existingTargets: string[] = [],
 ): Promise<DayOperationResult> {
   try {
     const plan = await prisma.plan.findFirst({
@@ -149,36 +150,44 @@ export async function executeCopyDay(
       return { success: false, error: "No plan found" };
     }
 
+    // Normalize targetDays to array
+    const targetDaysList = Array.isArray(targetDays)
+      ? targetDays
+      : [targetDays];
+
     // Get source tasks
     const sourceTasks = plan.tasks.filter((t) => t.day === sourceDay);
 
     // Store previous target tasks if any
-    const previousTargetTasks = plan.tasks.filter((t) => t.day === targetDay);
-    const previousData = deleteExisting
-      ? {
-          deletedTasks: previousTargetTasks.map((t) => ({
-            id: t.id,
-            day: t.day,
-            timeRange: t.timeRange,
-            activity: t.activity,
-            notes: t.notes,
-          })),
-        }
-      : {};
+    const previousTargetTasks = plan.tasks.filter((t) =>
+      targetDaysList.includes(t.day),
+    );
+    const previousData =
+      deleteExisting && previousTargetTasks.length > 0
+        ? {
+            deletedTasks: previousTargetTasks.map((t) => ({
+              id: t.id,
+              day: t.day,
+              timeRange: t.timeRange,
+              activity: t.activity,
+              notes: t.notes,
+            })),
+          }
+        : {};
 
-    // Delete existing target tasks if requested
-    if (deleteExisting && previousTargetTasks.length > 0) {
+    // Delete existing target tasks if they exist
+    if (existingTargets.length > 0) {
       await prisma.task.deleteMany({
         where: {
           planId: plan.id,
-          day: targetDay,
+          day: { in: existingTargets },
         },
       });
     }
 
-    // Copy source tasks to target day
-    await prisma.task.createMany({
-      data: sourceTasks.map((task) => ({
+    // Copy source tasks to all target days
+    const tasksToCreate = targetDaysList.flatMap((targetDay) =>
+      sourceTasks.map((task) => ({
         planId: plan.id,
         day: targetDay,
         timeRange: task.timeRange,
@@ -186,6 +195,10 @@ export async function executeCopyDay(
         notes: task.notes,
         status: "pending" as const,
       })),
+    );
+
+    await prisma.task.createMany({
+      data: tasksToCreate,
     });
 
     // Recalculate hours summary
@@ -205,10 +218,13 @@ export async function executeCopyDay(
     // Re-embed the plan
     await embedPlan(userId, plan.id, allTasks, plan.daysOff);
 
-    const action = deleteExisting ? "replaced with" : "copied to";
+    const targetList = targetDaysList.join(", ");
+    const action = existingTargets.length > 0 ? "replaced with" : "copied to";
+    const totalCopied = sourceTasks.length * targetDaysList.length;
+
     return {
       success: true,
-      message: `${sourceDay}'s plan has been ${action} ${targetDay} (${sourceTasks.length} task${sourceTasks.length !== 1 ? "s" : ""}).`,
+      message: `${sourceDay}'s plan has been ${action} ${targetList} (${totalCopied} task${totalCopied !== 1 ? "s" : ""} ${targetDaysList.length === 1 ? "copied" : "created"}).`,
       previousData,
     };
   } catch (error) {

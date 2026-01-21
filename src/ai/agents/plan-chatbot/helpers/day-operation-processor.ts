@@ -162,25 +162,34 @@ export async function processDayOperation(
   if (editType === "copy_day") {
     console.log("  📋 [copy_day] Processing copy day request");
     const sourceDay = extractedEdit.sourceDay;
-    const targetDay = extractedEdit.targetDay;
+    let targetDays: string | string[] = extractedEdit.targetDay || "";
+
+    // Support multiple target days from different fields
+    if (!targetDays && extractedEdit.targetDays) {
+      targetDays = extractedEdit.targetDays;
+    }
+
     console.log(
       "  📅 [copy_day] sourceDay:",
       sourceDay,
-      "targetDay:",
-      targetDay,
+      "targetDays:",
+      targetDays,
     );
 
-    if (!sourceDay || !targetDay) {
-      console.log("  ⚠️ [copy_day] Missing source or target day");
+    if (!sourceDay || !targetDays) {
+      console.log("  ⚠️ [copy_day] Missing source or target day(s)");
       return {
         shouldConfirm: false,
         errorMessage:
-          "Please specify which day's plan you want to copy and to which day. Example: 'Use Monday's plan for Tuesday as well'",
+          "Please specify which day's plan you want to copy and to which day(s). Examples:\n" +
+          "• 'Copy Monday to Tuesday'\n" +
+          "• 'Use Monday's plan for Tuesday and Wednesday'\n" +
+          "• 'Copy Monday to Tuesday, Wednesday and Thursday'",
       };
     }
 
     console.log("  ✅ [copy_day] Days specified, validating");
-    const validation = await validateCopyDay(userId, sourceDay, targetDay);
+    const validation = await validateCopyDay(userId, sourceDay, targetDays);
     if (!validation.isValid) {
       console.log("  ❌ [copy_day] Validation failed:", validation.errors);
       return {
@@ -189,17 +198,20 @@ export async function processDayOperation(
       };
     }
 
-    const [normalizedSource, normalizedTarget] = validation.normalizedDays!;
-    const targetExists = validation.existingDays!.length > 0;
+    const [normalizedSource, ...normalizedTargets] = validation.normalizedDays!;
+    const existingTargets = validation.existingDays || [];
     console.log(
-      "  ✅ [copy_day] Validation passed, targetExists:",
-      targetExists,
+      "  ✅ [copy_day] Validation passed, targets:",
+      normalizedTargets,
+      "existing:",
+      existingTargets,
     );
 
-    let confirmMessage = `⚠️ **Confirmation Required**\n\nYou want to copy **${normalizedSource}'s** plan to **${normalizedTarget}**.`;
+    const targetList = normalizedTargets.join(", ");
+    let confirmMessage = `⚠️ **Confirmation Required**\n\nYou want to copy **${normalizedSource}'s** plan to **${targetList}**.`;
 
-    if (targetExists) {
-      confirmMessage += `\n\n⚠️ **Warning:** ${normalizedTarget} already has a plan. It will be replaced with ${normalizedSource}'s plan.`;
+    if (existingTargets.length > 0) {
+      confirmMessage += `\n\n⚠️ **Warning:** ${existingTargets.length === 1 ? existingTargets[0] : `These days (${existingTargets.join(", ")})`} already ${existingTargets.length === 1 ? "has" : "have"} a plan. ${existingTargets.length === 1 ? "It" : "They"} will be replaced with ${normalizedSource}'s plan.`;
     }
 
     confirmMessage +=
@@ -211,15 +223,16 @@ export async function processDayOperation(
         type: "copy_day",
         data: {
           sourceDay: normalizedSource,
-          targetDay: normalizedTarget,
-          deleteExisting: targetExists,
+          targetDays: normalizedTargets,
+          deleteExisting: existingTargets.length > 0,
+          existingTargets,
         },
-        description: `Copy ${normalizedSource} to ${normalizedTarget}`,
+        description: `Copy ${normalizedSource} to ${targetList}`,
         preview: {
           changes: [
             {
               field: "Action",
-              newValue: `Copy ${normalizedSource} → ${normalizedTarget}`,
+              newValue: `Copy ${normalizedSource} → ${targetList}`,
             },
           ],
         },

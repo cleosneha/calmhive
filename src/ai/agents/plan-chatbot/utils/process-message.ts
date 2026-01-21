@@ -99,7 +99,17 @@ export async function processUserMessage(
         extractedEdit.sourceDay = parsed.SOURCE_DAY;
       }
       if (parsed.TARGET_DAY && parsed.TARGET_DAY !== "none") {
-        extractedEdit.targetDay = parsed.TARGET_DAY;
+        // Support multiple target days (comma-separated) for copy_day
+        const targetDayValue = parsed.TARGET_DAY.trim();
+        if (targetDayValue.includes(",")) {
+          // Multiple targets - parse as array
+          extractedEdit.targetDays = targetDayValue
+            .split(",")
+            .map((d) => d.trim());
+        } else {
+          // Single target - keep backward compatibility
+          extractedEdit.targetDay = targetDayValue;
+        }
       }
       if (parsed.DAYS_TO_ADD && parsed.DAYS_TO_ADD !== "none") {
         extractedEdit.daysToAdd = parsed.DAYS_TO_ADD.split(",").map((d) =>

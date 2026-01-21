@@ -116,7 +116,7 @@ export function validateDay(day: string): {
   ];
 
   const normalizedDay = validDays.find(
-    (d) => d.toLowerCase() === day.toLowerCase()
+    (d) => d.toLowerCase() === day.toLowerCase(),
   );
 
   if (!normalizedDay) {
@@ -175,7 +175,7 @@ export function validateActivityTitle(activity: string): {
  */
 export async function checkIfDayOff(
   userId: string,
-  day: string
+  day: string,
 ): Promise<{
   isDayOff: boolean;
   error?: string;
@@ -191,7 +191,7 @@ export async function checkIfDayOff(
     }
 
     const isDayOff = plan.daysOff.some(
-      (d) => d.toLowerCase() === day.toLowerCase()
+      (d) => d.toLowerCase() === day.toLowerCase(),
     );
 
     return { isDayOff };
@@ -202,13 +202,104 @@ export async function checkIfDayOff(
 }
 
 /**
+ * Check for similar activities on the same day
+ * Uses fuzzy matching to find activities with similar names
+ */
+export async function checkSimilarActivities(
+  userId: string,
+  day: string,
+  activity: string,
+): Promise<{
+  hasSimilar: boolean;
+  similarActivities?: Array<{ activity: string; timeRange: string }>;
+}> {
+  try {
+    const plan = await prisma.plan.findFirst({
+      where: { userId },
+      include: { tasks: true },
+    });
+
+    if (!plan) {
+      return { hasSimilar: false };
+    }
+
+    // Normalize the activity name for comparison
+    const normalizedActivity = activity.toLowerCase().trim();
+
+    // Find tasks on the same day with similar activity names
+    const similarTasks = plan.tasks.filter((task) => {
+      if (task.day.toLowerCase() !== day.toLowerCase()) return false;
+
+      const taskActivity = task.activity.toLowerCase().trim();
+
+      // Exact match (case-insensitive)
+      if (taskActivity === normalizedActivity) return true;
+
+      // Check if one contains the other (e.g., "yoga" in "morning yoga")
+      if (
+        taskActivity.includes(normalizedActivity) ||
+        normalizedActivity.includes(taskActivity)
+      ) {
+        return true;
+      }
+
+      // Check for common keywords (e.g., both have "workout", "meditation", etc.)
+      const commonKeywords = [
+        "workout",
+        "exercise",
+        "yoga",
+        "meditation",
+        "run",
+        "gym",
+        "walk",
+        "breakfast",
+        "lunch",
+        "dinner",
+        "meal",
+        "study",
+        "read",
+        "journal",
+        "sleep",
+        "rest",
+      ];
+
+      for (const keyword of commonKeywords) {
+        if (
+          taskActivity.includes(keyword) &&
+          normalizedActivity.includes(keyword)
+        ) {
+          return true;
+        }
+      }
+
+      return false;
+    });
+
+    if (similarTasks.length > 0) {
+      return {
+        hasSimilar: true,
+        similarActivities: similarTasks.map((t) => ({
+          activity: t.activity,
+          timeRange: t.timeRange,
+        })),
+      };
+    }
+
+    return { hasSimilar: false };
+  } catch (error) {
+    console.error("Error checking similar activities:", error);
+    return { hasSimilar: false };
+  }
+}
+
+/**
  * Comprehensive validation for add task operation
  */
 export async function validateAddTask(
   userId: string,
   day: string,
   timeRange: string,
-  activity: string
+  activity: string,
 ): Promise<{
   isValid: boolean;
   errors: string[];
@@ -238,11 +329,11 @@ export async function validateAddTask(
   if (dayValidation.isValid && dayValidation.normalizedDay) {
     const dayOffCheck = await checkIfDayOff(
       userId,
-      dayValidation.normalizedDay
+      dayValidation.normalizedDay,
     );
     if (dayOffCheck.isDayOff) {
       errors.push(
-        `Cannot add task on ${dayValidation.normalizedDay} as it's marked as a day off`
+        `Cannot add task on ${dayValidation.normalizedDay} as it's marked as a day off`,
       );
     }
   }

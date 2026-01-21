@@ -6,7 +6,7 @@ import { HARD_CODED_MESSAGES } from "../utils";
  * Confirm Node: Handle user's confirmation response
  */
 export async function confirmNode(
-  state: PlanChatbotStateType
+  state: PlanChatbotStateType,
 ): Promise<Partial<PlanChatbotStateType>> {
   // Get last user message
   const lastMessage = state.messages[state.messages.length - 1];
@@ -23,7 +23,7 @@ export async function confirmNode(
   console.log("[confirmNode] User message:", userMessage);
   console.log(
     "[confirmNode] Waiting for confirmation:",
-    state.waitingForConfirmation
+    state.waitingForConfirmation,
   );
   console.log("[confirmNode] Has pending edit:", !!state.pendingEdit);
 
@@ -44,7 +44,40 @@ export async function confirmNode(
 
   if (userMessage.startsWith("action:cancel") || userMessage === "[cancel]") {
     console.log("[confirmNode] CANCEL action detected");
-    // User cancelled via button
+
+    // Check if this was a time conflict overwrite scenario
+    if (
+      state.pendingEdit?.type === "add_task" &&
+      state.pendingEdit.data.shouldOverwrite
+    ) {
+      console.log(
+        "[confirmNode] Overwrite cancelled - restoring clarification state",
+      );
+
+      // Restore clarification state so user can provide a different time
+      return {
+        mode: "query",
+        waitingForConfirmation: false,
+        pendingEdit: null,
+        awaitingClarification: {
+          operation: "add_task",
+          context: {
+            activity: state.pendingEdit.data.activity,
+            day: state.pendingEdit.data.day,
+            notes: state.pendingEdit.data.notes,
+          },
+        },
+        messages: [
+          new AIMessage(
+            `No problem! I'll keep the existing activity.\\n\\n` +
+              `Please provide a different time slot for **${state.pendingEdit.data.activity}** on **${state.pendingEdit.data.day}**.\\n\\n` +
+              `Example: "7:30 AM to 8:30 AM" or "from 9:00 AM to 10:00 AM"`,
+          ),
+        ],
+      };
+    }
+
+    // User cancelled via button - regular cancel
     return {
       mode: "query",
       waitingForConfirmation: false,
@@ -89,7 +122,7 @@ export async function confirmNode(
   return {
     messages: [
       new AIMessage(
-        'Please use the **Apply Changes** or **Cancel** buttons, or type **"yes"** to proceed or **"no"** to cancel.'
+        'Please use the **Apply Changes** or **Cancel** buttons, or type **"yes"** to proceed or **"no"** to cancel.',
       ),
     ],
   };

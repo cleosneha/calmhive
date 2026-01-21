@@ -27,13 +27,15 @@ const isErrorResponse = (obj: unknown): obj is ErrorResponse => {
 };
 
 export function usePlanChatbotSession() {
-  const [threadId] = useState(() => `plan-chat-${Date.now()}`);
+  // Thread ID will be set by server after user auth verification
+  // Using null as placeholder until server initializes chat
+  const [threadId, setThreadId] = useState<string | null>(null);
 
   const [state, setState] = useState<PlanChatbotSessionState>({
     messages: [],
     input: "",
     loading: false,
-    threadId,
+    threadId: threadId || "",
     isInitialized: false,
   });
 
@@ -41,7 +43,7 @@ export function usePlanChatbotSession() {
   const initializeChat = useCallback(async () => {
     setState((prev) => ({ ...prev, loading: true }));
     try {
-      const result = await initializePlanChatSession(threadId);
+      const result = await initializePlanChatSession();
 
       // Check if result is an error response
       if (isErrorResponse(result)) {
@@ -60,11 +62,15 @@ export function usePlanChatbotSession() {
         return;
       }
 
+      if (result.threadId) {
+        setThreadId(result.threadId);
+      }
       setState((prev) => ({
         ...prev,
         messages: Array.isArray(result.messages) ? result.messages : [],
         loading: false,
         isInitialized: true,
+        threadId: result.threadId || prev.threadId,
       }));
     } catch (error) {
       console.error("Failed to initialize plan chat session:", error);
@@ -80,7 +86,7 @@ export function usePlanChatbotSession() {
         isInitialized: true,
       }));
     }
-  }, [threadId]);
+  }, []);
 
   // Handle sending messages
   const handleSend = useCallback(
@@ -147,7 +153,7 @@ export function usePlanChatbotSession() {
         }));
       }
     },
-    [state.input, state.threadId]
+    [state.input, state.threadId],
   );
 
   // Handle action button clicks
@@ -220,16 +226,18 @@ export function usePlanChatbotSession() {
         }
       })();
     },
-    [state.threadId]
+    [state.threadId],
   );
 
   const handleInputKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
+    (e: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => {
       if (e.key === "Enter" && !state.loading) {
+        // Prevent default to avoid newline when pressing Enter if desired
+        e.preventDefault();
         handleSend();
       }
     },
-    [state.loading, handleSend]
+    [state.loading, handleSend],
   );
 
   const setInput = useCallback((input: string) => {

@@ -49,7 +49,8 @@ export interface EditAnalysisResult {
     daysToAdd?: string[]; // For add_days_off
     daysToRemove?: string[]; // For remove_days
     sourceDay?: string; // For copy_day, rename_day, swap_days
-    targetDay?: string; // For copy_day, rename_day, swap_days
+    targetDay?: string; // For copy_day (single), rename_day, swap_days
+    targetDays?: string[]; // For copy_day (multiple targets)
     day1?: string; // For swap_days
     day2?: string; // For swap_days
     needsConfirmation?: boolean; // For operations requiring user confirmation

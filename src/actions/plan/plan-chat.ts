@@ -9,6 +9,7 @@ export interface PlanChatResponse {
   success: boolean;
   messages?: PlanChatMessage[];
   error?: string;
+  threadId?: string;
 }
 
 /**
@@ -16,7 +17,7 @@ export interface PlanChatResponse {
  */
 export async function processPlanChatMessage(
   userMessage: string,
-  threadId: string
+  _threadId: string, // Deprecated: kept for backward compatibility, ignored in favor of user-specific thread ID
 ): Promise<PlanChatResponse> {
   try {
     // Get current user
@@ -28,12 +29,16 @@ export async function processPlanChatMessage(
       };
     }
 
+    // Create user-specific thread ID to prevent cross-user collisions
+    // Format: plan-chat-{userId}
+    const userSpecificThreadId = `plan-chat-${user.id}`;
+
     // Compile graph
     const graph = compilePlanChatbotGraph();
 
     // Get current state or initialize
     const config = {
-      configurable: { thread_id: threadId },
+      configurable: { thread_id: userSpecificThreadId },
     };
 
     const currentState = await graph.getState(config);
@@ -42,16 +47,16 @@ export async function processPlanChatMessage(
     console.log("  - userId:", currentState.values.userId);
     console.log(
       "  - waitingForConfirmation:",
-      currentState.values.waitingForConfirmation
+      currentState.values.waitingForConfirmation,
     );
     console.log(
       "  - pendingEdit:",
-      currentState.values.pendingEdit ? "EXISTS" : "NULL"
+      currentState.values.pendingEdit ? "EXISTS" : "NULL",
     );
     console.log("  - mode:", currentState.values.mode);
     console.log(
       "  - messages count:",
-      currentState.values.messages?.length || 0
+      currentState.values.messages?.length || 0,
     );
 
     // Only initialize userId/userName on first message
@@ -60,7 +65,7 @@ export async function processPlanChatMessage(
 
     console.log(
       "[processPlanChatMessage] Should initialize:",
-      shouldInitialize
+      shouldInitialize,
     );
 
     // Track initial message count to return only new messages
@@ -78,7 +83,7 @@ export async function processPlanChatMessage(
         : {
             messages: [new HumanMessage(userMessage)],
           },
-      config
+      config,
     );
 
     // Extract only NEW messages (those added during this invocation)
@@ -103,6 +108,7 @@ export async function processPlanChatMessage(
     return {
       success: true,
       messages,
+      threadId: userSpecificThreadId,
     };
   } catch (error) {
     console.error("Error processing plan chat message:", error);
@@ -117,7 +123,7 @@ export async function processPlanChatMessage(
  * Parse action buttons from message content
  */
 function parseActionButtons(
-  content: string
+  content: string,
 ): Array<{ type: "confirm" | "cancel" | "undo"; label: string }> | undefined {
   const actions: Array<{ type: "confirm" | "cancel" | "undo"; label: string }> =
     [];
@@ -140,9 +146,7 @@ function parseActionButtons(
 /**
  * Initialize plan chatbot session
  */
-export async function initializePlanChatSession(
-  threadId: string
-): Promise<PlanChatResponse> {
+export async function initializePlanChatSession(): Promise<PlanChatResponse> {
   try {
     // Get current user
     const user = await getCurrentUser();
@@ -153,12 +157,16 @@ export async function initializePlanChatSession(
       };
     }
 
+    // Create user-specific thread ID to prevent cross-user collisions
+    // Format: plan-chat-{userId}
+    const userSpecificThreadId = `plan-chat-${user.id}`;
+
     // Compile graph
     const graph = compilePlanChatbotGraph();
 
     // Initialize with greeting
     const config = {
-      configurable: { thread_id: threadId },
+      configurable: { thread_id: userSpecificThreadId },
     };
 
     const result = await graph.invoke(
@@ -167,7 +175,7 @@ export async function initializePlanChatSession(
         userName: user.name || "there",
         messages: [],
       },
-      config
+      config,
     );
 
     // Extract messages and parse action buttons
@@ -189,6 +197,7 @@ export async function initializePlanChatSession(
     return {
       success: true,
       messages,
+      threadId: userSpecificThreadId,
     };
   } catch (error) {
     console.error("Error initializing plan chat session:", error);
