@@ -165,7 +165,11 @@ export async function analyzeNode(
             messages: [new AIMessage(result.errorMessage)],
             responseHandled: true,
             awaitingClarification: {
-              operation: result.clarificationOperation as any,
+              operation: result.clarificationOperation as
+                | "swap_days"
+                | "remove_days"
+                | "copy_day"
+                | "rename_day",
               context: result.clarificationContext,
             },
           };
@@ -190,7 +194,7 @@ export async function analyzeNode(
     }
 
     // Check for unsupported edit types or multiple operations
-    if (analysis.editType === "other" || !analysis.editType) {
+    if (!analysis.editType || (analysis.editType as string) === "other") {
       console.log("  ❌ UNSUPPORTED EDIT TYPE OR MULTIPLE OPERATIONS");
 
       return {
@@ -416,18 +420,10 @@ async function handleClarificationResponse(
   // Route to appropriate handler based on operation
   switch (operation) {
     case "swap_days":
-      return await handleSwapDaysClarification(
-        state.userId,
-        parsedDays,
-        context,
-      );
+      return await handleSwapDaysClarification(state.userId, parsedDays);
 
     case "remove_days":
-      return await handleRemoveDaysClarification(
-        state.userId,
-        parsedDays,
-        context,
-      );
+      return await handleRemoveDaysClarification(state.userId, parsedDays);
 
     default:
       console.log("  ⚠️ Unknown clarification operation:", operation);
@@ -449,7 +445,6 @@ async function handleClarificationResponse(
 async function handleSwapDaysClarification(
   userId: string,
   parsedDays: string[],
-  context?: Record<string, unknown>,
 ): Promise<Partial<PlanChatbotStateType>> {
   console.log("  🔄 Handling swap_days clarification with days:", parsedDays);
 
@@ -502,7 +497,6 @@ async function handleSwapDaysClarification(
 async function handleRemoveDaysClarification(
   userId: string,
   parsedDays: string[],
-  context?: Record<string, unknown>,
 ): Promise<Partial<PlanChatbotStateType>> {
   console.log("  🗑️ Handling remove_days clarification with days:", parsedDays);
 

@@ -17,7 +17,12 @@ export async function processDayOperation(
   | {
       shouldConfirm: true;
       pendingEdit: {
-        type: string;
+        type:
+          | "add_days_off"
+          | "remove_days"
+          | "copy_day"
+          | "rename_day"
+          | "swap_days";
         data: Record<string, unknown>;
         description: string;
         preview?: {

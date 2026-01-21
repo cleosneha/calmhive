@@ -1,6 +1,5 @@
 import type { PlanChatbotStateType } from "../state";
-import { AIMessage, HumanMessage } from "@langchain/core/messages";
-import { HARD_CODED_MESSAGES } from "../utils";
+import { AIMessage } from "@langchain/core/messages";
 
 /**
  * Respond Node: Answer user's query about their plan
@@ -8,14 +7,14 @@ import { HARD_CODED_MESSAGES } from "../utils";
  * Skips if response was already handled in analyze node (safety/irrelevant)
  */
 export async function respondNode(
-  state: PlanChatbotStateType
+  state: PlanChatbotStateType,
 ): Promise<Partial<PlanChatbotStateType>> {
   console.log("  📤 [respondNode] START");
   console.log(
     "    responseHandled:",
     state.responseHandled,
     "| cachedAnswer:",
-    state.cachedAnswer ? "Yes" : "No"
+    state.cachedAnswer ? "Yes" : "No",
   );
 
   // Skip if response was already handled (safety/irrelevant detected in analyze)

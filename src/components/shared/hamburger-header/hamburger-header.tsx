@@ -6,7 +6,6 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/hooks/useSession";
 import {
-  FiHome,
   FiBook,
   FiCalendar,
   FiBarChart2,
@@ -85,7 +84,7 @@ export default function HamburgerHeader() {
         alert(
           "message" in result
             ? result.message
-            : "Failed to delete account. Please try again."
+            : "Failed to delete account. Please try again.",
         );
         setIsDeleting(false);
         setShowDeleteDialog(false);
