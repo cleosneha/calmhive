@@ -1,36 +1,39 @@
-export default function SettingsPage() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
-      <h1 className="text-3xl font-bold text-slate-900 mb-2">Settings</h1>
-      <p className="text-slate-600 mb-8">
-        Manage your account and preferences.
-      </p>
+import { fetchUserProfile } from "@/fetchers/user-profile";
+import { SettingsFormClient } from "@/app/user/settings/client";
+import { redirect } from "next/navigation";
+import { Metadata } from "next";
 
-      <div className="bg-white rounded-lg shadow p-8">
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">
-              Account Settings
-            </h3>
-            <p className="text-slate-600">
-              Manage your account information and preferences.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">
-              Notifications
-            </h3>
-            <p className="text-slate-600">
-              Control how you receive notifications.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">
-              Privacy
-            </h3>
-            <p className="text-slate-600">Manage your privacy settings.</p>
-          </div>
+export const metadata: Metadata = {
+  title: "Settings",
+  description: "Manage your profile and preferences",
+};
+
+/**
+ * Server Component: Settings Page
+ * Fetches user data on server and passes to client component
+ */
+export default async function SettingsPage() {
+  // Fetch user profile on server
+  const userProfile = await fetchUserProfile();
+
+  if (!userProfile) {
+    redirect("/login");
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[var(--ch-bg-light)] to-[var(--ch-bg)]">
+      <div className="max-w-4xl mx-auto p-6 md:p-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-[var(--ch-slate-dark)] mb-2">
+            Settings
+          </h1>
+          <p className="text-[var(--ch-slate)]">
+            Manage your profile and wellness preferences
+          </p>
         </div>
+
+        {/* Client Component with User Data */}
+        <SettingsFormClient initialData={userProfile} />
       </div>
     </div>
   );
