@@ -34,6 +34,7 @@ export interface EditAnalysisResult {
     | "copy_day"
     | "rename_day"
     | "swap_days"
+    | "delete_plan"
     | "other";
   extractedEdit?: {
     day?: string;

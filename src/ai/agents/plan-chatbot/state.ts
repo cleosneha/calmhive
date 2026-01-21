@@ -36,6 +36,7 @@ export const PlanChatbotState = Annotation.Root({
       | "copy_day"
       | "rename_day"
       | "swap_days"
+      | "delete_plan"
       | "other";
     data: Record<string, unknown>;
     description: string;
@@ -58,6 +59,7 @@ export const PlanChatbotState = Annotation.Root({
       | "change_days_off"
       | "add_days_off"
       | "remove_days"
+      | "delete_plan"
       | "copy_day"
       | "rename_day"
       | "swap_days"

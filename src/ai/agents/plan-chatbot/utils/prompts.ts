@@ -14,14 +14,13 @@ Output:
 IS_EDIT_REQUEST: yes/no
 SAFETY: safe/concern
 RELEVANCE: yes/no
-EDIT_TYPE: add_task/remove_task/modify_task/change_days_off/add_days_off/remove_days/copy_day/rename_day/swap_days/none
+EDIT_TYPE: add_task/remove_task/modify_task/change_days_off/add_days_off/remove_days/copy_day/rename_day/swap_days/delete_plan/none
 DAY: Monday-Sunday or none
 TIME_RANGE: e.g., 6:00 AM - 7:00 AM or none
 OLD_ACTIVITY: current activity (modify_task only) or none
 NEW_ACTIVITY: new activity name or none
 NOTES: For add_task, include a concise, actionable 'notes' string formatted as a markdown list (use line breaks and dashes). Include 2–3 short practical steps or cues — this applies to all activity types (physical, mindfulness, journaling, social, etc.). Examples:
    - "Intense HIIT Workout" → "- warm-up: leg swings, high knees\n- main: squats, side runs\n- cool-down: stretching"
-   - "Evening journaling" → "- 5-min freewrite\n- list 3 wins\n- set one intention". For remove_task set to none.
 DAYS_OFF: comma-separated days or none
 SOURCE_DAY: day to copy/rename from (for copy_day/rename_day) or none
 TARGET_DAY: day to copy/rename to (for copy_day/rename_day) or none
@@ -41,18 +40,8 @@ Rules:
 Day Operation Rules (CRITICAL - check these first):
 - ALWAYS extract day names from user message when present. DO NOT leave fields empty if days are mentioned.
 - SWAP_DAYS: Keywords "swap", "interchange", "switch", "exchange", OR when BOTH directions mentioned (X to Y AND Y to X)
-  * Example: "swap Monday and Tuesday" → EDIT_TYPE=swap_days, DAY1=Monday, DAY2=Tuesday
-  * Example: "I want to swap monday and tuesday" → EDIT_TYPE=swap_days, DAY1=Monday, DAY2=Tuesday
-  * Example: "interchange monday with tuesday" → EDIT_TYPE=swap_days, DAY1=Monday, DAY2=Tuesday
-  * Example: "change Monday to Tuesday and Tuesday to Monday" → EDIT_TYPE=swap_days, DAY1=Monday, DAY2=Tuesday
-  * Example: "shift Monday to Tuesday and Tuesday to Monday" → EDIT_TYPE=swap_days, DAY1=Monday, DAY2=Tuesday
-  * Example: "make monday to tuesday and tuesday to monday" → EDIT_TYPE=swap_days, DAY1=Monday, DAY2=Tuesday
-  * IMPORTANT: If message contains BOTH "X to Y" AND "Y to X", it's ALWAYS swap_days, NOT rename_day
-  * ALWAYS extract BOTH days from the message and set DAY1 and DAY2
-  * If user says "swap X and Y" or "X to Y and Y to X", X goes in DAY1, Y goes in DAY2
 - RENAME_DAY: Keywords "change", "rename" (ONE-WAY change only, must NOT have reverse direction)
   * Example: "change Monday to Tuesday" (only one direction) → EDIT_TYPE=rename_day, SOURCE_DAY=Monday, TARGET_DAY=Tuesday
-  * Example: "rename wednesday to thursday" → EDIT_TYPE=rename_day, SOURCE_DAY=Wednesday, TARGET_DAY=Thursday
   * IMPORTANT: If BOTH directions mentioned (X to Y AND Y to X), it's swap_days, NOT rename_day
   * ALWAYS extract SOURCE_DAY (old) and TARGET_DAY (new) from message
 - COPY_DAY: Keywords "copy", "use X for Y", "duplicate", "same as"
@@ -63,8 +52,10 @@ Day Operation Rules (CRITICAL - check these first):
   * ALWAYS extract all days mentioned and set DAYS_TO_ADD
 - REMOVE_DAYS: Keywords "remove days", "delete days", "get rid of days"
   * Example: "remove Monday from plan" → EDIT_TYPE=remove_days, DAYS_TO_REMOVE=Monday
-  * Example: "remove monday and tuesday" → EDIT_TYPE=remove_days, DAYS_TO_REMOVE=Monday,Tuesday
   * ALWAYS extract all days mentioned and set DAYS_TO_REMOVE
+- DELETE_PLAN: Keywords "delete entire plan", "remove whole plan", "delete everything", "clear all tasks", "start over"
+  * Example: "delete the entire plan" → EDIT_TYPE=delete_plan
+  * This is IRREVERSIBLE - deletes all tasks and plan data
 
 Task Operation Rules:
 - MODIFY: identify activity from plan, set OLD_ACTIVITY
@@ -80,6 +71,5 @@ General Rules:
 - CRITICAL: If message contains BOTH "X to Y" AND "Y to X" patterns, it's swap_days (interchange), NOT rename_day
 - Check for bidirectional patterns first before classifying as rename_day
 - Examples of bidirectional (swap): "change X to Y and Y to X", "make X to Y and Y to X", "move X to Y and Y to X"
-
 `;
 }

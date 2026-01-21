@@ -27,6 +27,7 @@ export async function executePlanEdit(
     | "copy_day"
     | "rename_day"
     | "swap_days"
+    | "delete_plan"
     | "other",
   data: Record<string, unknown>,
 ): Promise<{
@@ -296,6 +297,43 @@ export async function executePlanEdit(
       case "swap_days": {
         const { day1, day2 } = data as { day1: string; day2: string };
         return await executeSwapDays(userId, day1, day2);
+      }
+
+      case "delete_plan": {
+        console.log("  🗑️ Executing delete_plan for userId:", userId);
+
+        // Delete all vector embeddings for this plan
+        try {
+          const { deletePlanEmbedding } =
+            await import("@/actions/plan/process-embedding");
+          await deletePlanEmbedding(userId);
+          console.log("  ✅ Deleted plan embeddings from vector store");
+        } catch (error) {
+          console.error("  ❌ Failed to delete plan embeddings:", error);
+          // Continue with deletion even if embedding deletion fails
+        }
+
+        // Delete all tasks associated with the plan
+        await prisma.task.deleteMany({
+          where: { planId: plan.id },
+        });
+        console.log("  ✅ Deleted all tasks");
+
+        // Delete the plan
+        await prisma.plan.delete({
+          where: { id: plan.id },
+        });
+        console.log("  ✅ Deleted plan");
+
+        return {
+          success: true,
+          message:
+            "✅ **Plan deleted successfully!**\n\nYour entire wellness plan, including all tasks and data, has been permanently removed.\n\nYou can create a new plan anytime from the Plan page.",
+          previousData: {
+            planId: plan.id,
+            taskCount: plan.tasks.length,
+          },
+        };
       }
 
       default:

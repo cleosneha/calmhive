@@ -121,7 +121,8 @@ export async function analyzeNode(
               "• Add/remove/modify tasks\n" +
               "• Mark days as off\n" +
               "• Remove days from plan\n" +
-              "• Copy/rename/swap days\n\n" +
+              "• Copy/rename/swap days\n" +
+              "• Delete entire plan\n\n" +
               "Please specify which single operation you'd like me to perform.",
           ),
         ],
@@ -193,6 +194,41 @@ export async function analyzeNode(
       };
     }
 
+    // Handle delete_plan operation
+    if (analysis.editType === "delete_plan") {
+      console.log("  🗑️ DELETE PLAN REQUEST");
+
+      return {
+        waitingForConfirmation: true,
+        pendingEdit: {
+          type: "delete_plan",
+          data: {},
+          description: "Delete entire plan",
+          preview: {
+            changes: [
+              {
+                field: "Plan",
+                oldValue: "All tasks and plan data",
+                newValue: "Deleted",
+              },
+            ],
+          },
+        },
+        messages: [
+          new AIMessage(
+            "⚠️ **Confirmation Required**\n\n" +
+              "You want to **delete your entire plan**. This will:\n" +
+              "• Remove all tasks from all days\n" +
+              "• Delete all plan data\n" +
+              "• Clear your wellness plan history\n\n" +
+              "**⚠️ WARNING: This action is IRREVERSIBLE. All your plan data will be permanently lost.**\n\n" +
+              "Are you absolutely sure you want to proceed?\n\n[CONFIRM_BUTTON][CANCEL_BUTTON]",
+          ),
+        ],
+        awaitingClarification: null,
+      };
+    }
+
     // Check for unsupported edit types or multiple operations
     if (!analysis.editType || (analysis.editType as string) === "other") {
       console.log("  ❌ UNSUPPORTED EDIT TYPE OR MULTIPLE OPERATIONS");
@@ -206,7 +242,8 @@ export async function analyzeNode(
               "• Add/remove/modify tasks\n" +
               "• Mark days as off\n" +
               "• Remove days from plan\n" +
-              "• Copy/rename/swap days\n\n" +
+              "• Copy/rename/swap days\n" +
+              "• Delete entire plan\n\n" +
               "Please specify which single operation you'd like me to perform.",
           ),
         ],
