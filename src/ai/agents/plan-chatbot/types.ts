@@ -29,6 +29,11 @@ export interface EditAnalysisResult {
     | "remove_task"
     | "modify_task"
     | "change_days_off"
+    | "add_days_off"
+    | "remove_days"
+    | "copy_day"
+    | "rename_day"
+    | "swap_days"
     | "other";
   extractedEdit?: {
     day?: string;
@@ -39,6 +44,15 @@ export interface EditAnalysisResult {
     taskId?: number;
     daysOff?: string[];
     isLastTask?: boolean; // For remove_task - indicates if this is the last task in plan
+    // Day operation fields
+    daysToAdd?: string[]; // For add_days_off
+    daysToRemove?: string[]; // For remove_days
+    sourceDay?: string; // For copy_day, rename_day, swap_days
+    targetDay?: string; // For copy_day, rename_day, swap_days
+    day1?: string; // For swap_days
+    day2?: string; // For swap_days
+    needsConfirmation?: boolean; // For operations requiring user confirmation
+    confirmationType?: "copy" | "rename" | "swap" | "remove" | "add_days_off"; // Type of confirmation needed
   };
   safetyIssue?: string;
   suggestion?: string;

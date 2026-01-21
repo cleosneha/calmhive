@@ -8,7 +8,7 @@ import { buildProcessMessagePrompt } from "./prompts";
  */
 export async function processUserMessage(
   userMessage: string,
-  userId: string
+  userId: string,
 ): Promise<{
   analysis: EditAnalysisResult;
   answer?: string;
@@ -19,7 +19,7 @@ export async function processUserMessage(
 
     const prompt = buildProcessMessagePrompt(
       userMessage,
-      planContext ?? undefined
+      planContext ?? undefined,
     );
 
     console.log("  🤖 Invoking LLM...");
@@ -30,7 +30,8 @@ export async function processUserMessage(
     const parsed: Record<string, string> = {};
     console.log("  📄 LLM Response:\n", content);
     for (const line of lines) {
-      const match = line.match(/^([A-Z_]+):\s*(.+)$/);
+      // Updated regex to include digits for DAY1, DAY2, etc.
+      const match = line.match(/^([A-Z0-9_]+):\s*(.+)$/);
       if (match) {
         parsed[match[1]] = match[2].trim();
       }
@@ -93,11 +94,53 @@ export async function processUserMessage(
         extractedEdit.daysOff = parsed.DAYS_OFF.split(",").map((d) => d.trim());
       }
 
+      // Parse day operation fields
+      if (parsed.SOURCE_DAY && parsed.SOURCE_DAY !== "none") {
+        extractedEdit.sourceDay = parsed.SOURCE_DAY;
+      }
+      if (parsed.TARGET_DAY && parsed.TARGET_DAY !== "none") {
+        extractedEdit.targetDay = parsed.TARGET_DAY;
+      }
+      if (parsed.DAYS_TO_ADD && parsed.DAYS_TO_ADD !== "none") {
+        extractedEdit.daysToAdd = parsed.DAYS_TO_ADD.split(",").map((d) =>
+          d.trim(),
+        );
+      }
+      if (parsed.DAYS_TO_REMOVE && parsed.DAYS_TO_REMOVE !== "none") {
+        extractedEdit.daysToRemove = parsed.DAYS_TO_REMOVE.split(",").map((d) =>
+          d.trim(),
+        );
+      }
+      if (parsed.DAY1 && parsed.DAY1 !== "none") {
+        extractedEdit.day1 = parsed.DAY1;
+      }
+      if (parsed.DAY2 && parsed.DAY2 !== "none") {
+        extractedEdit.day2 = parsed.DAY2;
+      }
+
       analysis.extractedEdit = extractedEdit;
       console.log("  ✏️ Edit extracted:", extractedEdit);
+
+      // Detect multiple operations if multiple operation fields are filled
+      const operationCount = [
+        extractedEdit.daysToAdd?.length ? 1 : 0,
+        extractedEdit.daysToRemove?.length ? 1 : 0,
+        extractedEdit.day1 && extractedEdit.day2 ? 1 : 0,
+        extractedEdit.sourceDay && extractedEdit.targetDay ? 1 : 0,
+        extractedEdit.activity || extractedEdit.oldActivity ? 1 : 0,
+      ].reduce((sum, count) => sum + count, 0);
+
+      if (operationCount > 1) {
+        console.log(
+          "  ⚠️ MULTIPLE OPERATIONS DETECTED - operationCount:",
+          operationCount,
+        );
+        analysis.editType = "other";
+        analysis.extractedEdit = undefined;
+      }
     }
 
-    // Extract answer if it's a query
+    // Extract answer only for queries (not for edit requests)
     let answer: string | undefined;
     if (!analysis.isEditRequest && analysis.isRelevant && parsed.ANSWER) {
       // Multi-line answer support

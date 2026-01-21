@@ -25,7 +25,7 @@ export default function PlanChatbot({
   } = usePlanChatbotSession();
 
   const chatEndRef = useRef<HTMLDivElement>(
-    null
+    null,
   ) as React.RefObject<HTMLDivElement>;
 
   // Track if we've already triggered onPlanUpdate for the current success message
@@ -48,7 +48,7 @@ export default function PlanChatbot({
       const lastMessage = messages[messages.length - 1];
       const messageId = `${lastMessage.role}-${lastMessage.content.substring(
         0,
-        50
+        50,
       )}`;
 
       if (
@@ -148,49 +148,49 @@ export default function PlanChatbot({
 
       {/* Fixed Input Area */}
       <div className="px-4 py-3 border-t border-[var(--ch-sage-dark)]/10 bg-white z-10 flex-shrink-0">
-        {/* Input area - always show but disabled when waiting for confirmation */}
-        <div className="flex gap-2">
-          <Input
-            placeholder="Type a message..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleInputKeyDown}
-            disabled={loading || waitingForConfirmation}
-            className="flex-1 rounded-xl border border-[var(--ch-sage-dark)]/20 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ch-sage-dark)]"
-          />
-          <Button
-            type="button"
-            onClick={() => handleSend()}
-            disabled={loading || !input.trim() || waitingForConfirmation}
-            className="bg-[var(--ch-sage-dark)] text-white rounded-xl w-9 h-9 flex items-center justify-center hover:bg-[var(--ch-sage-dark)]/90"
-            aria-label="Send"
-          >
-            <FiSend className="text-base" />
-          </Button>
-        </div>
-
-        {/* Action buttons when waiting for confirmation - show once below input */}
+        {/* Action buttons when waiting for confirmation - replace input with buttons */}
         {waitingForConfirmation &&
-          messages[messages.length - 1]?.actions &&
-          (messages[messages.length - 1]?.actions?.length ?? 0) > 0 && (
-            <div className="mt-3 flex gap-2">
-              {messages[messages.length - 1]?.actions?.map((action, index) => (
-                <Button
-                  key={index}
-                  type="button"
-                  onClick={() => handleActionClick(`action:${action.type}`)}
-                  disabled={loading}
-                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition ${
-                    action.type === "confirm"
-                      ? "bg-[var(--ch-sage-dark)] text-white hover:bg-[var(--ch-sage-dark)]/90"
-                      : "bg-slate-200 text-slate-700 hover:bg-slate-300"
-                  }`}
-                >
-                  {action.label}
-                </Button>
-              ))}
-            </div>
-          )}
+        messages[messages.length - 1]?.actions &&
+        (messages[messages.length - 1]?.actions?.length ?? 0) > 0 ? (
+          <div className="flex gap-2">
+            {messages[messages.length - 1]?.actions?.map((action, index) => (
+              <Button
+                key={index}
+                type="button"
+                onClick={() => handleActionClick(`action:${action.type}`)}
+                disabled={loading}
+                className={`flex-1 px-4 py-2 rounded-lg font-medium transition ${
+                  action.type === "confirm"
+                    ? "bg-[var(--ch-sage-dark)] text-white hover:bg-[var(--ch-sage-dark)]/90"
+                    : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+                }`}
+              >
+                {action.label}
+              </Button>
+            ))}
+          </div>
+        ) : (
+          /* Input area - show when NOT waiting for confirmation */
+          <div className="flex gap-2">
+            <Input
+              placeholder="Type a message..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleInputKeyDown}
+              disabled={loading}
+              className="flex-1 rounded-xl border border-[var(--ch-sage-dark)]/20 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ch-sage-dark)]"
+            />
+            <Button
+              type="button"
+              onClick={() => handleSend()}
+              disabled={loading || !input.trim()}
+              className="bg-[var(--ch-sage-dark)] text-white rounded-xl w-9 h-9 flex items-center justify-center hover:bg-[var(--ch-sage-dark)]/90"
+              aria-label="Send"
+            >
+              <FiSend className="text-base" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

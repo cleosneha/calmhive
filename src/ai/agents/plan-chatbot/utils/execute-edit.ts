@@ -3,6 +3,13 @@ import { embedPlan } from "@/actions/plan/process-embedding";
 import { calculateHoursSummaryFromTasks } from "@/utils/duration";
 import { addTask } from "@/actions/plan/add-task";
 import { removeTask } from "@/actions/plan/remove-task";
+import {
+  executeAddDaysOff,
+  executeRemoveDays,
+  executeCopyDay,
+  executeRenameDay,
+  executeSwapDays,
+} from "./execute-day-operations";
 
 /**
  * Execute plan edit in database and vector store
@@ -15,8 +22,13 @@ export async function executePlanEdit(
     | "remove_task"
     | "modify_task"
     | "change_days_off"
+    | "add_days_off"
+    | "remove_days"
+    | "copy_day"
+    | "rename_day"
+    | "swap_days"
     | "other",
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
 ): Promise<{
   success: boolean;
   message?: string;
@@ -148,7 +160,7 @@ export async function executePlanEdit(
             (t) =>
               t.day.toLowerCase() === day.toLowerCase() &&
               t.timeRange === timeRange &&
-              t.activity.toLowerCase().includes(oldActivity.toLowerCase())
+              t.activity.toLowerCase().includes(oldActivity.toLowerCase()),
           );
 
           if (tasks.length === 0) {
@@ -190,11 +202,11 @@ export async function executePlanEdit(
         // Recalculate hoursSummary if timeRange or day changed
         if (timeRange || day) {
           const updatedTasksForModify = plan.tasks.map((t) =>
-            t.id === task.id ? updated : t
+            t.id === task.id ? updated : t,
           );
           const newHoursSummary = calculateHoursSummaryFromTasks(
             updatedTasksForModify,
-            plan.daysOff
+            plan.daysOff,
           );
 
           // Update plan with new hoursSummary
@@ -227,7 +239,7 @@ export async function executePlanEdit(
         // Recalculate hoursSummary with new days off
         const newHoursSummary = calculateHoursSummaryFromTasks(
           plan.tasks,
-          daysOff
+          daysOff,
         );
 
         await prisma.plan.update({
@@ -241,6 +253,49 @@ export async function executePlanEdit(
           previousData,
         };
         break;
+      }
+
+      case "add_days_off": {
+        const { daysToAdd } = data as { daysToAdd: string[] };
+        return await executeAddDaysOff(userId, daysToAdd);
+      }
+
+      case "remove_days": {
+        const { daysToRemove } = data as { daysToRemove: string[] };
+        return await executeRemoveDays(userId, daysToRemove);
+      }
+
+      case "copy_day": {
+        const { sourceDay, targetDay, deleteExisting } = data as {
+          sourceDay: string;
+          targetDay: string;
+          deleteExisting?: boolean;
+        };
+        return await executeCopyDay(
+          userId,
+          sourceDay,
+          targetDay,
+          deleteExisting,
+        );
+      }
+
+      case "rename_day": {
+        const { oldDay, newDay, deleteExistingNew } = data as {
+          oldDay: string;
+          newDay: string;
+          deleteExistingNew?: boolean;
+        };
+        return await executeRenameDay(
+          userId,
+          oldDay,
+          newDay,
+          deleteExistingNew,
+        );
+      }
+
+      case "swap_days": {
+        const { day1, day2 } = data as { day1: string; day2: string };
+        return await executeSwapDays(userId, day1, day2);
       }
 
       default:
@@ -261,7 +316,7 @@ export async function executePlanEdit(
           userId,
           plan.id,
           updatedPlan.tasks,
-          updatedPlan.daysOff
+          updatedPlan.daysOff,
         );
       }
     }

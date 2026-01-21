@@ -31,6 +31,11 @@ export const PlanChatbotState = Annotation.Root({
       | "remove_task"
       | "modify_task"
       | "change_days_off"
+      | "add_days_off"
+      | "remove_days"
+      | "copy_day"
+      | "rename_day"
+      | "swap_days"
       | "other";
     data: Record<string, unknown>;
     description: string;
@@ -51,6 +56,11 @@ export const PlanChatbotState = Annotation.Root({
       | "remove_task"
       | "modify_task"
       | "change_days_off"
+      | "add_days_off"
+      | "remove_days"
+      | "copy_day"
+      | "rename_day"
+      | "swap_days"
       | "other";
     data: Record<string, unknown>;
     previousData?: Record<string, unknown>;
@@ -65,6 +75,15 @@ export const PlanChatbotState = Annotation.Root({
   mode: Annotation<"query" | "edit" | "confirm" | "undo">({
     reducer: (_, value) => value,
     default: () => "query",
+  }),
+
+  // Track awaiting clarification for multi-step operations
+  awaitingClarification: Annotation<{
+    operation: "swap_days" | "remove_days" | "copy_day" | "rename_day" | null;
+    context?: Record<string, unknown>;
+  } | null>({
+    reducer: (_, value) => value,
+    default: () => null,
   }),
 
   // Flag to handle undo request

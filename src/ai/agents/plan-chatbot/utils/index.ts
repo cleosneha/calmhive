@@ -12,3 +12,19 @@ export {
   checkIfDayOff,
 } from "./validate-add-task";
 export { validateRemoveTask, findTaskByActivity } from "./validate-remove-task";
+export {
+  validateAddDaysOff,
+  validateRemoveDays,
+  validateCopyDay,
+  validateRenameDay,
+  validateSwapDays,
+  parseDayNames,
+  normalizeDayName,
+} from "./validate-day-operations";
+export {
+  executeAddDaysOff,
+  executeRemoveDays,
+  executeCopyDay,
+  executeRenameDay,
+  executeSwapDays,
+} from "./execute-day-operations";
