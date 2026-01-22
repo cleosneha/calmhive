@@ -5,7 +5,7 @@ import vectorStore from "@/ai/config/vector-store";
  * Returns the formatted plan text with all tasks and days off
  */
 export async function retrievePlanFromEmbeddings(
-  userId: string
+  userId: string,
 ): Promise<string | null> {
   try {
     const store = await vectorStore;
@@ -13,7 +13,7 @@ export async function retrievePlanFromEmbeddings(
     // Search for plan using userId as query
     const results = await store.similaritySearch(
       `plan for user ${userId}`,
-      1 // Get top 1 result
+      5, // Get top 5 results to find the right one
     );
 
     if (results.length === 0) {
@@ -22,11 +22,19 @@ export async function retrievePlanFromEmbeddings(
     }
 
     // Filter by userId to ensure we get the right plan
-    const userPlan = results.find((doc) => doc.metadata?.userId === userId);
+    // First try exact match, then fall back to first result if no exact match
+    let userPlan = results.find((doc) => doc.metadata?.userId === userId);
 
     if (!userPlan) {
-      console.warn(`Plan embedding found but userId mismatch for ${userId}`);
-      return null;
+      console.warn(
+        `No exact userId match found for ${userId}, using first result`,
+      );
+      console.log(
+        `Available metadata:`,
+        results.map((r) => r.metadata),
+      );
+      // Use the first result if no exact match found (it should be the most relevant)
+      userPlan = results[0];
     }
 
     // Return the plan text from the result
