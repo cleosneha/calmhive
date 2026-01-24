@@ -6,26 +6,60 @@
 import type { Task } from "@prisma/client";
 
 /**
- * Parse time range string (e.g., "10:00-11:00") and return duration in hours
- * @param timeRange - Time range string in format "HH:MM-HH:MM"
+ * Parse time range string (e.g., "10:00-11:00" or "10:00 AM-11:00 AM") and return duration in hours
+ * @param timeRange - Time range string in format "HH:MM-HH:MM" or "H:MM AM/PM - H:MM AM/PM"
  * @returns Duration in hours (decimal)
  */
 export function getDurationFromTimeRange(timeRange: string): number {
   try {
-    const [start, end] = timeRange.split("-");
-    if (!start || !end) {
-      console.warn(`Invalid time range format: ${timeRange}`);
+    // Support both 12-hour (7:00 AM - 8:00 AM) and 24-hour (07:00 - 08:00) formats
+    const time12HourPattern =
+      /^(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)$/i;
+    const time24HourPattern = /^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$/;
+
+    let startHour: number, startMin: number, endHour: number, endMin: number;
+
+    if (time12HourPattern.test(timeRange)) {
+      const match = time12HourPattern.exec(timeRange);
+      if (!match) {
+        console.warn(`Invalid 12-hour time range format: ${timeRange}`);
+        return 0;
+      }
+
+      const [, sh, sm, sp, eh, em, ep] = match;
+      startHour = parseInt(sh);
+      startMin = parseInt(sm);
+      endHour = parseInt(eh);
+      endMin = parseInt(em);
+
+      // Convert to 24-hour format
+      if (sp.toUpperCase() === "PM" && startHour !== 12) startHour += 12;
+      if (sp.toUpperCase() === "AM" && startHour === 12) startHour = 0;
+      if (ep.toUpperCase() === "PM" && endHour !== 12) endHour += 12;
+      if (ep.toUpperCase() === "AM" && endHour === 12) endHour = 0;
+    } else if (time24HourPattern.test(timeRange)) {
+      const match = time24HourPattern.exec(timeRange);
+      if (!match) {
+        console.warn(`Invalid 24-hour time range format: ${timeRange}`);
+        return 0;
+      }
+
+      [, startHour, startMin, endHour, endMin] = match.map(Number);
+    } else {
+      console.warn(`Unsupported time range format: ${timeRange}`);
       return 0;
     }
 
-    const [startHour, startMin] = start.split(":").map(Number);
-    const [endHour, endMin] = end.split(":").map(Number);
-
+    // Validate ranges
     if (
-      isNaN(startHour) ||
-      isNaN(startMin) ||
-      isNaN(endHour) ||
-      isNaN(endMin)
+      startHour < 0 ||
+      startHour > 23 ||
+      endHour < 0 ||
+      endHour > 23 ||
+      startMin < 0 ||
+      startMin > 59 ||
+      endMin < 0 ||
+      endMin > 59
     ) {
       console.warn(`Invalid time range values: ${timeRange}`);
       return 0;
@@ -33,6 +67,11 @@ export function getDurationFromTimeRange(timeRange: string): number {
 
     const startTotalMin = startHour * 60 + startMin;
     const endTotalMin = endHour * 60 + endMin;
+
+    if (endTotalMin <= startTotalMin) {
+      console.warn(`End time must be after start time: ${timeRange}`);
+      return 0;
+    }
 
     return (endTotalMin - startTotalMin) / 60; // Convert minutes to hours
   } catch (error) {
@@ -51,7 +90,7 @@ export function getDurationFromTimeRange(timeRange: string): number {
  */
 export function calculateHoursSummaryFromTasks(
   tasks: Task[],
-  daysOff: string[] = []
+  daysOff: string[] = [],
 ): Record<string, number> {
   const summary: Record<string, number> = {};
   let weekTotal = 0;
@@ -93,7 +132,7 @@ export function calculateHoursSummaryFromTasks(
 export function updateHoursSummaryForDay(
   currentSummary: Record<string, number> | null,
   day: string,
-  newDayHours: number
+  newDayHours: number,
 ): Record<string, number> {
   const summary = currentSummary ? { ...currentSummary } : {};
   const oldDayHours = summary[day] || 0;

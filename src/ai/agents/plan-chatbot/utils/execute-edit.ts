@@ -1,6 +1,9 @@
 import prisma from "@/lib/db";
 import { embedPlan } from "@/actions/plan/process-embedding";
-import { calculateHoursSummaryFromTasks } from "@/utils/duration";
+import {
+  calculateHoursSummaryFromTasks,
+  getDurationFromTimeRange,
+} from "@/utils/duration";
 import { addTask } from "@/actions/plan/add-task";
 import { removeTask } from "@/actions/plan/remove-task";
 import {
@@ -237,6 +240,32 @@ export async function executePlanEdit(
           activity: task.activity,
           notes: task.notes,
         };
+
+        // Validate timeRange if provided
+        if (timeRange) {
+          const duration = getDurationFromTimeRange(timeRange);
+          if (duration === 0) {
+            return {
+              success: false,
+              error:
+                "Invalid time range format. Please use format like '7:00 AM - 8:00 AM' or '07:00 - 08:00'",
+            };
+          }
+          if (duration < 0.25) {
+            // Less than 15 minutes
+            return {
+              success: false,
+              error: "Activity duration must be at least 15 minutes",
+            };
+          }
+          if (duration > 8) {
+            // More than 8 hours
+            return {
+              success: false,
+              error: "Activity duration cannot exceed 8 hours",
+            };
+          }
+        }
 
         const updated = await prisma.task.update({
           where: { id: task.id },

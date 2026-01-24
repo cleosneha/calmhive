@@ -36,10 +36,16 @@ export async function executeAddDaysOff(
     // Add new days off (avoid duplicates)
     const updatedDaysOff = [...new Set([...plan.daysOff, ...daysToAdd])];
 
+    // Recalculate hours summary with new days off
+    const newHoursSummary = calculateHoursSummaryFromTasks(
+      plan.tasks,
+      updatedDaysOff,
+    );
+
     // Update plan
     await prisma.plan.update({
       where: { id: plan.id },
-      data: { daysOff: updatedDaysOff },
+      data: { daysOff: updatedDaysOff, hoursSummary: newHoursSummary },
     });
 
     // Re-embed the plan

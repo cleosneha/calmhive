@@ -3,7 +3,10 @@
 import { getCurrentUser } from "@/actions/auth";
 import prisma from "@/lib/db";
 import { embedPlan } from "@/actions/plan/process-embedding";
-import { calculateHoursSummaryFromTasks } from "@/utils/duration";
+import {
+  getDurationFromTimeRange,
+  calculateHoursSummaryFromTasks,
+} from "@/utils/duration";
 
 interface AddTaskInput {
   day: string;
@@ -44,6 +47,32 @@ export async function addTask(input: AddTaskInput): Promise<AddTaskResult> {
       };
     }
 
+    // Validate time range format and duration
+    const duration = getDurationFromTimeRange(timeRange);
+    if (duration === 0) {
+      return {
+        success: false,
+        message:
+          "Invalid time range format. Please use format like '7:00 AM - 8:00 AM' or '07:00 - 08:00'",
+      };
+    }
+
+    if (duration < 0.25) {
+      // Less than 15 minutes
+      return {
+        success: false,
+        message: "Activity duration must be at least 15 minutes",
+      };
+    }
+
+    if (duration > 8) {
+      // More than 8 hours
+      return {
+        success: false,
+        message: "Activity duration cannot exceed 8 hours",
+      };
+    }
+
     // Find user's plan
     const plan = await prisma.plan.findFirst({
       where: { userId: user.id },
@@ -61,7 +90,7 @@ export async function addTask(input: AddTaskInput): Promise<AddTaskResult> {
     const conflictingTask = plan.tasks.find(
       (task) =>
         task.day.toLowerCase() === day.toLowerCase() &&
-        task.timeRange === timeRange
+        task.timeRange === timeRange,
     );
 
     if (conflictingTask) {
@@ -96,7 +125,7 @@ export async function addTask(input: AddTaskInput): Promise<AddTaskResult> {
       // Calculate and update hoursSummary
       const newHoursSummary = calculateHoursSummaryFromTasks(
         updatedPlan.tasks,
-        updatedPlan.daysOff
+        updatedPlan.daysOff,
       );
 
       // Update plan with new hoursSummary

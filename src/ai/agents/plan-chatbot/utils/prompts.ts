@@ -56,11 +56,13 @@ Day Operation Rules (CRITICAL - check these first):
   * Example: "use Monday for Tuesday" → EDIT_TYPE=copy_day, SOURCE_DAY=Monday, TARGET_DAY=Tuesday
   * **MULTIPLE TARGETS**: "copy Monday to Tuesday and Wednesday" → EDIT_TYPE=copy_day, SOURCE_DAY=Monday, TARGET_DAY=Tuesday,Wednesday
   * ALWAYS extract SOURCE_DAY (to copy from) and ALL target days in TARGET_DAY (comma-separated if multiple)
+  * Analyze message carefully whether it wants to copy a day or do something else. whenever you see days, randomly guessing copy_day is incorrect.
 - ADD_DAYS_OFF: Keywords "mark as off", "set as day off", "no work on"
   * Example: "mark Wednesday as day off" → EDIT_TYPE=add_days_off, DAYS_TO_ADD=Wednesday
   * ALWAYS extract all days mentioned and set DAYS_TO_ADD
-- REMOVE_DAYS: Keywords "remove days", "delete days", "get rid of days"
+- REMOVE_DAYS: Keywords "remove days", "delete days", "get rid of days", "make my current plan of 2 days - monday and tuesday"
   * Example: "remove Monday from plan" → EDIT_TYPE=remove_days, DAYS_TO_REMOVE=Monday
+* "make my current plan of 2 days - monday and tuesday" → EDIT_TYPE=remove_days, DAYS_TO_REMOVE=other days(exclude day off) not monday and tuesday
   * ALWAYS extract all days mentioned and set DAYS_TO_REMOVE
 - DELETE_PLAN: Keywords "delete entire plan", "remove whole plan", "delete everything", "clear all tasks", "start over"
   * Example: "delete the entire plan" → EDIT_TYPE=delete_plan
