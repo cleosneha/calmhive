@@ -19,8 +19,24 @@ function routeAfterFetch(state: PlanStateType): string {
 /**
  * Router: Determine next node after validation
  */
-function routeAfterValidation(): string {
-  // Always end after validation (no retries)
+function routeAfterValidation(state: PlanStateType): string {
+  const MAX_RETRIES = 2;
+
+  // If validation passed, end the workflow
+  if (state.validation?.isValid) {
+    return END;
+  }
+
+  // If validation failed and we haven't exceeded retry limit, retry generation
+  if (state.retryCount < MAX_RETRIES) {
+    console.log(
+      `♻️ Validation failed. Retrying generation (${state.retryCount + 1}/${MAX_RETRIES})`,
+    );
+    return "retry_generate";
+  }
+
+  // Max retries exceeded, end with failure
+  console.log(`❌ Max retries (${MAX_RETRIES}) exceeded. Ending workflow.`);
   return END;
 }
 
@@ -33,11 +49,19 @@ export function createPlanGraph() {
     .addNode("fetch", fetchOnboardingDataNode)
     .addNode("generate", generatePlanNode)
     .addNode("validate", validatePlanNode)
+    // Retry node: increment retry count and regenerate
+    .addNode("retry_generate", async (state: PlanStateType) => {
+      return {
+        retryCount: state.retryCount + 1,
+        // Keep validation errors for next generation
+      };
+    })
 
     // Define edges
     .addEdge(START, "fetch")
     .addConditionalEdges("fetch", routeAfterFetch)
     .addEdge("generate", "validate")
+    .addEdge("retry_generate", "generate") // Retry goes back to generate
     .addConditionalEdges("validate", routeAfterValidation);
 
   return workflow;

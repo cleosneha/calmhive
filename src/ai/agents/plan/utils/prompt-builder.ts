@@ -7,6 +7,7 @@ import { getAvailableDays } from "../tools/days-off-checker";
 export function buildPlanGenerationPrompt(
   data: OnboardingData,
   planSuggestions?: string | null,
+  validationErrors?: string[],
 ): string {
   const availableDays = getAvailableDays(data.daysOff);
   const timeAvailabilityHours = data.timeAvailability / 60; // Convert minutes to hours
@@ -31,15 +32,24 @@ export function buildPlanGenerationPrompt(
 - Additional Notes: ${data.additionalNotes || "None"}
 
 ${
-  planSuggestions
-    ? `**AI SUGGESTIONS FOR PLAN IMPROVEMENTS:**
+  validationErrors && validationErrors.length > 0
+    ? `**❌ PREVIOUS ATTEMPT FAILED VALIDATION - FIX THESE ERRORS:**
+${validationErrors.map((error) => `- ${error}`).join("\n")}
+
+**YOU MUST FIX THESE ERRORS IN THIS GENERATION. DO NOT REPEAT THE SAME MISTAKES.**
+
+`
+    : ""
+}${
+    planSuggestions
+      ? `**AI SUGGESTIONS FOR PLAN IMPROVEMENTS:**
 ${planSuggestions}
 
 Please incorporate these suggestions while maintaining all constraints below.
 
 `
-    : ""
-}**CRITICAL CONSTRAINTS (MUST FOLLOW):**
+      : ""
+  }**CRITICAL CONSTRAINTS (MUST FOLLOW):**
 1. Only schedule activities on available days: ${availableDays.join(", ")}
 2. NEVER schedule anything on days off: ${data.daysOff.join(", ")}
 3. STRICTLY respect energetic time: ${data.energeticTime}

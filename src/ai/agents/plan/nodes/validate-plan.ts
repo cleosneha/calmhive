@@ -13,7 +13,7 @@ import { filterDaysOff } from "../tools/days-off-checker";
  * Checks time constraints, days off violations, and energetic time constraints
  */
 export async function validatePlanNode(
-  state: PlanStateType
+  state: PlanStateType,
 ): Promise<Partial<PlanStateType>> {
   try {
     const { generatedTasks, onboardingData } = state;
@@ -45,7 +45,7 @@ export async function validatePlanNode(
 
     // Check 1: Validate days off
     const tasksOnDaysOff = generatedTasks.filter((task) =>
-      onboardingData.daysOff.includes(task.day)
+      onboardingData.daysOff.includes(task.day),
     );
 
     if (tasksOnDaysOff.length > 0) {
@@ -54,7 +54,7 @@ export async function validatePlanNode(
           tasksOnDaysOff.length
         } tasks scheduled on days off: ${tasksOnDaysOff
           .map((t) => `${t.day} - ${t.activity}`)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -66,14 +66,14 @@ export async function validatePlanNode(
       if (hours > maxHours) {
         errors.push(
           `${day}: ${hours.toFixed(
-            1
-          )} hours exceeds limit of ${maxHours.toFixed(2)} hours`
+            1,
+          )} hours exceeds limit of ${maxHours.toFixed(2)} hours`,
         );
       } else if (hours > maxHours * 0.9) {
         warnings.push(
           `${day}: ${hours.toFixed(
-            1
-          )} hours is close to the limit of ${maxHours.toFixed(2)} hours`
+            1,
+          )} hours is close to the limit of ${maxHours.toFixed(2)} hours`,
         );
       }
     });
@@ -82,7 +82,7 @@ export async function validatePlanNode(
     generatedTasks.forEach((task) => {
       if (!task.timeRange.match(/^\d{2}:\d{2}-\d{2}:\d{2}$/)) {
         errors.push(
-          `Invalid time range format for "${task.activity}": ${task.timeRange}`
+          `Invalid time range format for "${task.activity}": ${task.timeRange}`,
         );
       }
     });
@@ -92,7 +92,7 @@ export async function validatePlanNode(
     if (energeticTimeLimit) {
       const tasksOutsideEnergeticTime = generatedTasks.filter(
         (task) =>
-          !isTimeWithinEnergeticWindow(task.timeRange, energeticTimeLimit)
+          !isTimeWithinEnergeticWindow(task.timeRange, energeticTimeLimit),
       );
 
       if (tasksOutsideEnergeticTime.length > 0) {
@@ -103,7 +103,7 @@ export async function validatePlanNode(
             onboardingData.energeticTime
           }): ${tasksOutsideEnergeticTime
             .map((t) => `${t.day} ${t.timeRange} - ${t.activity}`)
-            .join(", ")}`
+            .join(", ")}`,
         );
       }
     }
@@ -121,13 +121,13 @@ export async function validatePlanNode(
       // Filter out any tasks on days off (just in case)
       const cleanedTasks = filterDaysOff(
         generatedTasks,
-        onboardingData.daysOff
+        onboardingData.daysOff,
       );
 
       // Calculate hours summary for DB storage
       const hoursSummary = calculateHoursSummary(
         cleanedTasks,
-        onboardingData.daysOff
+        onboardingData.daysOff,
       );
 
       console.log("📊 Hours Summary:", hoursSummary);
@@ -138,13 +138,15 @@ export async function validatePlanNode(
         generatedTasks: cleanedTasks,
         isComplete: true,
         error: null,
+        validationErrors: [], // Clear validation errors on success
       };
     }
 
-    // If invalid, fail immediately (no retries)
+    // If invalid, return validation errors for potential retry
     return {
       validation,
       isComplete: false,
+      validationErrors: errors, // Store errors for retry
       error: `Plan validation failed: ${errors.join("; ")}`,
     };
   } catch (error) {
@@ -157,6 +159,9 @@ export async function validatePlanNode(
       },
       isComplete: false,
       error: error instanceof Error ? error.message : "Validation failed",
+      validationErrors: [
+        error instanceof Error ? error.message : "Validation failed",
+      ],
     };
   }
 }

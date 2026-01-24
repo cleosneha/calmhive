@@ -12,7 +12,7 @@ export async function generatePlanNode(
   state: PlanStateType,
 ): Promise<Partial<PlanStateType>> {
   try {
-    const { onboardingData } = state;
+    const { onboardingData, retryCount, validationErrors } = state;
 
     if (!onboardingData) {
       return {
@@ -21,12 +21,15 @@ export async function generatePlanNode(
       };
     }
 
-    console.log("🤖 Generating plan for user:", onboardingData.userId);
+    console.log(
+      `🤖 Generating plan for user: ${onboardingData.userId} (Attempt ${retryCount + 1})`,
+    );
 
-    // Build prompt (with optional plan suggestions)
+    // Build prompt (with optional plan suggestions and validation errors for retry)
     const prompt = buildPlanGenerationPrompt(
       onboardingData,
       state.planSuggestions,
+      validationErrors.length > 0 ? validationErrors : undefined,
     );
 
     // Call LLM
