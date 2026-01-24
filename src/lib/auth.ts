@@ -1,8 +1,10 @@
 import { betterAuth } from "better-auth";
+import { createAuthMiddleware } from "better-auth/api";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import db from "./db";
-import type { SessionCallbackParams } from "@/types";
+import { sendWelcomeEmail } from "@/email/service";
+import { SessionCallbackParams } from "@/types";
 
 export const auth = betterAuth({
   database: prismaAdapter(db, {
@@ -29,6 +31,50 @@ export const auth = betterAuth({
     },
   },
   plugins: [nextCookies()], // Add nextCookies plugin for server actions cookie handling
+  hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path.startsWith("/sign-up") || ctx.path.startsWith("/sign-in")) {
+        const newSession = ctx.context.newSession;
+        if (newSession) {
+          sendWelcomeEmail(
+            newSession.user.email,
+            newSession.user.name || "there",
+          ).catch((error) => {
+            console.error("Failed to send welcome email:", error);
+          });
+        }
+      }
+    }),
+    session: {
+      created: async ({ session, user }: SessionCallbackParams) => {
+        // Fetch user with onboarded field from DB
+        const dbUser = await db.user.findUnique({
+          where: { id: user.id },
+          select: { onboarded: true },
+        });
+
+        return {
+          session,
+          user: {
+            ...user,
+            onboarded: dbUser?.onboarded ?? false,
+          },
+        };
+      },
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          // Send welcome email when user is created
+          sendWelcomeEmail(user.email, user.name || "there").catch((error) => {
+            console.error("Failed to send welcome email:", error);
+          });
+        },
+      },
+    },
+  },
   user: {
     additionalFields: {
       onboarded: {
@@ -36,27 +82,6 @@ export const auth = betterAuth({
         defaultValue: false,
         required: false,
       },
-    },
-  },
-  callbacks: {
-    /**
-     * Inject custom user fields into session
-     * This allows direct access to onboarded status without DB queries
-     */
-    async session({ session, user }: SessionCallbackParams) {
-      // Fetch user with onboarded field from DB
-      const dbUser = await db.user.findUnique({
-        where: { id: user.id },
-        select: { onboarded: true },
-      });
-
-      return {
-        session,
-        user: {
-          ...user,
-          onboarded: dbUser?.onboarded ?? false,
-        },
-      };
     },
   },
 });

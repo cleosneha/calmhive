@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { generateWeeklyInsightsEmailHTML } from "./templates/weekly-insights";
+import { generateWelcomeEmailHTML } from "./templates/welcome-email";
 import { logEmailSuccess, logEmailError, EmailResult } from "./utils";
 
 /**
@@ -44,6 +45,41 @@ export async function sendWeeklyInsightsEmail(
     };
   } catch (error) {
     logEmailError(userEmail, "Weekly Insights Notification", error);
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+/**
+ * Send welcome email to new user
+ */
+export async function sendWelcomeEmail(
+  userEmail: string,
+  userName: string,
+): Promise<EmailResult> {
+  try {
+    const htmlContent = generateWelcomeEmailHTML(userName);
+
+    const mailOptions = {
+      from: process.env.GMAIL_USER,
+      to: userEmail,
+      subject: "Welcome to CalmHive! 🐝 Your Productivity Journey Begins",
+      html: htmlContent,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+
+    logEmailSuccess(userEmail, "Welcome Email", info.messageId);
+
+    return {
+      success: true,
+      messageId: info.messageId,
+    };
+  } catch (error) {
+    logEmailError(userEmail, "Welcome Email", error);
 
     return {
       success: false,
