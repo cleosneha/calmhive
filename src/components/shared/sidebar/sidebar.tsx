@@ -12,23 +12,11 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { MdLogout, MdDeleteForever } from "react-icons/md";
+import { MdLogout } from "react-icons/md";
 import { useSignOut } from "@/hooks/useSession";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { deleteUserAccount } from "@/actions/auth";
 import { useState } from "react";
-import { toast } from "sonner";
 
 const navLinks = [
   { href: "/user/journal", icon: <FiBook />, label: "Journal" },
@@ -53,46 +41,11 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { signOut } = useSignOut();
   const router = useRouter();
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Handles sign out and redirects to login
   const handleSignOut = async () => {
     await signOut();
     router.push("/login");
-  };
-
-  // Handles account deletion confirmation
-  const handleConfirmDelete = async () => {
-    setIsDeleting(true);
-    setShowDeleteDialog(false);
-
-    try {
-      const result = await deleteUserAccount();
-      if ("success" in result && result.success) {
-        // Server action already signs out the user
-        // Show success message and redirect
-        toast.success("Account deleted successfully");
-        // Use href for hard navigation to clear all client state
-        window.location.href = "/";
-      } else {
-        toast.error(
-          "message" in result
-            ? result.message
-            : "Failed to delete account. Please try again.",
-        );
-        setIsDeleting(false);
-      }
-    } catch (error) {
-      console.error("Error deleting account:", error);
-      toast.error("Failed to delete account. Please try again.");
-      setIsDeleting(false);
-    }
-  };
-
-  // Show delete confirmation dialog
-  const handleDeleteAccount = () => {
-    setShowDeleteDialog(true);
   };
 
   return (
@@ -177,48 +130,9 @@ export default function Sidebar() {
                 <MdLogout className="text-lg" /> Logout
               </span>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={handleDeleteAccount}
-              disabled={isDeleting}
-              className="text-[var(--destructive)] hover:bg-[var(--destructive)]/10 focus:bg-[var(--destructive)]/10"
-            >
-              <span className="flex items-center gap-2">
-                <MdDeleteForever className="text-lg" />
-                {isDeleting ? "Deleting..." : "Delete Account"}
-              </span>
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-
-      {/* Delete Account Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent className="bg-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-[var(--destructive)]">
-              Delete Account
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete your account? This action cannot
-              be undone and will permanently delete all your data including
-              journal entries, plans, insights, and vector embeddings.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="cursor-pointer">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              disabled={isDeleting}
-              className="bg-[var(--destructive)] hover:bg-[var(--destructive)]/90 text-white cursor-pointer"
-            >
-              {isDeleting ? "Deleting..." : "Delete Account"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </aside>
   );
 }

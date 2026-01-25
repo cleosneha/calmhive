@@ -25,6 +25,7 @@ model User {
     aiNoteGenerationCount        Int       @default(0) // AI note generation usage (0-3 per 24h)
     aiNoteGenerationCountResetAt DateTime? // Timestamp when 24h reset should occur
     badges                       String[]  @default([])
+    encryptedPin                 String?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -143,12 +144,26 @@ enum TaskStatus {
     partial
 }
 
+enum Mood {
+    HAPPY
+    SAD
+    ANGRY
+    CALM
+    EXCITED
+    ANXIOUS
+    NEUTRAL
+    // Add more as needed
+}
+
 model JournalEntry {
     id           Int      @id @default(autoincrement())
     userId       String
     date         DateTime @db.Date // One entry per day
+    title        String // Title of the journal entry
     finalContent String // User-edited final version
-    moodScore    Decimal? @db.Decimal(3, 1) // 0.0 - 10.0
+    mood         Mood?
+    pinned       Boolean  @default(false)
+    isPrivate    Boolean  @default(false)
     createdAt    DateTime @default(now())
     updatedAt    DateTime @updatedAt
 
@@ -158,6 +173,9 @@ model JournalEntry {
     // Constraints
     @@unique([userId, date])
     @@index([userId])
+    @@index([userId, pinned]) // Fast pinned queries
+    @@index([userId, mood])
+    @@index([userId, title]) // Fast title search queries
 }
 
 model Insight {
