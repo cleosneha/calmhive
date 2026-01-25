@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { MdDeleteForever } from "react-icons/md";
-import { deleteUserAccount } from "@/actions/auth";
+import { deleteUserAccount } from "@/actions/settings/delete-account";
 import { toast } from "sonner";
 
 export function DeleteAccount() {
