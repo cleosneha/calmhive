@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import { FiPlus, FiFileText } from "react-icons/fi";
@@ -23,12 +22,18 @@ interface JournalHomeProps {
   recentEntries: Entry[];
   pinnedEntries: Entry[];
   userImage?: string;
+  userName?: string;
+  message: string;
+  quote: string;
 }
 
 export default function JournalHome({
   recentEntries,
   pinnedEntries,
   userImage,
+  userName,
+  message,
+  quote,
 }: JournalHomeProps) {
   const [moodFilter, setMoodFilter] = useState<string | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<Entry | null>(
@@ -88,6 +93,14 @@ export default function JournalHome({
 
   return (
     <div className="min-h-screen ">
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold text-[var(--ch-slate-dark)]">
+          {message}
+        </h1>
+        <p className="mt-2 text-sm text-[var(--ch-slate)] italic">
+          <q>{quote}</q>
+        </p>
+      </header>
       <div className="flex items-start gap-6">
         {/* Main content */}
         <main className="flex-1">

@@ -39,7 +39,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useSignOut } from "@/hooks/useSession";
 import { useRouter } from "next/navigation";
-import { deleteUserAccount } from "@/actions/auth";
+import { deleteUserAccount } from "@/actions/settings/delete-account";
 
 const navLinks = [
   { href: "/user/journal", icon: <FiBook />, label: "Journal" },

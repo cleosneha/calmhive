@@ -1,3 +1,4 @@
+"use server";
 import { apiError, getErrorMessage } from "@/utils/api-error";
 import { getSession } from "../auth";
 import { headers } from "next/headers";

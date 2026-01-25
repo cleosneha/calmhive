@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Sheet,
   SheetTrigger,
@@ -8,53 +8,112 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetClose,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { FiChevronLeft } from "react-icons/fi";
+import { FiSearch } from "react-icons/fi";
+import { MdKeyboardDoubleArrowLeft } from "react-icons/md";
+
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+
+const MOODS = [
+  "HAPPY",
+  "SAD",
+  "ANGRY",
+  "CALM",
+  "EXCITED",
+  "ANXIOUS",
+  "NEUTRAL",
+];
 
 export default function RightSheet() {
+  const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"latest" | "oldest">("latest");
+  const [mood, setMood] = useState<string | null>(null);
+
   return (
     <Sheet>
       {/* Thin handle column */}
       <SheetTrigger asChild>
-        <button
+        <Button
           aria-label="Open right sheet"
-          className="fixed right-0 top-1/2 -translate-y-1/2 z-40 w-8 h-16 rounded-l-md bg-white border-l border-slate-200 flex items-center justify-center shadow-sm hover:bg-slate-50 focus:outline-none"
+          className="fixed right-0 top-1/2 -translate-y-1/2 z-40 w-8 h-16 rounded-br-none rounded-tr-none bg-white border-l border-slate-200 flex items-center justify-center shadow-sm hover:bg-slate-50 focus:outline-none"
         >
-          <FiChevronLeft className="text-[var(--ch-sage-dark)]" />
-        </button>
+          <MdKeyboardDoubleArrowLeft className="text-[var(--ch-sage-dark)]" />
+        </Button>
       </SheetTrigger>
 
       <SheetContent side="right" className="max-w-md">
         <SheetHeader className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <SheetTitle>Entry Details</SheetTitle>
+              <SheetTitle>Entries</SheetTitle>
               <SheetDescription>
-                View and manage selected journal entry
+                Search, sort and filter your journal entries
               </SheetDescription>
             </div>
-            <SheetClose asChild>
-              <Button variant="ghost" size="icon">
-                <span className="sr-only">Close</span>✕
-              </Button>
-            </SheetClose>
+          </div>
+
+          {/* Search bar */}
+          <div className="mt-4">
+            <label className="sr-only">Search by title</label>
+            <div className="relative">
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ch-slate)] opacity-60" />
+              <Input
+                placeholder="Search by title..."
+                className="pl-10"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Filters */}
+            <div className="mt-3 flex flex-col gap-3 items-start">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-[var(--ch-slate)]">Sort By</span>
+                <Select
+                  value={sortBy}
+                  onValueChange={(v) => setSortBy(v as "latest" | "oldest")}
+                >
+                  <SelectTrigger size="sm" className="w-36">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="latest">Latest</SelectItem>
+                    <SelectItem value="oldest">Oldest</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2 flex-1">
+                <span className="text-sm text-[var(--ch-slate)]">Mood</span>
+
+                <Select
+                  value={mood || "all"}
+                  onValueChange={(v) => setMood(v === "all" ? null : v)}
+                >
+                  <SelectTrigger size="sm" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Any mood</SelectItem>
+                    {MOODS.map((m) => (
+                      <SelectItem key={m} value={m}>
+                        {m.charAt(0) + m.slice(1).toLowerCase()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
         </SheetHeader>
-
-        <div className="p-6">
-          <p className="text-sm text-[var(--ch-slate)]">
-            Select an entry to view details here. This sheet can hold entry
-            meta, actions, and deeper insights.
-          </p>
-
-          <div className="mt-6 flex gap-2">
-            <Button variant="outline">Edit</Button>
-            <Button variant="ghost">Pin</Button>
-            <Button variant="ghost">Share</Button>
-          </div>
-        </div>
       </SheetContent>
     </Sheet>
   );
