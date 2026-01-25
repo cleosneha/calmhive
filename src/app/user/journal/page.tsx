@@ -1,16 +1,19 @@
-export default function JournalPage() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
-      <h1 className="text-3xl font-bold text-slate-900 mb-2">Journal</h1>
-      <p className="text-slate-600 mb-8">Your personal journal entries.</p>
+import { getCurrentUser, requireOnboarding } from "@/actions/auth";
+import { getJournalHomeData } from "@/fetchers/journal/recently-visited";
+import JournalHome from "@/components/journal/journal-home";
 
-      <div className="grid gap-4">
-        <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-slate-600">
-            No journal entries yet. Create your first entry!
-          </p>
-        </div>
-      </div>
-    </div>
+export default async function JournalPage() {
+  await requireOnboarding();
+  const user = await getCurrentUser();
+  if (!user?.id) return <div>Please log in</div>;
+
+  const { data } = await getJournalHomeData(user.id);
+
+  return (
+    <JournalHome
+      recentEntries={data.recent}
+      pinnedEntries={data.pinned}
+      userImage={user.image ?? undefined}
+    />
   );
 }

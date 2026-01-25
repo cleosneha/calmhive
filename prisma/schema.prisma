@@ -14,18 +14,19 @@ datasource db {
 }
 
 model User {
-    id                           String    @id
-    email                        String    @unique
-    emailVerified                Boolean   @default(false)
-    name                         String?
-    password                     String?
-    verificationCode             String? // Temporary OTP code for email verification
-    verificationCodeExpiresAt    DateTime? // OTP expiration time
-    onboarded                    Boolean   @default(false)
-    aiNoteGenerationCount        Int       @default(0) // AI note generation usage (0-3 per 24h)
-    aiNoteGenerationCountResetAt DateTime? // Timestamp when 24h reset should occur
-    badges                       String[]  @default([])
-    encryptedPin                 String?
+    id                            String    @id
+    email                         String    @unique
+    emailVerified                 Boolean   @default(false)
+    name                          String?
+    password                      String?
+    verificationCode              String? // Temporary OTP code for email verification
+    verificationCodeExpiresAt     DateTime? // OTP expiration time
+    onboarded                     Boolean   @default(false)
+    aiNoteGenerationCount         Int       @default(0) // AI note generation usage (0-3 per 24h)
+    aiNoteGenerationCountResetAt  DateTime? // Timestamp when 24h reset should occur
+    badges                        String[]  @default([])
+    encryptedPin                  String?
+    recentlyVisitedJournalEntries Int[]     @default([]) // Array of JournalEntry IDs (max 6, most recent first)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
