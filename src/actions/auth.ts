@@ -1,11 +1,8 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import db from "@/lib/db";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { apiResponse } from "@/utils/api-response";
-import { apiError, getErrorMessage } from "@/utils/api-error";
 
 /**
  * Get the current authenticated user session
