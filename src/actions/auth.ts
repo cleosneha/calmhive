@@ -9,11 +9,16 @@ import { headers } from "next/headers";
  * @returns User session or null if not authenticated
  */
 export async function getSession() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
 
-  return session;
+    return session;
+  } catch (error) {
+    // During prerendering, headers() may reject
+    return null;
+  }
 }
 
 /**

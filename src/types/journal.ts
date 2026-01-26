@@ -2,6 +2,16 @@
  * Journal-related types for CalmHive
  */
 
+export type Mood =
+  | "HAPPY"
+  | "SAD"
+  | "ANGRY"
+  | "CALM"
+  | "EXCITED"
+  | "ANXIOUS"
+  | "TIRED"
+  | "NEUTRAL";
+
 /**
  * Journal entry from database
  */
@@ -10,7 +20,9 @@ export interface JournalEntry {
   userId: string;
   date: Date;
   finalContent: string;
-  moodScore: number | null;
+  mood?: Mood;
+  pinned: boolean;
+  isPrivate: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,7 +33,9 @@ export interface JournalEntry {
 export interface CreateJournalEntryInput {
   date: Date | string;
   finalContent: string;
-  moodScore?: number;
+  mood?: Mood;
+  pinned?: boolean;
+  isPrivate?: boolean;
 }
 
 /**
@@ -29,7 +43,9 @@ export interface CreateJournalEntryInput {
  */
 export interface UpdateJournalEntryInput {
   finalContent?: string;
-  moodScore?: number;
+  mood?: Mood;
+  pinned?: boolean;
+  isPrivate?: boolean;
 }
 
 /**

@@ -10,8 +10,9 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { FiSearch } from "react-icons/fi";
+import { FiSearch, FiLock } from "react-icons/fi";
 import { MdKeyboardDoubleArrowLeft } from "react-icons/md";
+import { BsPin } from "react-icons/bs";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -21,8 +22,12 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import { getMoodIcon } from "@/utils/mood-icons";
+import type { Mood } from "@/types/journal";
+import { useJournalEntries } from "@/hooks/use-journal-entries";
+import { SecurityPinDialog } from "@/components/journal/security-pin-dialog";
 
-const MOODS = [
+const MOODS: Mood[] = [
   "HAPPY",
   "SAD",
   "ANGRY",
@@ -33,9 +38,37 @@ const MOODS = [
 ];
 
 export default function RightSheet() {
-  const [query, setQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"latest" | "oldest">("latest");
-  const [mood, setMood] = useState<string | null>(null);
+  const {
+    query,
+    sortBy,
+    mood,
+    entries,
+    loading,
+    hasMore,
+    observerRef,
+    setQuery,
+    setSortBy,
+    setMood,
+    handleEntryClick,
+  } = useJournalEntries();
+
+  const [isLockedDialogOpen, setIsLockedDialogOpen] = useState(false);
+
+  const handlePinSuccess = () => {
+    // Store verification in localStorage with 30-minute expiration
+    const verificationData = {
+      verified: true,
+      timestamp: Date.now(),
+      expiresAt: Date.now() + 30 * 60 * 1000, // 30 minutes
+    };
+    localStorage.setItem(
+      "lockedEntriesVerified",
+      JSON.stringify(verificationData),
+    );
+
+    // Navigate to locked chats section
+    window.location.href = "/user/journal/locked-chats";
+  };
 
   return (
     <Sheet>
@@ -49,8 +82,8 @@ export default function RightSheet() {
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="right" className="max-w-md">
-        <SheetHeader className="p-6">
+      <SheetContent side="right" className="max-w-md flex flex-col">
+        <SheetHeader className="p-6 pb-4">
           <div className="flex items-center justify-between">
             <div>
               <SheetTitle>Entries</SheetTitle>
@@ -96,7 +129,9 @@ export default function RightSheet() {
 
                 <Select
                   value={mood || "all"}
-                  onValueChange={(v) => setMood(v === "all" ? null : v)}
+                  onValueChange={(v) =>
+                    setMood(v === "all" ? null : (v as Mood))
+                  }
                 >
                   <SelectTrigger size="sm" className="w-full">
                     <SelectValue />
@@ -105,15 +140,98 @@ export default function RightSheet() {
                     <SelectItem value="all">Any mood</SelectItem>
                     {MOODS.map((m) => (
                       <SelectItem key={m} value={m}>
-                        {m.charAt(0) + m.slice(1).toLowerCase()}
+                        <div className="flex items-center gap-2">
+                          {React.createElement(getMoodIcon(m).icon, {
+                            className: `${getMoodIcon(m).color} text-lg`,
+                          })}
+                          {m.charAt(0) + m.slice(1).toLowerCase()}
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Locked Entries Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full flex items-center gap-2"
+                onClick={() => setIsLockedDialogOpen(true)}
+              >
+                <FiLock className="text-sm" />
+                Locked Entries
+              </Button>
+
+              <SecurityPinDialog
+                isOpen={isLockedDialogOpen}
+                onClose={() => setIsLockedDialogOpen(false)}
+                onSuccess={handlePinSuccess}
+                title="Access Locked Entries"
+                description="Enter your security PIN to access locked journal entries."
+              />
             </div>
           </div>
         </SheetHeader>
+
+        {/* Entries List */}
+        <div className="flex-1 overflow-y-auto px-6">
+          <div className="space-y-2">
+            {entries.map((entry) => (
+              <div
+                key={entry.id}
+                onClick={() => handleEntryClick(entry.id)}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--ch-taupe)] cursor-pointer transition-colors"
+              >
+                {entry.pinned && (
+                  <BsPin className="text-[var(--ch-sage-dark)] flex-shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-sm truncate">
+                    {entry.title}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    {entry.mood && (
+                      <div className="text-xs">
+                        {React.createElement(getMoodIcon(entry.mood).icon, {
+                          className: `${getMoodIcon(entry.mood).color} text-sm`,
+                        })}
+                      </div>
+                    )}
+                    <span className="text-xs text-[var(--ch-muted)]">
+                      {entry.createdAt.toLocaleDateString("en-US")}
+                    </span>
+                    {entry.isPrivate && (
+                      <span className="text-xs text-[var(--ch-muted)]">
+                        Private
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <div className="text-center py-4">
+                <div className="text-sm text-[var(--ch-muted)]">Loading...</div>
+              </div>
+            )}
+            {!hasMore && entries.length > 0 && (
+              <div className="text-center py-4">
+                <div className="text-sm text-[var(--ch-muted)]">
+                  No more entries
+                </div>
+              </div>
+            )}
+            {entries.length === 0 && !loading && (
+              <div className="text-center py-4">
+                <div className="text-sm text-[var(--ch-muted)]">
+                  No entries found
+                </div>
+              </div>
+            )}
+          </div>
+          <div ref={observerRef} className="h-4" />
+        </div>
       </SheetContent>
     </Sheet>
   );

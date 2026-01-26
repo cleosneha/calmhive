@@ -152,6 +152,7 @@ enum Mood {
     CALM
     EXCITED
     ANXIOUS
+    TIRED
     NEUTRAL
     // Add more as needed
 }

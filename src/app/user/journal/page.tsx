@@ -16,7 +16,6 @@ export default async function JournalPage() {
       recentEntries={data.recent}
       pinnedEntries={data.pinned}
       userImage={user.image ?? undefined}
-      userName={user.name ?? undefined}
       message={message}
       quote={quote}
     />
