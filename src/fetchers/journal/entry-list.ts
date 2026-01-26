@@ -25,6 +25,7 @@ export interface JournalEntryListItem {
   mood?: Mood;
   pinned: boolean;
   isPrivate: boolean;
+  date: Date;
   createdAt: Date;
   updatedAt?: Date;
 }
@@ -95,6 +96,7 @@ export async function getJournalEntries({
         mood: true,
         pinned: true,
         isPrivate: true,
+        date: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -114,6 +116,7 @@ export async function getJournalEntries({
           mood: entry.mood ?? undefined,
           pinned: entry.pinned,
           isPrivate: entry.isPrivate,
+          date: entry.date,
           createdAt: entry.createdAt,
           updatedAt: entry.updatedAt ?? undefined,
         })),

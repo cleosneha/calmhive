@@ -1,7 +1,7 @@
 import { getCurrentUser, requireOnboarding } from "@/actions/auth";
 import { getJournalHomeData } from "@/fetchers/journal/recently-visited";
 import { getGreeting } from "@/utils/greeting";
-import JournalHome from "@/components/journal/journal-home";
+import JournalHomeResponsive from "@/components/journal/home/journal-home-responsive";
 
 export default async function JournalPage() {
   await requireOnboarding();
@@ -12,7 +12,7 @@ export default async function JournalPage() {
   const { message, quote } = getGreeting(user.name ?? undefined);
 
   return (
-    <JournalHome
+    <JournalHomeResponsive
       recentEntries={data.recent}
       pinnedEntries={data.pinned}
       userImage={user.image ?? undefined}

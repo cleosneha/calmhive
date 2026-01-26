@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,14 +18,12 @@ import {
   FiTrash,
   FiMoreVertical,
   FiLock,
+  FiChevronLeft,
+  FiChevronRight,
 } from "react-icons/fi";
 import { TiPin } from "react-icons/ti";
 import { TbClockFilled } from "react-icons/tb";
-import { pinEntry } from "@/actions/journal/pin-entry";
-import { removeJournalEntry } from "@/actions/journal/remove-journal-entry";
-import { markEntryPrivate } from "@/actions/journal/secure-entry";
-import { removeFromRecentlyVisited } from "@/actions/journal/update-recently-visited";
-import { toast } from "sonner";
+import { useJournalHome } from "@/hooks/use-journal-home";
 
 type Entry = {
   id: number;
@@ -53,73 +52,47 @@ export default function JournalHome({
 }: JournalHomeProps) {
   const router = useRouter();
 
-  const handleEdit = (entryId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    router.push(`/user/journal/entry-section/${entryId}?mode=edit`);
-  };
+  const {
+    pinnedRef,
+    recentRef,
+    pinnedCanScrollLeft,
+    pinnedCanScrollRight,
+    recentCanScrollLeft,
+    recentCanScrollRight,
+    handlePinnedScroll,
+    handleRecentScroll,
+    handleEdit,
+    handlePin,
+    handleDelete,
+    handleMarkPrivate,
+    scrollPinnedLeft,
+    scrollPinnedRight,
+    scrollRecentLeft,
+    scrollRecentRight,
+  } = useJournalHome();
 
-  const handlePin = async (entryId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      const result = await pinEntry(entryId);
-      if (result.success) {
-        toast.success("Entry pinned successfully");
-        // Optionally refresh the page or update state
-        window.location.reload();
-      } else {
-        toast.error(result.message || "Failed to pin entry");
-      }
-    } catch {
-      toast.error("Failed to pin entry");
+  useEffect(() => {
+    const pinnedEl = pinnedRef.current;
+    if (pinnedEl) {
+      pinnedEl.addEventListener("scroll", handlePinnedScroll);
+      handlePinnedScroll(); // initial
+      return () => pinnedEl.removeEventListener("scroll", handlePinnedScroll);
     }
-  };
+  }, [pinnedEntries, handlePinnedScroll, pinnedRef]);
 
-  const handleDelete = async (entryId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (confirm("Are you sure you want to delete this entry?")) {
-      try {
-        const result = await removeJournalEntry(entryId);
-        if (result.success) {
-          toast.success("Entry deleted successfully");
-          window.location.reload();
-        } else {
-          toast.error(result.message || "Failed to delete entry");
-        }
-      } catch {
-        toast.error("Failed to delete entry");
-      }
+  useEffect(() => {
+    const recentEl = recentRef.current;
+    if (recentEl) {
+      recentEl.addEventListener("scroll", handleRecentScroll);
+      handleRecentScroll(); // initial
+      return () => recentEl.removeEventListener("scroll", handleRecentScroll);
     }
-  };
-
-  const handleMarkPrivate = async (entryId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      const result = await markEntryPrivate(entryId);
-      if (result.success) {
-        toast.success(result.message || "Entry marked as private");
-        // Remove from recently visited if present
-        await removeFromRecentlyVisitedList(entryId);
-        window.location.reload();
-      } else {
-        toast.error(result.message || "Failed to mark entry as private");
-      }
-    } catch {
-      toast.error("Failed to mark entry as private");
-    }
-  };
-
-  const removeFromRecentlyVisitedList = async (entryId: number) => {
-    try {
-      await removeFromRecentlyVisited(entryId);
-    } catch (error) {
-      console.error("Error removing from recently visited:", error);
-    }
-  };
+  }, [recentEntries, handleRecentScroll, recentRef]);
 
   const renderCard = (entry: Entry) => (
     <Card
       key={entry.id}
-      className="aspect-square min-w-[220px] p-0 overflow-hidden cursor-pointer  shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] rounded-3xl"
+      className="w-[200px] h-[220px] flex-none p-0 overflow-hidden cursor-pointer shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] rounded-3xl scroll-snap-align-start"
       onClick={() =>
         router.push(`/user/journal/entry-section/${entry.id}?mode=show`)
       }
@@ -241,29 +214,57 @@ export default function JournalHome({
               </span>
             </h3>
 
-            <div className="flex gap-4 overflow-x-auto pb-3">
-              {pinnedEntries.length > 0 ? (
-                pinnedEntries.map((entry) => renderCard(entry))
-              ) : (
-                <Card className="aspect-square min-w-[220px] p-0 overflow-hidden shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] rounded-3xl">
-                  <div className="h-full flex flex-col">
-                    <div className="flex items-center gap-3 p-3 bg-[var(--ch-slate-dark)]/6">
-                      <div className="w-8 h-8 rounded-md bg-[var(--ch-slate-dark)]/10 flex items-center justify-center text-[var(--ch-slate)]">
-                        <FiFileText />
+            <div className="flex items-center max-w-[calc(100vw-260px)] mx-auto overflow-hidden">
+              <div className="flex-shrink-0 flex items-center h-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white shadow-md"
+                  onClick={scrollPinnedLeft}
+                  disabled={!pinnedCanScrollLeft}
+                >
+                  <FiChevronLeft />
+                </Button>
+              </div>
+              <div
+                ref={pinnedRef}
+                className="flex gap-4 flex-1 overflow-hidden pb-3 scroll-snap-x-mandatory px-4"
+              >
+                {pinnedEntries.length > 0 ? (
+                  pinnedEntries.map((entry) => renderCard(entry))
+                ) : (
+                  <Card className="w-[200px] h-[220px] flex-none p-0 overflow-hidden shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] rounded-3xl scroll-snap-align-start">
+                    <div className="h-full flex flex-col">
+                      <div className="flex items-center gap-3 p-3 bg-[var(--ch-slate-dark)]/6">
+                        <div className="w-8 h-8 rounded-md bg-[var(--ch-slate-dark)]/10 flex items-center justify-center text-[var(--ch-slate)]">
+                          <FiFileText />
+                        </div>
+                        <h4 className="font-semibold text-[var(--ch-slate-dark)] truncate">
+                          Pinned
+                        </h4>
                       </div>
-                      <h4 className="font-semibold text-[var(--ch-slate-dark)] truncate">
-                        Pinned
-                      </h4>
-                    </div>
 
-                    <div className="flex-1 p-3 flex items-center justify-center ">
-                      <p className="text-sm text-[var(--ch-slate)]">
-                        No entries pinned
-                      </p>
+                      <div className="flex-1 p-3 flex items-center justify-center ">
+                        <p className="text-sm text-[var(--ch-slate)]">
+                          No entries pinned
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </Card>
-              )}
+                  </Card>
+                )}
+              </div>
+
+              <div className="flex-shrink-0 flex items-center h-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white shadow-md"
+                  onClick={scrollPinnedRight}
+                  disabled={!pinnedCanScrollRight}
+                >
+                  <FiChevronRight />
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -275,29 +276,57 @@ export default function JournalHome({
               </span>
             </h3>
 
-            <div className="flex gap-4 overflow-x-auto pb-3">
-              {recentEntries.length > 0 ? (
-                recentEntries.map((entry) => renderCard(entry))
-              ) : (
-                <Card className="aspect-square min-w-[220px] p-0 overflow-hidden shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] rounded-3xl">
-                  <div className="h-full flex flex-col">
-                    <div className="flex items-center gap-3 p-3 bg-[var(--ch-slate-dark)]/6">
-                      <div className="w-8 h-8 rounded-md bg-[var(--ch-slate-dark)]/10 flex items-center justify-center text-[var(--ch-slate)]">
-                        <FiFileText />
+            <div className="flex items-center max-w-[calc(100vw-260px)] mx-auto overflow-hidden">
+              <div className="flex-shrink-0 flex items-center h-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white shadow-md"
+                  onClick={scrollRecentLeft}
+                  disabled={!recentCanScrollLeft}
+                >
+                  <FiChevronLeft />
+                </Button>
+              </div>
+              <div
+                ref={recentRef}
+                className="flex gap-4 flex-1 overflow-hidden pb-3 scroll-snap-x-mandatory px-4"
+              >
+                {recentEntries.length > 0 ? (
+                  recentEntries.map((entry) => renderCard(entry))
+                ) : (
+                  <Card className="w-[200px] h-[220px] flex-none p-0 overflow-hidden shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] rounded-3xl scroll-snap-align-start">
+                    <div className="h-full flex flex-col">
+                      <div className="flex items-center gap-3 p-3 bg-[var(--ch-slate-dark)]/6">
+                        <div className="w-8 h-8 rounded-md bg-[var(--ch-slate-dark)]/10 flex items-center justify-center text-[var(--ch-slate)]">
+                          <FiFileText />
+                        </div>
+                        <h4 className="font-semibold text-[var(--ch-slate-dark)] truncate">
+                          Recent
+                        </h4>
                       </div>
-                      <h4 className="font-semibold text-[var(--ch-slate-dark)] truncate">
-                        Recent
-                      </h4>
-                    </div>
 
-                    <div className="flex-1 p-3 flex items-center justify-center">
-                      <p className="text-sm text-[var(--ch-slate)]">
-                        No recent entries
-                      </p>
+                      <div className="flex-1 p-3 flex items-center justify-center">
+                        <p className="text-sm text-[var(--ch-slate)]">
+                          No recent entries
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </Card>
-              )}
+                  </Card>
+                )}
+              </div>
+
+              <div className="flex-shrink-0 flex items-center h-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white shadow-md"
+                  onClick={scrollRecentRight}
+                  disabled={!recentCanScrollRight}
+                >
+                  <FiChevronRight />
+                </Button>
+              </div>
             </div>
           </div>
         </main>

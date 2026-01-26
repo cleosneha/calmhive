@@ -181,7 +181,7 @@ export default function RightSheet() {
               <div
                 key={entry.id}
                 onClick={() => handleEntryClick(entry.id)}
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--ch-taupe)] cursor-pointer transition-colors"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--ch-taupe)] cursor-pointer transition-colors border-b border-slate-100 last:border-b-0"
               >
                 {entry.pinned && (
                   <BsPin className="text-[var(--ch-sage-dark)] flex-shrink-0" />
@@ -199,7 +199,7 @@ export default function RightSheet() {
                       </div>
                     )}
                     <span className="text-xs text-[var(--ch-muted)]">
-                      {entry.createdAt.toLocaleDateString("en-US")}
+                      {entry.date.toLocaleDateString("en-US")}
                     </span>
                     {entry.isPrivate && (
                       <span className="text-xs text-[var(--ch-muted)]">

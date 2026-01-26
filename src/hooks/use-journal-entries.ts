@@ -68,7 +68,7 @@ export function useJournalEntries() {
           fetchEntries();
         }
       },
-      { threshold: 1.0 },
+      { threshold: 0.5, rootMargin: "0px 0px 50px 0px" },
     );
 
     if (observerRef.current) {
