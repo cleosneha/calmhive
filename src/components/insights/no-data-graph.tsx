@@ -38,8 +38,8 @@ export function NoDataGraph({ title, pattern = "trend" }: NoDataGraphProps) {
       <CardHeader>
         <CardTitle className="text-lg">{title}</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="relative h-64 w-full bg-white rounded-lg flex items-center justify-center overflow-hidden">
+      <CardContent className="p-2 sm:p-6">
+        <div className="relative h-48 sm:h-64 w-full bg-white rounded-lg flex items-center justify-center overflow-hidden">
           <style>{`
             @keyframes graphFloat {
               0%, 100% { opacity: 0.5; }
@@ -119,8 +119,8 @@ export function NoDataGraph({ title, pattern = "trend" }: NoDataGraphProps) {
           </svg>
 
           {/* Very subtle overlay */}
-          <div className="relative z-10 text-center space-y-2 bg-[var(--ch-sage-light)]/70 rounded-lg p-2">
-            <p className="text-xs font-light text-slate-800">
+          <div className="relative z-10 text-center space-y-2 bg-[var(--ch-sage-light)]/70 rounded-lg p-1 sm:p-2">
+            <p className="text-xs sm:text-sm font-light text-slate-800">
               No data available
             </p>
           </div>

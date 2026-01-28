@@ -61,16 +61,27 @@ export function HolidaysGraph({
     fetchData();
   }, [userId, filterParams.year, filterParams.period]);
 
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const checkScreen = () => setIsSmallScreen(window.innerWidth < 640);
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
+
   if (isLoading) {
     return (
       <Card className="bg-white border-slate-200">
         <CardHeader>
           <CardTitle>Holidays Taken</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-2 sm:p-6">
           <div className="space-y-4">
             <div className="h-20 bg-slate-100 rounded-lg animate-pulse" />
-            <div className="h-64 bg-slate-100 rounded-lg animate-pulse" />
+            <div
+              className={`${isSmallScreen ? "h-48" : "h-64"} bg-slate-100 rounded-lg animate-pulse`}
+            />
           </div>
         </CardContent>
       </Card>
@@ -83,7 +94,7 @@ export function HolidaysGraph({
         <CardHeader>
           <CardTitle>Holidays Taken</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-2 sm:p-6">
           <NoDataGraph
             title=""
             description="No historical data available"
@@ -99,14 +110,20 @@ export function HolidaysGraph({
       <CardHeader>
         <CardTitle>Holidays Taken</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-2 sm:p-6">
         <p className="text-sm text-slate-500 mb-2">
           {totalHolidaysThisWeek} holidays taken this week
         </p>
-        <ResponsiveContainer width="100%" height={250}>
+        <ResponsiveContainer width="100%" height={isSmallScreen ? 200 : 250}>
           <BarChart
             data={data}
-            margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+            barCategoryGap={isSmallScreen ? "30%" : "18%"}
+            barGap={6}
+            margin={
+              isSmallScreen
+                ? { top: 5, right: 10, left: 2, bottom: 5 }
+                : { top: 5, right: 30, left: 20, bottom: 5 }
+            }
           >
             <defs>
               <linearGradient id="colorHolidays" x1="0" y1="0" x2="0" y2="1">
@@ -122,10 +139,21 @@ export function HolidaysGraph({
             <XAxis
               dataKey="week"
               stroke="#94a3b8"
-              style={{ fontSize: "12px" }}
+              interval={0}
+              height={isSmallScreen ? 54 : 30}
+              tick={{ fontSize: isSmallScreen ? 10 : 12 }}
+              angle={isSmallScreen ? -45 : 0}
+              textAnchor={isSmallScreen ? "end" : "middle"}
+              tickMargin={isSmallScreen ? 8 : 10}
+              padding={isSmallScreen ? { left: 0, right: 0 } : undefined}
             />
-            <YAxis stroke="#94a3b8" style={{ fontSize: "12px" }} />
+            <YAxis
+              stroke="#94a3b8"
+              width={isSmallScreen ? 28 : 48}
+              tick={{ fontSize: isSmallScreen ? 10 : 12 }}
+            />
             <Tooltip
+              cursor={{ fill: "var(--ch-sage-light)", fillOpacity: 0.3 }}
               contentStyle={{
                 backgroundColor: "#fff",
                 border: "1px solid #e2e8f0",
