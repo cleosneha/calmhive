@@ -43,8 +43,8 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
   return (
     <div className="space-y-8">
       {/* Profile Section */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-8">
-        <div className="flex items-center gap-6">
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 sm:p-8">
+        <div className="flex flex-col sm:flex-row items-center gap-6">
           {/* Profile Photo */}
           <div className="flex-shrink-0">
             {initialData.image ? (
@@ -53,10 +53,10 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
                 alt={initialData.name || "User"}
                 width={96}
                 height={96}
-                className="w-24 h-24 rounded-full object-cover border-2 border-[var(--ch-sage-light)]"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-[var(--ch-sage-light)]"
               />
             ) : (
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[var(--ch-sage-light)] to-[var(--ch-sage)] flex items-center justify-center border-2 border-[var(--ch-sage-light)]">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-[var(--ch-sage-light)] to-[var(--ch-sage)] flex items-center justify-center border-2 border-[var(--ch-sage-light)]">
                 <span className="text-2xl font-semibold text-[var(--ch-sage-dark)]">
                   {initialData.name?.charAt(0)?.toUpperCase() || "U"}
                 </span>
@@ -65,7 +65,7 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
           </div>
 
           {/* Profile Info */}
-          <div className="flex-1">
+          <div className="flex-1 text-center sm:text-left mt-4 sm:mt-0">
             <h2 className="text-2xl font-bold text-[var(--ch-slate-dark)]">
               {initialData.name || "User"}
             </h2>
@@ -82,10 +82,10 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
       {/* Settings Form */}
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-lg shadow-sm border border-slate-200 p-8 space-y-6"
+        className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 sm:p-8 space-y-6"
       >
         {/* Form Header with Edit Button */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-200 gap-3">
           <h2 className="text-xl font-bold text-[var(--ch-slate-dark)]">
             Settings
           </h2>
@@ -311,16 +311,21 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
 
         {/* Submit Button */}
         {isEditMode && (
-          <div className="flex justify-end gap-3 pt-6 border-t border-slate-200">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-slate-200">
             <Button
               type="button"
               onClick={() => setIsEditMode(false)}
               variant="outline"
-              className="border-[var(--ch-slate-light)] text-[var(--ch-slate-dark)] hover:bg-slate-50"
+              className="border-[var(--ch-slate-light)] text-[var(--ch-slate-dark)] hover:bg-slate-50 w-full sm:w-auto"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading} variant="default">
+            <Button
+              type="submit"
+              disabled={isLoading}
+              variant="default"
+              className="w-full sm:w-auto"
+            >
               {isLoading ? (
                 <>
                   <FaSpinner className="mr-2 h-4 w-4 animate-spin" />

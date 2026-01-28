@@ -111,8 +111,8 @@ export function PrivacyPinSection() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-8">
-      <div className="flex items-center justify-between">
+    <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 sm:p-8">
+      <div className="flex items-start sm:items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-[var(--ch-slate-dark)]">
             Privacy PIN
@@ -121,14 +121,21 @@ export function PrivacyPinSection() {
             Set a PIN to protect your private journal entries and sensitive data
           </p>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)} variant="outline">
+      </div>
+
+      <div className="mt-6 flex justify-start">
+        <Button
+          onClick={() => setIsDialogOpen(true)}
+          variant="outline"
+          className="w-full sm:w-auto"
+        >
           <TbLockPassword className="mr-2 h-4 w-4" />
           Update PIN
         </Button>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-md max-h-[800px] overflow-y-auto top-1/2 -translate-y-1/2 bottom-auto">
+        <DialogContent className="w-full sm:max-w-md max-h-[80vh] overflow-y-auto top-4 sm:top-1/2 sm:-translate-y-1/2 bottom-auto mx-4 sm:mx-auto p-4 sm:p-6">
           {/* Step indicators */}
           <div className="flex items-center justify-center gap-4 mb-4">
             {(["send-otp", "enter-otp", "set-pin"] as const).map(
@@ -205,11 +212,11 @@ export function PrivacyPinSection() {
                     className="text-center text-lg tracking-widest mt-4"
                   />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button
                     variant="outline"
                     onClick={() => setCurrentStep("send-otp")}
-                    className="flex-1"
+                    className="flex-1 w-full sm:w-auto"
                   >
                     Back
                   </Button>
@@ -217,7 +224,7 @@ export function PrivacyPinSection() {
                     onClick={handleVerifyOTP}
                     disabled={isLoading || otp.length !== 6}
                     variant="default"
-                    className="flex-1 "
+                    className="flex-1 w-full sm:w-auto"
                   >
                     {isLoading ? (
                       <>
@@ -300,11 +307,11 @@ export function PrivacyPinSection() {
                     </Button>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button
                     variant="outline"
                     onClick={() => setCurrentStep("enter-otp")}
-                    className="flex-1"
+                    className="flex-1 w-full sm:w-auto"
                   >
                     Back
                   </Button>
@@ -314,7 +321,7 @@ export function PrivacyPinSection() {
                       isLoading || !pin || !confirmPin || pin !== confirmPin
                     }
                     variant="default"
-                    className="flex-1 "
+                    className="flex-1 w-full sm:w-auto"
                   >
                     {isLoading ? (
                       <>
