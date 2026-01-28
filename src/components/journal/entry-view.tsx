@@ -2,9 +2,11 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import type { Mood } from "@/types/journal";
 import { getMoodIcon } from "@/utils/mood-icons";
+import { FiShare2, FiEye } from "react-icons/fi";
+import { generateEntryPDF } from "@/actions/generate-pdf";
+import { toast } from "sonner";
 
 interface Entry {
   id: number;
@@ -34,17 +36,76 @@ export default function EntryView({ entry, onEdit }: EntryViewProps) {
     }).format(date);
   };
 
+  const onShare = async () => {
+    try {
+      const base64 = await generateEntryPDF(entry);
+      const pdfBlob = new Blob(
+        [Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))],
+        { type: "application/pdf" },
+      );
+      const file = new File([pdfBlob], `${entry.title}.pdf`, {
+        type: "application/pdf",
+      });
+
+      if (navigator.share) {
+        await navigator.share({
+          title: entry.title,
+          text: "Journal entry PDF",
+          files: [file],
+        });
+      } else {
+        toast.error("Sharing not supported on this device.");
+      }
+    } catch (error) {
+      console.error("Error sharing PDF:", error);
+      toast.error("Failed to share PDF. Please try again.");
+    }
+  };
+
+  const onPreview = async () => {
+    try {
+      const base64 = await generateEntryPDF(entry);
+      const pdfBlob = new Blob(
+        [Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))],
+        { type: "application/pdf" },
+      );
+      const url = URL.createObjectURL(pdfBlob);
+      window.open(url, "_blank");
+    } catch (error) {
+      console.error("Error previewing PDF:", error);
+      toast.error("Failed to preview PDF. Please try again.");
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-3xl font-bold">{entry.title}</h1>
-        {entry.mood && (
-          <div className="text-2xl">
-            {React.createElement(getMoodIcon(entry.mood).icon, {
-              className: getMoodIcon(entry.mood).color,
-            })}
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {entry.mood && (
+            <div className="text-2xl">
+              {React.createElement(getMoodIcon(entry.mood).icon, {
+                className: getMoodIcon(entry.mood).color,
+              })}
+            </div>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Preview PDF"
+            onClick={onPreview}
+          >
+            <FiEye className="w-5 h-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Share entry"
+            onClick={onShare}
+          >
+            <FiShare2 className="w-5 h-5" />
+          </Button>
+        </div>
       </div>
       <div className="mb-4 text-sm text-gray-600">
         Created: {formatDate(entry.createdAt)}

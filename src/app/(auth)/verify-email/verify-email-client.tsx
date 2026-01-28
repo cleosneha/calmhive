@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 export default function VerifyEmailClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "";
+  const email = searchParams?.get("email") || "";
 
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);

@@ -13,6 +13,7 @@ import {
   FiMenu,
 } from "react-icons/fi";
 import { MdLogout, MdDeleteForever } from "react-icons/md";
+import { toast } from "sonner";
 import {
   Sheet,
   SheetContent,
@@ -81,7 +82,7 @@ export default function HamburgerHeader() {
         // Use window.location for hard redirect
         window.location.href = "/login";
       } else {
-        alert(
+        toast.error(
           "message" in result
             ? result.message
             : "Failed to delete account. Please try again.",
@@ -91,7 +92,7 @@ export default function HamburgerHeader() {
       }
     } catch (error) {
       console.error("Error deleting account:", error);
-      alert("Failed to delete account. Please try again.");
+      toast.error("Failed to delete account. Please try again.");
       setIsDeleting(false);
       setShowDeleteDialog(false);
     }

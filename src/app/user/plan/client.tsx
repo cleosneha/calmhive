@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { BsStars } from "react-icons/bs";
 import { FiX } from "react-icons/fi";
 import { MdAdd } from "react-icons/md";
+import { toast } from "sonner";
 
 interface Task {
   id: number;
@@ -134,7 +135,7 @@ export default function PlanClient({ plan: initialPlan, userId }: Props) {
           {/* Desktop Plan Table */}
           <PlanTable
             plan={plan}
-            onEdit={(id) => alert(`Edit task ${id}`)}
+            onEdit={(id) => toast.error(`Edit task ${id}`)}
             onRefresh={handleRefresh}
           />
         </div>
@@ -143,7 +144,7 @@ export default function PlanClient({ plan: initialPlan, userId }: Props) {
         <div className="md:hidden">
           <PlanTableMobile
             plan={plan}
-            onEdit={(id) => alert(`Edit task ${id}`)}
+            onEdit={(id) => toast.error(`Edit task ${id}`)}
             onRefresh={handleRefresh}
           />
         </div>

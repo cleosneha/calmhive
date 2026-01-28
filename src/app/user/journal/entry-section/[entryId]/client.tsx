@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import EntryView from "@/components/journal/entry-view";
 import EntryForm from "@/components/journal/entry-form";
 import { JournalEntryData } from "@/fetchers/journal/entry";
+import { toast } from "sonner";
 
 type Entry = JournalEntryData;
 
@@ -64,7 +65,7 @@ export default function EntrySection({
       }
     }
     if (!result?.success) {
-      alert(result?.message || "Failed to save");
+      toast.error(result?.message || "Failed to save");
     }
   };
 

@@ -18,6 +18,7 @@ import {
   AlertDialogDescription,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 import { HolidayPopup } from "@/components/plan/holiday-popup";
 import { usePlanTable } from "@/hooks/use-plan-table";
 import { Button } from "@/components/ui/button";
@@ -219,7 +220,7 @@ export default function PlanTable({ plan, onEdit, onRefresh }: Props) {
                           onEdit={() =>
                             onEdit
                               ? onEdit(task.id)
-                              : window.alert(`Edit task ${task.id}`)
+                              : toast.error(`Edit task ${task.id}`)
                           }
                           onTaskSaved={onRefresh}
                           onTaskSave={async (updatedTask) => {

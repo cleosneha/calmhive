@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { completeOnboarding } from "@/actions/onboarding/onboarding";
+import { toast } from "sonner";
 
 export default function TermsActions() {
   const [accepted, setAccepted] = useState(false);
@@ -18,7 +19,7 @@ export default function TermsActions() {
       const result = await completeOnboarding();
 
       if (!result.success) {
-        alert("Failed to complete onboarding. Please try again.");
+        toast.error("Failed to complete onboarding. Please try again.");
         setLoading(false);
         return;
       }
@@ -30,7 +31,7 @@ export default function TermsActions() {
       router.push("/onboarding/complete");
     } catch (error) {
       console.error("Error completing onboarding:", error);
-      alert("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
       setLoading(false);
     }
   };

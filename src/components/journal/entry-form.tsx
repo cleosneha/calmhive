@@ -22,6 +22,7 @@ import {
 import { MoreVertical } from "lucide-react";
 import type { Mood } from "@/types/journal";
 import { getMoodIcon } from "@/utils/mood-icons";
+import { toast } from "sonner";
 
 interface Entry {
   id: number;
@@ -65,7 +66,7 @@ export default function EntryForm({ entry, mode, onSave }: EntryFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
-      alert("Title and content are required");
+      toast.error("Title and content are required");
       return;
     }
     onSave({ title, content, mood, pinned, isPrivate });
