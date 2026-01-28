@@ -46,7 +46,7 @@ export default function RegisterPage() {
       toast.error(
         err instanceof Error
           ? err.message
-          : "Registration failed. Please try again."
+          : "Registration failed. Please try again.",
       );
     } finally {
       setIsLoading(false);
@@ -62,7 +62,7 @@ export default function RegisterPage() {
       });
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Google sign-up failed."
+        error instanceof Error ? error.message : "Google sign-up failed.",
       );
       setIsLoading(false);
     }
@@ -250,14 +250,14 @@ export default function RegisterPage() {
             <p className="text-center text-xs text-[var(--ch-text)]/50 mt-4">
               By creating an account, you agree to our{" "}
               <Link
-                href="#"
+                href="/terms-of-service"
                 className="hover:underline text-[var(--ch-sage-dark)]"
               >
                 Terms of Service
               </Link>{" "}
               and{" "}
               <Link
-                href="#"
+                href="/privacy-policy"
                 className="hover:underline text-[var(--ch-sage-dark)]"
               >
                 Privacy Policy

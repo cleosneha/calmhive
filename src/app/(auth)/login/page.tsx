@@ -190,14 +190,14 @@ export default function LoginPage() {
             <p className="text-center text-xs text-[var(--ch-text)]/50 mt-4">
               By logging in, you agree to our{" "}
               <Link
-                href="#"
+                href="/terms-of-service"
                 className="hover:underline text-[var(--ch-sage-dark)]"
               >
                 Terms of Service
               </Link>{" "}
               and{" "}
               <Link
-                href="#"
+                href="/privacy-policy"
                 className="hover:underline text-[var(--ch-sage-dark)]"
               >
                 Privacy Policy

@@ -239,10 +239,17 @@ export default function VerifyEmailClient() {
             <p className="text-center text-xs text-[var(--ch-text)]/50 mt-6">
               By verifying your email, you agree to our{" "}
               <Link
-                href="#"
+                href="/terms-of-service"
                 className="hover:underline text-[var(--ch-sage-dark)]"
               >
                 Terms of Service
+              </Link>
+              and{" "}
+              <Link
+                href="/privacy-policy"
+                className="hover:underline text-[var(--ch-sage-dark)]"
+              >
+                Privacy Policy
               </Link>
             </p>
           </div>
