@@ -15,6 +15,46 @@ import {
 } from "./execute-day-operations";
 
 /**
+ * Normalize time range string for consistent comparison
+ * Converts to 24-hour format like "08:00-08:30"
+ */
+function normalizeTimeRange(timeRange: string): string {
+  // Remove extra spaces and standardize
+  let normalized = timeRange.replace(/\s+/g, " ").trim();
+
+  // If it contains AM/PM, convert to 24-hour
+  if (normalized.includes("AM") || normalized.includes("PM")) {
+    // Split by ' - ' or similar
+    const parts = normalized.split(/\s*-\s*/);
+    if (parts.length === 2) {
+      const start = convertTo24Hour(parts[0].trim());
+      const end = convertTo24Hour(parts[1].trim());
+      return `${start}-${end}`;
+    }
+  }
+
+  // If already in 24-hour format like "08:00-08:30", clean it
+  normalized = normalized.replace(/\s*-\s*/g, "-");
+  return normalized;
+}
+
+/**
+ * Convert 12-hour time to 24-hour format
+ */
+function convertTo24Hour(timeStr: string): string {
+  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return timeStr;
+
+  const [_, hour, minute, period] = match;
+  let h = parseInt(hour, 10);
+
+  if (period.toUpperCase() === "PM" && h !== 12) h += 12;
+  if (period.toUpperCase() === "AM" && h === 12) h = 0;
+
+  return `${h.toString().padStart(2, "0")}:${minute}`;
+}
+
+/**
  * Execute plan edit in database and vector store
  * Also updates hoursSummary when plan is modified
  */
@@ -83,10 +123,12 @@ export async function executePlanEdit(
           );
 
           // Find and remove the conflicting task
+          const normalizedConflictingTime = normalizeTimeRange(conflictingTime);
           const conflictingTask = plan.tasks.find(
             (task) =>
               task.day.toLowerCase() === day.toLowerCase() &&
-              task.timeRange === conflictingTime &&
+              normalizeTimeRange(task.timeRange) ===
+                normalizedConflictingTime &&
               task.activity === conflictingActivity,
           );
 
@@ -182,6 +224,15 @@ export async function executePlanEdit(
             notes?: string;
           };
 
+        console.log("[modify_task] Data received:", {
+          taskId,
+          day,
+          timeRange,
+          activity,
+          oldActivity,
+          notes,
+        });
+
         let task;
 
         // If taskId is provided, use it directly
@@ -207,12 +258,41 @@ export async function executePlanEdit(
             };
           }
 
+          console.log("[modify_task] Searching for task with:", {
+            oldActivity,
+            day,
+            timeRange,
+          });
+
+          console.log(
+            "[modify_task] All tasks in plan:",
+            plan.tasks.map((t) => ({
+              id: t.id,
+              day: t.day,
+              timeRange: t.timeRange,
+              activity: t.activity,
+              normalizedTimeRange: normalizeTimeRange(t.timeRange),
+            })),
+          );
+
           // Find matching task in user's plan
+          const normalizedTimeRange = normalizeTimeRange(timeRange);
           const tasks = plan.tasks.filter(
             (t) =>
               t.day.toLowerCase() === day.toLowerCase() &&
-              t.timeRange === timeRange &&
+              normalizeTimeRange(t.timeRange) === normalizedTimeRange &&
               t.activity.toLowerCase().includes(oldActivity.toLowerCase()),
+          );
+
+          console.log(
+            "[modify_task] Found tasks:",
+            tasks.length,
+            tasks.map((t) => ({
+              id: t.id,
+              activity: t.activity,
+              timeRange: t.timeRange,
+              day: t.day,
+            })),
           );
 
           if (tasks.length === 0) {
@@ -231,6 +311,8 @@ export async function executePlanEdit(
 
           task = tasks[0];
         }
+
+        console.log("[modify_task] Task to update:", task);
 
         // Store previous task data for undo
         const previousData = {
@@ -267,15 +349,21 @@ export async function executePlanEdit(
           }
         }
 
+        const updateData = {
+          ...(day && { day }),
+          ...(timeRange && { timeRange: normalizeTimeRange(timeRange) }),
+          ...(activity && { activity }),
+          ...(notes !== undefined && { notes }),
+        };
+
+        console.log("[modify_task] Update data:", updateData);
+
         const updated = await prisma.task.update({
           where: { id: task.id },
-          data: {
-            ...(day && { day }),
-            ...(timeRange && { timeRange }),
-            ...(activity && { activity }),
-            ...(notes && { notes }),
-          },
+          data: updateData,
         });
+
+        console.log("[modify_task] Updated task:", updated);
 
         // Recalculate hoursSummary if timeRange or day changed
         if (timeRange || day) {
@@ -292,6 +380,7 @@ export async function executePlanEdit(
             where: { id: plan.id },
             data: { hoursSummary: newHoursSummary },
           });
+          console.log("[modify_task] Updated hoursSummary");
         }
 
         result = {

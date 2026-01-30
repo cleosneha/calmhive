@@ -6,13 +6,13 @@ import { executePlanEdit, HARD_CODED_MESSAGES } from "../utils";
  * Execute Edit Node: Apply the confirmed edit to the database
  */
 export async function executeEditNode(
-  state: PlanChatbotStateType
+  state: PlanChatbotStateType,
 ): Promise<Partial<PlanChatbotStateType>> {
   if (!state.pendingEdit) {
     return {
       messages: [
         new AIMessage(
-          "No edit to execute. Something went wrong. Please try again."
+          "No edit to execute. Something went wrong. Please try again.",
         ),
       ],
     };
@@ -23,10 +23,11 @@ export async function executeEditNode(
     const result = await executePlanEdit(
       state.userId,
       state.pendingEdit.type,
-      state.pendingEdit.data
+      state.pendingEdit.data,
     );
 
     if (!result.success) {
+      console.error("Plan edit execution failed:", result.error);
       return {
         mode: "query",
         waitingForConfirmation: false,
@@ -53,7 +54,7 @@ export async function executeEditNode(
         new AIMessage(
           `✅ **Plan updated successfully!**\n\n${
             result.message || "Your changes have been applied."
-          }`
+          }`,
         ),
       ],
     };
