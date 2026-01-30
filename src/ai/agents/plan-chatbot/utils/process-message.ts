@@ -55,6 +55,31 @@ export async function processUserMessage(
       if (parsed.TIME_RANGE !== "none")
         extractedEdit.timeRange = parsed.TIME_RANGE;
 
+      // Handle MODIFY_TYPE for modify_task
+      if (
+        parsed.MODIFY_TYPE &&
+        parsed.MODIFY_TYPE !== "none" &&
+        ["title", "notes", "status"].includes(parsed.MODIFY_TYPE)
+      ) {
+        extractedEdit.modifyType = parsed.MODIFY_TYPE as
+          | "title"
+          | "notes"
+          | "status";
+      } else if (parsed.MODIFY_TYPE === "none") {
+        // Set modifyType to "none" so validation can reject unsupported modifications
+        extractedEdit.modifyType = "none";
+      }
+
+      // Handle STATUS for modify_task when MODIFY_TYPE is status
+      if (
+        parsed.STATUS &&
+        parsed.STATUS !== "none" &&
+        parsed.MODIFY_TYPE === "status" &&
+        ["pending", "done", "partial"].includes(parsed.STATUS)
+      ) {
+        extractedEdit.status = parsed.STATUS as "pending" | "done" | "partial";
+      }
+
       // Handle OLD_ACTIVITY and NEW_ACTIVITY for proper change tracking
       if (parsed.OLD_ACTIVITY && parsed.OLD_ACTIVITY !== "none") {
         extractedEdit.oldActivity = parsed.OLD_ACTIVITY;

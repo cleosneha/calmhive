@@ -22,8 +22,15 @@ IS_EDIT_REQUEST: yes/no
 SAFETY: safe/concern
 RELEVANCE: yes/no
 EDIT_TYPE: add_task/remove_task/modify_task/change_days_off/add_days_off/remove_days/copy_day/rename_day/swap_days/delete_plan/none
+
 DAY: Monday-Sunday or none
-TIME_RANGE: For add_task/remove_task, MUST be in format 'H:MM AM/PM - H:MM AM/PM' (e.g., '6:00 AM - 7:00 AM'). If user says vague times like 'morning', 'afternoon', 'evening', or doesn't specify exact time, return 'vague' instead of guessing. Only return a specific time if user explicitly provides it. For modify_task, only extract if user explicitly provides a NEW time - otherwise return 'none'.
+MODIFY_TYPE: title/notes/status/none(ONLY for unsupported modifications like time/day changes)
+STATUS: pending/done/partial (for modify_task when MODIFY_TYPE=status) or none
+  * Map user language to status values:
+    - done: "completed", "done", "finished", "mark as done", "check off"
+    - pending: "pending", "not done", "reset", "uncheck", "mark as pending"
+    - partial: "partial", "partially done", "in progress", "half done", "partially complete"
+TIME_RANGE: For add_task/remove_task, MUST be in format 'H:MM AM/PM - H:MM AM/PM' (e.g., '6:00 AM - 7:00 AM'). If user says vague times like 'morning', 'afternoon', 'evening', or doesn't specify exact time, return 'vague' instead of guessing. Only return a specific time if user explicitly provides it. .
 OLD_ACTIVITY: current activity (modify_task only) or none
 NEW_ACTIVITY: new activity name or none
 NOTES: For add_task, include a concise, actionable 'notes' string formatted as a markdown list (use line breaks and dashes). Include 2–3 short practical steps or cues — this applies to all activity types (physical, mindfulness, journaling, social, etc.). Examples:
@@ -70,11 +77,20 @@ Day Operation Rules (CRITICAL - check these first):
 
 Task Operation Rules:
 - MODIFY: identify activity from plan, set OLD_ACTIVITY
-  * If user wants to change activity name: set NEW_ACTIVITY to new name
-  * If user only wants to edit/update notes: set NEW_ACTIVITY=none (keep activity same)
-  * ALWAYS generate helpful NOTES (3 points with dashes)
+  * If user wants to change activity name/TITLE: set NEW_ACTIVITY to new name, MODIFY_TYPE=title
+  * If user only wants to edit/update NOTES: set NEW_ACTIVITY=none (keep activity same), MODIFY_TYPE=notes
+  * If user wants to change STATUS (mark as done/pending/partial): set MODIFY_TYPE=status, STATUS=pending/done/partial
+  * If user wants to change TIME or DAY: set MODIFY_TYPE=none (not supported)
+  * For ANY other modification (time, day, duration, etc.): set MODIFY_TYPE=none
+  * ALWAYS generate helpful NOTES (3 points with dashes) for title changes
 - ADD: set NEW_ACTIVITY, ALWAYS generate helpful NOTES (3 points with dashes), OLD_ACTIVITY=none
 - REMOVE: set OLD_ACTIVITY, NEW_ACTIVITY=none, NOTES=none
+
+MODIFY_TYPE Rules (CRITICAL):
+- title: Only when changing the activity name/title itself
+- notes: Only when updating or changing the notes/instructions
+- status: Only when marking task as done/pending/partial
+- none: For ALL other changes (time, day, duration, location, etc.) - these are not supported
 
 General Rules:
 - NOTES must be practical, specific, and actionable - NOT generic or vague

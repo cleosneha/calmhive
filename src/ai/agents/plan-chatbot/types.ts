@@ -55,6 +55,8 @@ export interface EditAnalysisResult {
     day2?: string; // For swap_days
     needsConfirmation?: boolean; // For operations requiring user confirmation
     confirmationType?: "copy" | "rename" | "swap" | "remove" | "add_days_off"; // Type of confirmation needed
+    modifyType?: "title" | "notes" | "status" | "none"; // For modify_task - what type of modification
+    status?: "pending" | "done" | "partial"; // For modify_task - new status when modifyType is "status"
   };
   safetyIssue?: string;
   suggestion?: string;

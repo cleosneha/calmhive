@@ -175,15 +175,25 @@ export async function executePlanEdit(
       }
 
       case "modify_task": {
-        const { taskId, day, timeRange, activity, oldActivity, notes } =
-          data as {
-            taskId?: number;
-            day?: string;
-            timeRange?: string;
-            activity?: string;
-            oldActivity?: string;
-            notes?: string;
-          };
+        const {
+          taskId,
+          day,
+          timeRange,
+          activity,
+          oldActivity,
+          notes,
+          modifyType,
+          status,
+        } = data as {
+          taskId?: number;
+          day?: string;
+          timeRange?: string;
+          activity?: string;
+          oldActivity?: string;
+          notes?: string;
+          modifyType?: "title" | "notes" | "status" | "none";
+          status?: "pending" | "done" | "partial";
+        };
 
         console.log("[modify_task] Data received:", {
           taskId,
@@ -192,6 +202,8 @@ export async function executePlanEdit(
           activity,
           oldActivity,
           notes,
+          modifyType,
+          status,
         });
 
         let task;
@@ -311,10 +323,9 @@ export async function executePlanEdit(
         }
 
         const updateData = {
-          ...(day && { day }),
-          ...(timeRange && { timeRange: normalizeTimeRange(timeRange) }),
           ...(activity && { activity }),
           ...(notes !== undefined && { notes }),
+          ...(modifyType === "status" && status && { status }),
         };
 
         console.log("[modify_task] Update data:", updateData);
@@ -326,27 +337,9 @@ export async function executePlanEdit(
 
         console.log("[modify_task] Updated task:", updated);
 
-        // Recalculate hoursSummary if timeRange or day changed
-        if (timeRange || day) {
-          const updatedTasksForModify = plan.tasks.map((t) =>
-            t.id === task.id ? updated : t,
-          );
-          const newHoursSummary = calculateHoursSummaryFromTasks(
-            updatedTasksForModify,
-            plan.daysOff,
-          );
-
-          // Update plan with new hoursSummary
-          await prisma.plan.update({
-            where: { id: plan.id },
-            data: { hoursSummary: newHoursSummary },
-          });
-          console.log("[modify_task] Updated hoursSummary");
-        }
-
         result = {
           success: true,
-          message: `Updated task on **${updated.day}**: **${updated.activity}**.`,
+          message: `✅ Task updated successfully on **${updated.day}**: **${updated.activity}**.`,
           previousData,
         };
         break;

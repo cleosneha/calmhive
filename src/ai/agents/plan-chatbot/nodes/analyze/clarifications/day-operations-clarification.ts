@@ -57,7 +57,7 @@ export async function handleDayOperationsClarification(
   }
 
   // Create complete edit analysis based on operation type
-  let completeEdit: any = {};
+  let completeEdit: Record<string, unknown> = {};
 
   switch (operation) {
     case "remove_days":
@@ -141,7 +141,12 @@ export async function handleDayOperationsClarification(
     isEditRequest: true,
     isSafe: true,
     isRelevant: true,
-    editType: operation as any,
+    editType: operation as
+      | "add_days_off"
+      | "remove_days"
+      | "copy_day"
+      | "rename_day"
+      | "swap_days",
     extractedEdit: completeEdit,
   };
 

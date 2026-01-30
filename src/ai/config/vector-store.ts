@@ -4,9 +4,8 @@ import { Pinecone } from "@pinecone-database/pinecone";
 import embeddings from "./embedding";
 
 const isProd = process.env.NODE_ENV === "production";
-const usePinecone = isProd || !!process.env.PINECONE_API_KEY;
 
-const vectorStore = usePinecone
+const vectorStore = isProd
   ? (async () => {
       const pinecone = new Pinecone({
         apiKey: process.env.PINECONE_API_KEY!,

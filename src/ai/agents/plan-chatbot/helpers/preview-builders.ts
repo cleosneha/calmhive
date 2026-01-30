@@ -64,6 +64,22 @@ export function buildEditPreview(analysis: EditAnalysisResult): EditPreview {
         changes.push({ field: "Time", newValue: extractedEdit.timeRange });
       }
 
+      // Handle status updates
+      if (extractedEdit.modifyType === "status") {
+        const statusText =
+          extractedEdit.status === "done"
+            ? "Completed"
+            : extractedEdit.status === "pending"
+              ? "Pending"
+              : extractedEdit.status === "partial"
+                ? "Partially Completed"
+                : "Updated";
+        changes.push({
+          field: "Status",
+          newValue: statusText,
+        });
+      }
+
       const modifyPreview: EditPreview = { changes };
 
       if (extractedEdit.oldActivity && extractedEdit.activity) {
@@ -126,6 +142,24 @@ export function buildPreviewMessage(analysis: EditAnalysisResult): string {
         extractedEdit.activity &&
         extractedEdit.activity.toLowerCase() !==
           extractedEdit.oldActivity?.toLowerCase();
+
+      // Handle status updates
+      if (extractedEdit.modifyType === "status") {
+        const statusText =
+          extractedEdit.status === "done"
+            ? "completed"
+            : extractedEdit.status === "pending"
+              ? "pending"
+              : extractedEdit.status === "partial"
+                ? "partially completed"
+                : "updated";
+        return (
+          `Okay, I found the task **${extractedEdit.oldActivity}** on **${extractedEdit.day}** at **${extractedEdit.timeRange}**.\n\n` +
+          `This task will be marked as **${statusText}**.\n\n` +
+          `Are you sure you want to update the status of this task?\n\n` +
+          `[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`
+        );
+      }
 
       if (isActivityChanging) {
         return (

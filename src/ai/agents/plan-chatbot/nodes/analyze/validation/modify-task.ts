@@ -77,35 +77,62 @@ export async function validateModifyTask(
   analysis.extractedEdit!.timeRange = validation.task.timeRange;
   // Keep the new activity and notes from the extraction
 
-  // Check for time conflicts if it's a modify_task with time change
+  // Check if user is trying to modify time - not supported
   if (
     analysis.extractedEdit!.timeRange &&
     analysis.extractedEdit!.timeRange !== "none" &&
-    analysis.extractedEdit!.day
+    analysis.extractedEdit!.timeRange !== validation.task.timeRange
   ) {
-    const conflictCheck = await checkTimeConflict(
-      state.userId,
-      analysis.extractedEdit!.day,
-      analysis.extractedEdit!.timeRange,
-      analysis.extractedEdit!.oldActivity,
-    );
+    return {
+      isValid: false,
+      needsClarification: false,
+      response: {
+        mode: "query",
+        messages: [
+          new AIMessage(
+            `I'm sorry, but modifying the time of existing tasks is not supported yet. You'll need to manually delete this task and create a new one at the desired time.\n\nTo delete: "${validation.task.activity}" on ${validation.task.day} at ${validation.task.timeRange}`,
+          ),
+        ],
+        responseHandled: true,
+      },
+    };
+  }
 
-    if (conflictCheck.hasConflict) {
-      console.log("  ⚠️ TIME CONFLICT DETECTED - overlapping times");
-      return {
-        isValid: false,
-        needsClarification: false,
-        response: {
-          mode: "query",
-          messages: [
-            new AIMessage(
-              `**Cannot make this change.** There's already a **${conflictCheck.conflictingActivity}** scheduled on **${analysis.extractedEdit!.day}** at **${conflictCheck.conflictingTime || analysis.extractedEdit!.timeRange}** that would overlap.\n\nPlease choose a different time slot or remove the conflicting activity first.`,
-            ),
-          ],
-          responseHandled: true,
-        },
-      };
-    }
+  // Check if user is trying to modify day - not supported
+  if (
+    analysis.extractedEdit!.day &&
+    analysis.extractedEdit!.day !== validation.task.day
+  ) {
+    return {
+      isValid: false,
+      needsClarification: false,
+      response: {
+        mode: "query",
+        messages: [
+          new AIMessage(
+            `I'm sorry, but changing the day of existing tasks is not supported yet. You'll need to manually delete this task and create a new one on the desired day.\n\nTo delete: "${validation.task.activity}" on ${validation.task.day} at ${validation.task.timeRange}`,
+          ),
+        ],
+        responseHandled: true,
+      },
+    };
+  }
+
+  // Check modifyType - reject if "none" (unsupported modifications)
+  if (analysis.extractedEdit!.modifyType === "none") {
+    return {
+      isValid: false,
+      needsClarification: false,
+      response: {
+        mode: "query",
+        messages: [
+          new AIMessage(
+            `I'm sorry, but that type of modification is not supported yet. You can only modify the title, notes, or status of tasks.\n\nFor other changes (like time or day), you'll need to manually delete this task and create a new one.`,
+          ),
+        ],
+        responseHandled: true,
+      },
+    };
   }
 
   return {
@@ -130,27 +157,20 @@ export async function validateModifyTask(
                   },
                 ]
               : []),
-            ...(analysis.extractedEdit!.day
-              ? [
-                  {
-                    field: "Day",
-                    newValue: analysis.extractedEdit!.day,
-                  },
-                ]
-              : []),
-            ...(analysis.extractedEdit!.timeRange
-              ? [
-                  {
-                    field: "Time",
-                    newValue: analysis.extractedEdit!.timeRange,
-                  },
-                ]
-              : []),
             ...(analysis.extractedEdit!.notes
               ? [
                   {
                     field: "Notes",
                     newValue: analysis.extractedEdit!.notes,
+                  },
+                ]
+              : []),
+            ...(analysis.extractedEdit!.modifyType === "status"
+              ? [
+                  {
+                    field: "Status",
+                    oldValue: "Current status", // This could be improved to show actual current status
+                    newValue: analysis.extractedEdit!.status || "Unknown",
                   },
                 ]
               : []),
