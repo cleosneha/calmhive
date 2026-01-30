@@ -10,6 +10,11 @@ export async function retrievePlanFromEmbeddings(
   try {
     const store = await vectorStore;
 
+    if (!store) {
+      console.warn(`Vector store not available for user ${userId}`);
+      return null;
+    }
+
     // Search for plan using userId as query
     const results = await store.similaritySearch(
       `plan for user ${userId}`,

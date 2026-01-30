@@ -23,7 +23,7 @@ SAFETY: safe/concern
 RELEVANCE: yes/no
 EDIT_TYPE: add_task/remove_task/modify_task/change_days_off/add_days_off/remove_days/copy_day/rename_day/swap_days/delete_plan/none
 DAY: Monday-Sunday or none
-TIME_RANGE: MUST be in format 'H:MM AM/PM - H:MM AM/PM' (e.g., '6:00 AM - 7:00 AM'). If user says vague times like 'morning', 'afternoon', 'evening', or doesn't specify exact time, return 'vague' instead of guessing. Only return a specific time if user explicitly provides it.
+TIME_RANGE: For add_task/remove_task, MUST be in format 'H:MM AM/PM - H:MM AM/PM' (e.g., '6:00 AM - 7:00 AM'). If user says vague times like 'morning', 'afternoon', 'evening', or doesn't specify exact time, return 'vague' instead of guessing. Only return a specific time if user explicitly provides it. For modify_task, only extract if user explicitly provides a NEW time - otherwise return 'none'.
 OLD_ACTIVITY: current activity (modify_task only) or none
 NEW_ACTIVITY: new activity name or none
 NOTES: For add_task, include a concise, actionable 'notes' string formatted as a markdown list (use line breaks and dashes). Include 2–3 short practical steps or cues — this applies to all activity types (physical, mindfulness, journaling, social, etc.). Examples:

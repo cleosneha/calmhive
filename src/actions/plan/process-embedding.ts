@@ -26,7 +26,7 @@ export async function embedPlan(
   userId: string,
   planId: number,
   tasks: PlanTask[] | Task[],
-  daysOff: string[]
+  daysOff: string[],
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Format plan data for embedding
@@ -45,9 +45,35 @@ export async function embedPlan(
         apiKey: process.env.PINECONE_API_KEY!,
       });
 
-      const pineconeIndex = pinecone.Index(
-        process.env.PINECONE_INDEX_NAME || "calmhive-embeddings"
+      const indexName =
+        process.env.PINECONE_INDEX_NAME || "calmhive-embeddings";
+
+      // Check if index exists, create if not
+      const indexList = await pinecone.listIndexes();
+      const indexExists = indexList.indexes?.some(
+        (index) => index.name === indexName,
       );
+
+      if (!indexExists) {
+        console.log(`📝 Creating Pinecone index: ${indexName}`);
+        await pinecone.createIndex({
+          name: indexName,
+          dimension: 768, // Dimension for text-embedding-3-small
+          metric: "cosine",
+          spec: {
+            serverless: {
+              cloud: "aws",
+              region: "us-east-1",
+            },
+          },
+        });
+
+        // Wait for index to be ready
+        console.log("⏳ Waiting for index to be ready...");
+        await new Promise((resolve) => setTimeout(resolve, 10000));
+      }
+
+      const pineconeIndex = pinecone.Index(indexName);
 
       // Generate embedding
       const vector = await embeddings.embedQuery(planText);
@@ -68,28 +94,47 @@ export async function embedPlan(
       ]);
     } else {
       // Qdrant for local development
-      const vectorStore = await QdrantVectorStore.fromExistingCollection(
-        embeddings,
-        {
-          url: process.env.QDRANT_URL || "http://localhost:6333",
-          collectionName: "calmhive",
-        }
-      );
-
-      // Use the userId as the point ID
-      const pointId = generatePlanPointId(userId);
-
-      await vectorStore.addDocuments(
-        [
+      try {
+        // Try to use existing collection first
+        const vectorStore = await QdrantVectorStore.fromExistingCollection(
+          embeddings,
           {
-            pageContent: planText,
-            metadata,
+            url: process.env.QDRANT_URL || "http://localhost:6333",
+            collectionName: "calmhive",
           },
-        ],
-        {
-          ids: [pointId],
-        }
-      );
+        );
+
+        // Use the userId as the point ID
+        const pointId = generatePlanPointId(userId);
+
+        await vectorStore.addDocuments(
+          [
+            {
+              pageContent: planText,
+              metadata,
+            },
+          ],
+          {
+            ids: [pointId],
+          },
+        );
+      } catch (existingCollectionError) {
+        console.log("📝 Collection doesn't exist, creating new one...");
+        // Collection doesn't exist, create it with fromDocuments
+        await QdrantVectorStore.fromDocuments(
+          [
+            {
+              pageContent: planText,
+              metadata,
+            },
+          ],
+          embeddings,
+          {
+            url: process.env.QDRANT_URL || "http://localhost:6333",
+            collectionName: "calmhive",
+          },
+        );
+      }
     }
 
     return { success: true };
@@ -106,7 +151,7 @@ export async function embedPlan(
  * Delete plan embeddings from vector store
  */
 export async function deletePlanEmbedding(
-  userId: string
+  userId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     if (isProd) {
@@ -116,7 +161,7 @@ export async function deletePlanEmbedding(
       });
 
       const pineconeIndex = pinecone.Index(
-        process.env.PINECONE_INDEX_NAME || "calmhive-embeddings"
+        process.env.PINECONE_INDEX_NAME || "calmhive-embeddings",
       );
 
       const documentId = `user-${userId}`;
@@ -152,7 +197,7 @@ export async function deletePlanEmbedding(
  */
 function formatPlanForEmbedding(
   tasks: PlanTask[] | Task[],
-  daysOff: string[]
+  daysOff: string[],
 ): string {
   const tasksByDay: Record<string, (PlanTask | Task)[]> = {};
 

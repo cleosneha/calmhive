@@ -1,45 +1,19 @@
+import { parseTimeRange } from "./time-parser";
+
 /**
  * Validation utilities for plan chatbot add task operations
  */
 
 import prisma from "@/lib/db";
-
-/**
- * Validate time range format (HH:MM AM/PM - HH:MM AM/PM or HH:MM - HH:MM)
- */
 export function validateTimeRange(timeRange: string): {
   isValid: boolean;
   error?: string;
 } {
   try {
-    // Support both 12-hour (7:00 AM - 8:00 AM) and 24-hour (07:00 - 08:00) formats
-    const time12HourPattern =
-      /^(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)$/i;
-    const time24HourPattern = /^(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$/;
+    // Parse the time range using shared utility
+    const parsed = parseTimeRange(timeRange);
 
-    let startHour: number, startMin: number, endHour: number, endMin: number;
-
-    if (time12HourPattern.test(timeRange)) {
-      const match = timeRange.match(time12HourPattern);
-      if (!match) return { isValid: false, error: "Invalid time format" };
-
-      const [, sh, sm, sp, eh, em, ep] = match;
-      startHour = parseInt(sh);
-      startMin = parseInt(sm);
-      endHour = parseInt(eh);
-      endMin = parseInt(em);
-
-      // Convert to 24-hour format
-      if (sp.toUpperCase() === "PM" && startHour !== 12) startHour += 12;
-      if (sp.toUpperCase() === "AM" && startHour === 12) startHour = 0;
-      if (ep.toUpperCase() === "PM" && endHour !== 12) endHour += 12;
-      if (ep.toUpperCase() === "AM" && endHour === 12) endHour = 0;
-    } else if (time24HourPattern.test(timeRange)) {
-      const match = timeRange.match(time24HourPattern);
-      if (!match) return { isValid: false, error: "Invalid time format" };
-
-      [, startHour, startMin, endHour, endMin] = match.map(Number);
-    } else {
+    if (!parsed) {
       return {
         isValid: false,
         error:
@@ -47,32 +21,17 @@ export function validateTimeRange(timeRange: string): {
       };
     }
 
-    // Validate hour and minute ranges
-    if (
-      startHour < 0 ||
-      startHour > 23 ||
-      endHour < 0 ||
-      endHour > 23 ||
-      startMin < 0 ||
-      startMin > 59 ||
-      endMin < 0 ||
-      endMin > 59
-    ) {
-      return { isValid: false, error: "Invalid hour or minute values" };
-    }
+    const { startMinutes, endMinutes } = parsed;
 
-    // Calculate duration
-    const startTotalMin = startHour * 60 + startMin;
-    const endTotalMin = endHour * 60 + endMin;
-
-    if (endTotalMin <= startTotalMin) {
+    // Validate that end time is after start time
+    if (endMinutes <= startMinutes) {
       return {
         isValid: false,
         error: "End time must be after start time",
       };
     }
 
-    const durationMin = endTotalMin - startTotalMin;
+    const durationMin = endMinutes - startMinutes;
 
     // Minimum 15 minutes, maximum 8 hours
     if (durationMin < 15) {

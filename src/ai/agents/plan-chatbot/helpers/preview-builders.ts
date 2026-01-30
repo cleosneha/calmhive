@@ -110,13 +110,16 @@ export function buildPreviewMessage(analysis: EditAnalysisResult): string {
 
   switch (editType) {
     case "add_task":
-      return `I have detected a new activity: **${
-        extractedEdit.activity
-      }** on **${extractedEdit.day}** at **${extractedEdit.timeRange}**${
-        extractedEdit.notes
-          ? `\n\n📋 **Suggested approach:**\n${extractedEdit.notes}`
-          : ""
-      }\n\n[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`;
+      return (
+        `Okay, the task you want to add will be added in this format:\n\n` +
+        `📅 **Day:** ${extractedEdit.day}\n\n` +
+        `⏰ **Time:** ${extractedEdit.timeRange}\n\n` +
+        `🎯 **Activity:** ${extractedEdit.activity}${
+          extractedEdit.notes ? `\n\n📝 **Notes:**\n${extractedEdit.notes}` : ""
+        }\n\n` +
+        `Are you okay with adding this task to your plan?\n\n` +
+        `[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`
+      );
 
     case "modify_task": {
       const isActivityChanging =
@@ -125,43 +128,98 @@ export function buildPreviewMessage(analysis: EditAnalysisResult): string {
           extractedEdit.oldActivity?.toLowerCase();
 
       if (isActivityChanging) {
-        return `I have detected **${extractedEdit.oldActivity}** on **${
-          extractedEdit.day
-        }** at **${
-          extractedEdit.timeRange
-        }**\n\nNow as per your request, I suggest changing it to **${
-          extractedEdit.activity
-        }** at **${extractedEdit.timeRange}**${
-          extractedEdit.notes
-            ? `\n\n📋 **Suggested approach:**\n${extractedEdit.notes}`
-            : ""
-        }\n\n[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`;
+        return (
+          `Okay, I found the task **${extractedEdit.oldActivity}** on **${extractedEdit.day}** at **${extractedEdit.timeRange}**.\n\n` +
+          `The updated task will be:\n\n` +
+          `📅 **Day:** ${extractedEdit.day}\n` +
+          `⏰ **Time:** ${extractedEdit.timeRange}\n` +
+          `🎯 **Activity:** ${extractedEdit.activity}${
+            extractedEdit.notes ? `\n📝 **Notes:**\n${extractedEdit.notes}` : ""
+          }\n\n` +
+          `Are you okay with these changes?\n\n` +
+          `[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`
+        );
       } else {
-        return `I have detected **${extractedEdit.oldActivity}** on **${
-          extractedEdit.day
-        }** at **${extractedEdit.timeRange}**${
-          extractedEdit.notes
-            ? `\n\nNow as per your request, I suggest updating the notes:\n\n📋 **Suggested approach:**\n${extractedEdit.notes}`
-            : ""
-        }\n\n[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`;
+        return (
+          `Okay, I found the task **${extractedEdit.oldActivity}** on **${extractedEdit.day}** at **${extractedEdit.timeRange}**.\n\n` +
+          `The updated notes will be:\n\n` +
+          `📝 **Notes:**\n${extractedEdit.notes}\n\n` +
+          `Are you okay with updating the notes?\n\n` +
+          `[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`
+        );
       }
     }
 
     case "remove_task":
-      return `I have detected **${extractedEdit.activity}** on **${
-        extractedEdit.day
-      }** at **${extractedEdit.timeRange}** which you want to remove.${
-        extractedEdit.isLastTask
-          ? "\n\n⚠️ **Warning:** This is the only task in your plan. Deleting it will remove your entire plan. You will need to create a new plan afterwards."
-          : "\n\n⚠️ **Note:** This action is irreversible."
-      }\n\n[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`;
+      return (
+        `Are you sure you want to remove this task?\n\n` +
+        `📅 **Day:** ${extractedEdit.day}\n` +
+        `⏰ **Time:** ${extractedEdit.timeRange}\n` +
+        `🎯 **Activity:** ${extractedEdit.activity}${
+          extractedEdit.isLastTask
+            ? "\n\n⚠️ **Warning:** This is the only task in your plan. Removing it will delete your entire plan. You will need to create a new plan afterwards."
+            : "\n\n⚠️ **Note:** This change is permanent and cannot be undone."
+        }\n\n` +
+        `Do you want to proceed with removing this task?\n\n` +
+        `[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`
+      );
 
     case "change_days_off":
-      return `I have detected you want to set days off as: **${
-        extractedEdit.daysOff?.join(", ") || "None"
-      }**\n\n[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`;
+      return (
+        `Okay, your days off will be updated to:\n\n` +
+        `📅 **Days Off:** ${extractedEdit.daysOff?.join(", ") || "None"}\n\n` +
+        `Are you okay with these changes?\n\n` +
+        `[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`
+      );
+
+    case "add_days_off":
+      return (
+        `Okay, these days will be added to your days off:\n\n` +
+        `📅 **Days to Add:** ${extractedEdit.daysToAdd?.join(", ") || "None"}\n\n` +
+        `Are you okay with adding these days off?\n\n` +
+        `[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`
+      );
+
+    case "remove_days":
+      return (
+        `Are you sure you want to remove these days from your plan?\n\n` +
+        `📅 **Days to Remove:** ${extractedEdit.daysToRemove?.join(", ") || "None"}\n\n` +
+        `⚠️ **Note:** This will permanently remove all tasks from these days. This change cannot be undone.\n\n` +
+        `Do you want to proceed?\n\n` +
+        `[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`
+      );
+
+    case "copy_day":
+      return (
+        `Okay, the tasks from **${extractedEdit.sourceDay}** will be copied to **${extractedEdit.targetDay}**.\n\n` +
+        `Are you okay with copying all tasks from ${extractedEdit.sourceDay} to ${extractedEdit.targetDay}?\n\n` +
+        `[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`
+      );
+
+    case "rename_day":
+      return (
+        `Okay, **${extractedEdit.sourceDay}** will be renamed to **${extractedEdit.targetDay}**.\n\n` +
+        `Are you okay with renaming ${extractedEdit.sourceDay} to ${extractedEdit.targetDay}?\n\n` +
+        `[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`
+      );
+
+    case "swap_days":
+      return (
+        `Okay, **${extractedEdit.day1}** and **${extractedEdit.day2}** will be swapped.\n\n` +
+        `All tasks from ${extractedEdit.day1} will move to ${extractedEdit.day2}, and vice versa.\n\n` +
+        `Are you okay with swapping these two days?\n\n` +
+        `[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`
+      );
+
+    case "delete_plan":
+      return (
+        `⚠️ **Warning:** You are about to delete your entire plan.\n\n` +
+        `This will permanently remove all tasks and cannot be undone. You will need to create a new plan afterwards.\n\n` +
+        `Are you absolutely sure you want to delete your entire plan?\n\n` +
+        `[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`
+      );
 
     default:
-      return "";
+      return `Are you okay with this change?\n\n[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`;
   }
 }

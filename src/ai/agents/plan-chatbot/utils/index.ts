@@ -5,6 +5,12 @@ export { retrievePlanFromEmbeddings } from "./retrieve-plan";
 export { invokeLLM } from "./llm-service";
 export { buildProcessMessagePrompt } from "./prompts";
 export {
+  convertTo24Hour,
+  normalizeTimeRange,
+  parseTimeRange,
+  doTimeRangesOverlap,
+} from "./time-parser";
+export {
   validateAddTask,
   validateTimeRange,
   validateDay,

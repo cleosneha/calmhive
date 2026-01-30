@@ -11,17 +11,44 @@ const vectorStore = isProd
         apiKey: process.env.PINECONE_API_KEY!,
       });
 
-      const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX_NAME!);
+      const indexName = process.env.PINECONE_INDEX_NAME!;
+
+      // Check if index exists
+      const indexList = await pinecone.listIndexes();
+      const indexExists = indexList.indexes?.some(
+        (index) => index.name === indexName,
+      );
+
+      if (!indexExists) {
+        console.warn(
+          `⚠️ Pinecone index '${indexName}' does not exist. Vector store operations may fail.`,
+        );
+        // Return null or throw error - retrieval should handle this gracefully
+        return null;
+      }
+
+      const pineconeIndex = pinecone.Index(indexName);
 
       return await PineconeStore.fromExistingIndex(embeddings, {
         pineconeIndex,
         maxConcurrency: 5,
-        namespace: "calmhive", // Optional namespace
+        namespace: "calmhive",
       });
     })()
-  : await QdrantVectorStore.fromExistingCollection(embeddings, {
-      url: process.env.QDRANT_URL,
-      collectionName: "calmhive",
-    });
+  : (async () => {
+      try {
+        // Try existing collection first
+        return await QdrantVectorStore.fromExistingCollection(embeddings, {
+          url: process.env.QDRANT_URL,
+          collectionName: "calmhive",
+        });
+      } catch (error) {
+        console.warn(
+          "⚠️ Qdrant collection 'calmhive' does not exist. Vector store operations may fail.",
+        );
+        // Return null - retrieval should handle this gracefully
+        return null;
+      }
+    })();
 
 export default vectorStore;

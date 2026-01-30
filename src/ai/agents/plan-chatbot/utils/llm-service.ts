@@ -2,39 +2,25 @@ import { geminiModel, mistralModel } from "@/ai/config/llm";
 
 /**
  * Single centralized place for all LLM invocations in plan chatbot
- * Uses Gemini as primary, Mistral as fallback on 429 errors
+ * Uses Gemini as primary, Mistral as fallback on any error
  */
 export async function invokeLLM(prompt: string): Promise<string> {
   try {
+    console.log("🤖 Trying Gemini model...");
     const response = await geminiModel.invoke(prompt);
     return response.content.toString();
-  } catch (error: unknown) {
-    console.error("Error invoking Gemini LLM:", error);
-
-    // Check if it's a 429 error (rate limit)
-    const isRateLimit =
-      (typeof error === "object" &&
-        error !== null &&
-        "status" in error &&
-        (error as { status: number }).status === 429) ||
-      (typeof error === "object" &&
-        error !== null &&
-        "code" in error &&
-        (error as { code: number }).code === 429) ||
-      (error instanceof Error && error.message?.includes("429"));
-
-    if (isRateLimit) {
-      console.log("Rate limit hit, falling back to Mistral");
-      try {
-        const fallbackResponse = await mistralModel.invoke(prompt);
-        return fallbackResponse.content.toString();
-      } catch (fallbackError) {
-        console.error("Error invoking Mistral fallback:", fallbackError);
-        throw fallbackError;
-      }
+  } catch (geminiError) {
+    console.warn("⚠️ Gemini failed, trying Mistral...", geminiError);
+    try {
+      console.log("🤖 Trying Mistral model...");
+      const fallbackResponse = await mistralModel.invoke(prompt);
+      console.log("✅ Used Mistral model for fallback");
+      return fallbackResponse.content.toString();
+    } catch (mistralError) {
+      console.error("❌ Both models failed:", { geminiError, mistralError });
+      throw new Error(
+        `Both AI models failed. Gemini: ${geminiError instanceof Error ? geminiError.message : "Unknown error"}. Mistral: ${mistralError instanceof Error ? mistralError.message : "Unknown error"}`,
+      );
     }
-
-    // For other errors, throw the original error
-    throw error;
   }
 }

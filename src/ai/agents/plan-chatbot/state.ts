@@ -86,6 +86,7 @@ export const PlanChatbotState = Annotation.Root({
       | "remove_days"
       | "copy_day"
       | "rename_day"
+      | "add_days_off"
       | "add_task"
       | "modify_task"
       | null;

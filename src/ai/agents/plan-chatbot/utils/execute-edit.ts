@@ -13,46 +13,7 @@ import {
   executeRenameDay,
   executeSwapDays,
 } from "./execute-day-operations";
-
-/**
- * Normalize time range string for consistent comparison
- * Converts to 24-hour format like "08:00-08:30"
- */
-function normalizeTimeRange(timeRange: string): string {
-  // Remove extra spaces and standardize
-  let normalized = timeRange.replace(/\s+/g, " ").trim();
-
-  // If it contains AM/PM, convert to 24-hour
-  if (normalized.includes("AM") || normalized.includes("PM")) {
-    // Split by ' - ' or similar
-    const parts = normalized.split(/\s*-\s*/);
-    if (parts.length === 2) {
-      const start = convertTo24Hour(parts[0].trim());
-      const end = convertTo24Hour(parts[1].trim());
-      return `${start}-${end}`;
-    }
-  }
-
-  // If already in 24-hour format like "08:00-08:30", clean it
-  normalized = normalized.replace(/\s*-\s*/g, "-");
-  return normalized;
-}
-
-/**
- * Convert 12-hour time to 24-hour format
- */
-function convertTo24Hour(timeStr: string): string {
-  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-  if (!match) return timeStr;
-
-  const [_, hour, minute, period] = match;
-  let h = parseInt(hour, 10);
-
-  if (period.toUpperCase() === "PM" && h !== 12) h += 12;
-  if (period.toUpperCase() === "AM" && h === 12) h = 0;
-
-  return `${h.toString().padStart(2, "0")}:${minute}`;
-}
+import { normalizeTimeRange } from "./time-parser";
 
 /**
  * Execute plan edit in database and vector store
@@ -156,7 +117,7 @@ export async function executePlanEdit(
         // Use the addTask action which handles all validations, embedding, and hoursSummary
         const addResult = await addTask({
           day,
-          timeRange,
+          timeRange: normalizeTimeRange(timeRange),
           activity,
           notes: notes || null,
         });

@@ -57,7 +57,7 @@ async function validateTimeRange(
   taskId: number,
   day: string,
   newTimeRange: string,
-  planId: number
+  planId: number,
 ): Promise<string | null> {
   // Get all tasks for this day in the plan
   const tasksOnDay = await prisma.task.findMany({
@@ -87,7 +87,7 @@ async function validateTimeRange(
  * Save task edits to database and update vector stores
  */
 export async function saveTaskEdit(
-  taskInput: TaskUpdateInput
+  taskInput: TaskUpdateInput,
 ): Promise<SaveEditResponse> {
   try {
     // Get current user
@@ -126,7 +126,7 @@ export async function saveTaskEdit(
         taskInput.id,
         taskInput.day,
         taskInput.timeRange,
-        existingTask.planId
+        existingTask.planId,
       );
 
       if (conflictError) {
@@ -143,7 +143,7 @@ export async function saveTaskEdit(
         taskInput.id,
         taskInput.day,
         taskInput.timeRange,
-        existingTask.planId
+        existingTask.planId,
       );
 
       if (conflictError) {
@@ -181,7 +181,7 @@ export async function saveTaskEdit(
     ) {
       const newHoursSummary = calculateHoursSummaryFromTasks(
         updatedPlan.tasks,
-        updatedPlan.daysOff
+        updatedPlan.daysOff,
       );
 
       // Update plan with new hoursSummary
@@ -247,7 +247,7 @@ export async function saveTaskEdit(
                     task.personalNotes
                       ? ` (Personal: ${task.personalNotes})`
                       : ""
-                  }`
+                  }`,
               )
               .join("; ");
             return `${day}: ${taskList}`;
@@ -269,7 +269,7 @@ export async function saveTaskEdit(
             apiKey: process.env.PINECONE_API_KEY!,
           });
           const pineconeIndex = pinecone.Index(
-            process.env.PINECONE_INDEX_NAME || "calmhive-embeddings"
+            process.env.PINECONE_INDEX_NAME || "calmhive-embeddings",
           );
 
           // Query for vectors with matching userId metadata
@@ -332,7 +332,7 @@ export async function saveTaskEdit(
               verifyResults.matches.length,
               verifyResults.matches.length > 0
                 ? `ID: ${verifyResults.matches[0].id}`
-                : ""
+                : "",
             );
           } catch (upsertError) {
             console.error("❌ Upsert operation failed:", upsertError);
@@ -341,6 +341,14 @@ export async function saveTaskEdit(
         } else {
           // Qdrant: Use stable UUID and upsert
           const store = await vectorStore;
+          if (!store) {
+            console.warn("⚠️ Vector store not available, skipping embedding");
+            return {
+              success: true,
+              message:
+                "Edit saved successfully, but embedding was skipped due to vector store unavailability.",
+            };
+          }
           const pointId = generatePlanPointId(user.id);
 
           await store.addDocuments(
@@ -355,12 +363,12 @@ export async function saveTaskEdit(
                 },
               },
             ],
-            { ids: [pointId] }
+            { ids: [pointId] },
           );
 
           console.log(
             "✅ Plan document upserted in Qdrant for userId:",
-            user.id
+            user.id,
           );
         }
       } else {
@@ -374,8 +382,10 @@ export async function saveTaskEdit(
 
     // Only return allowed status values for TaskUpdateInput
     const allowedStatuses = ["pending", "done", "partial"] as const;
-    const safeStatus = allowedStatuses.includes(updatedTask.status as typeof allowedStatuses[number])
-      ? (updatedTask.status as typeof allowedStatuses[number])
+    const safeStatus = allowedStatuses.includes(
+      updatedTask.status as (typeof allowedStatuses)[number],
+    )
+      ? (updatedTask.status as (typeof allowedStatuses)[number])
       : "pending";
 
     return {

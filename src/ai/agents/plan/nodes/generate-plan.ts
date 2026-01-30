@@ -1,4 +1,4 @@
-import model from "@/ai/config/llm";
+import { geminiModel, mistralModel } from "@/ai/config/llm";
 import type { PlanStateType } from "../state";
 import { buildPlanGenerationPrompt } from "../utils/prompt-builder";
 import { parseAIResponse } from "../utils/plan-formatter";
@@ -32,8 +32,31 @@ export async function generatePlanNode(
       validationErrors.length > 0 ? validationErrors : undefined,
     );
 
-    // Call LLM
-    const response = await model.invoke(prompt);
+    // Try Gemini first, fallback to Mistral
+    let response;
+    let usedModel = "Gemini";
+
+    try {
+      console.log("🤖 Trying Gemini model...");
+      response = await geminiModel.invoke(prompt);
+    } catch (geminiError) {
+      console.warn("⚠️ Gemini failed, trying Mistral...", geminiError);
+      try {
+        usedModel = "Mistral";
+        console.log("🤖 Trying Mistral model...");
+        response = await mistralModel.invoke(prompt);
+      } catch (mistralError) {
+        console.error("❌ Both models failed:", { geminiError, mistralError });
+        const { error: errorMessage } = handleAIError(mistralError);
+        return {
+          error: `Both AI models failed: ${errorMessage}`,
+          generatedTasks: [],
+          isComplete: false,
+        };
+      }
+    }
+
+    console.log(`✅ Used ${usedModel} model for generation`);
     const content =
       typeof response.content === "string"
         ? response.content
