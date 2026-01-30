@@ -52,14 +52,31 @@ export default function PlanChatbot({
 
       if (
         lastMessage.role === "assistant" &&
-        lastMessage.content.includes("Plan updated successfully") &&
+        (lastMessage.content.includes("Plan updated successfully") ||
+          lastMessage.content.includes("✅") ||
+          lastMessage.content.includes("updated successfully")) &&
         lastSuccessMessageId !== messageId
       ) {
-        // Use a microtask to avoid cascading renders
-        Promise.resolve().then(() => {
-          setLastSuccessMessageId(messageId);
-          onPlanUpdate?.();
-        });
+        const isSuccessMessage =
+          lastMessage.role === "assistant" &&
+          (lastMessage.content.includes("Plan updated successfully") ||
+            lastMessage.content.includes("✅") ||
+            lastMessage.content.includes("updated successfully") ||
+            lastMessage.content.includes("successfully") ||
+            (lastMessage.content.includes("updated") &&
+              lastMessage.content.includes("!")));
+
+        if (isSuccessMessage && lastSuccessMessageId !== messageId) {
+          console.log(
+            "[PlanChatbot] Detected successful plan update, triggering refresh",
+          );
+          console.log("[PlanChatbot] Message content:", lastMessage.content);
+          // Use a microtask to avoid cascading renders
+          Promise.resolve().then(() => {
+            setLastSuccessMessageId(messageId);
+            onPlanUpdate?.();
+          });
+        }
       }
     }
   }, [messages, onPlanUpdate, lastSuccessMessageId]);

@@ -31,13 +31,16 @@ export function usePlanData(initialPlan: Plan) {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const refreshPlan = useCallback(async () => {
+    console.log("[usePlanData] Starting plan refresh");
     setIsRefreshing(true);
     try {
       const result = await refreshPlanAction();
       if (result.success && result.data) {
+        console.log("[usePlanData] Plan refresh successful, updating state");
         setPlan(result.data);
         return { success: true };
       }
+      console.log("[usePlanData] Plan refresh failed:", result.message);
       return { success: false, error: result.message };
     } catch (error) {
       console.error("Error refreshing plan:", error);
