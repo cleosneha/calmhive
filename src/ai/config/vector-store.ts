@@ -4,8 +4,9 @@ import { Pinecone } from "@pinecone-database/pinecone";
 import embeddings from "./embedding";
 
 const isProd = process.env.NODE_ENV === "production";
+const usePinecone = isProd || !!process.env.PINECONE_API_KEY;
 
-const vectorStore = isProd
+const vectorStore = usePinecone
   ? (async () => {
       const pinecone = new Pinecone({
         apiKey: process.env.PINECONE_API_KEY!,
@@ -32,7 +33,7 @@ const vectorStore = isProd
       return await PineconeStore.fromExistingIndex(embeddings, {
         pineconeIndex,
         maxConcurrency: 5,
-        namespace: "calmhive",
+        namespace: "plans",
       });
     })()
   : (async () => {
