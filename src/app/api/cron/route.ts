@@ -65,10 +65,8 @@ export async function GET(request: NextRequest) {
       console.log("[CRON] Task statuses reset to pending for new week");
     }
 
-    // Send notification emails to users with insights
-    if (result.data && result.data.created > 0) {
-      await sendWeeklyInsightsEmails();
-    }
+    // Send notification emails to users with insights (always send weekly notification)
+    await sendWeeklyInsightsEmails();
 
     // Aggregate monthly and yearly data for all users
     await aggregateMonthlyDataForAllUsers();
