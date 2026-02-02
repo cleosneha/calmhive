@@ -45,7 +45,7 @@ export default function RightSheet() {
     entries,
     loading,
     hasMore,
-    observerRef,
+    lastEntryRef,
     setQuery,
     setSortBy,
     setMood,
@@ -174,47 +174,55 @@ export default function RightSheet() {
           </div>
         </SheetHeader>
 
-        {/* Entries List */}
+        {/* Entries List - Scrollable Container */}
         <div className="flex-1 overflow-y-auto px-6">
           <div className="space-y-2">
-            {entries.map((entry) => (
-              <div
-                key={entry.id}
-                onClick={() => handleEntryClick(entry.id)}
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--ch-taupe)] cursor-pointer transition-colors border-b border-slate-100 last:border-b-0"
-              >
-                {entry.pinned && (
-                  <BsPin className="text-[var(--ch-sage-dark)] flex-shrink-0" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-sm truncate">
-                    {entry.title}
-                  </h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    {entry.mood && (
-                      <div className="text-xs">
-                        {React.createElement(getMoodIcon(entry.mood).icon, {
-                          className: `${getMoodIcon(entry.mood).color} text-sm`,
-                        })}
-                      </div>
-                    )}
-                    <span className="text-xs text-[var(--ch-muted)]">
-                      {entry.date.toLocaleDateString("en-US")}
-                    </span>
-                    {entry.isPrivate && (
+            {entries.map((entry, index) => {
+              const isLastEntry = index === entries.length - 1;
+              return (
+                <div
+                  key={entry.id}
+                  ref={isLastEntry && hasMore ? lastEntryRef : undefined}
+                  onClick={() => handleEntryClick(entry.id)}
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--ch-taupe)] cursor-pointer transition-colors border-b border-slate-100 last:border-b-0"
+                >
+                  {entry.pinned && (
+                    <BsPin className="text-[var(--ch-sage-dark)] flex-shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-sm truncate">
+                      {entry.title}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      {entry.mood && (
+                        <div className="text-xs">
+                          {React.createElement(getMoodIcon(entry.mood).icon, {
+                            className: `${getMoodIcon(entry.mood).color} text-sm`,
+                          })}
+                        </div>
+                      )}
                       <span className="text-xs text-[var(--ch-muted)]">
-                        Private
+                        {entry.date.toLocaleDateString("en-US")}
                       </span>
-                    )}
+                      {entry.isPrivate && (
+                        <span className="text-xs text-[var(--ch-muted)]">
+                          Private
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
+
+            {/* Loading indicator */}
             {loading && (
               <div className="text-center py-4">
                 <div className="text-sm text-[var(--ch-muted)]">Loading...</div>
               </div>
             )}
+
+            {/* No more entries message */}
             {!hasMore && entries.length > 0 && (
               <div className="text-center py-4">
                 <div className="text-sm text-[var(--ch-muted)]">
@@ -222,6 +230,8 @@ export default function RightSheet() {
                 </div>
               </div>
             )}
+
+            {/* Empty state */}
             {entries.length === 0 && !loading && (
               <div className="text-center py-4">
                 <div className="text-sm text-[var(--ch-muted)]">
@@ -230,7 +240,6 @@ export default function RightSheet() {
               </div>
             )}
           </div>
-          <div ref={observerRef} className="h-4" />
         </div>
       </SheetContent>
     </Sheet>

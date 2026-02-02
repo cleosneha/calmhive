@@ -58,6 +58,7 @@ export async function getJournalEntries({
   try {
     // Get current user
     const user = await getCurrentUser();
+    console.log("Current user in getJournalEntries:", user);
     if (!user?.id) {
       return { success: false, message: "Not authenticated", data: null };
     }
@@ -104,6 +105,10 @@ export async function getJournalEntries({
       take: limit,
       skip: offset,
     });
+
+    console.log(
+      `Fetched ${entries.length} journal entries for user ${user.id}`,
+    );
 
     const hasMore = offset + entries.length < total;
 

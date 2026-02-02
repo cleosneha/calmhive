@@ -4,6 +4,8 @@ import { getJournalEntries } from "@/fetchers/journal/entry-list";
 import type { Mood } from "@/types/journal";
 import type { JournalEntryListItem } from "@/fetchers/journal/entry-list";
 
+const ENTRIES_PER_PAGE = 15;
+
 export function useJournalEntries() {
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<"latest" | "oldest">("latest");
@@ -11,72 +13,90 @@ export function useJournalEntries() {
   const [entries, setEntries] = useState<JournalEntryListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [offset, setOffset] = useState(0);
   const router = useRouter();
-  const observerRef = useRef<HTMLDivElement>(null);
 
-  const limit = 20;
+  // Use refs to track state without causing re-renders
+  const offsetRef = useRef(0);
+  const isFetchingRef = useRef(false);
+  const hasMoreRef = useRef(true);
 
   const fetchEntries = useCallback(
-    async (reset = false) => {
-      if (loading) return;
+    async (reset: boolean = false) => {
+      // Prevent duplicate fetches
+      if (isFetchingRef.current) return;
+      if (!reset && !hasMoreRef.current) return;
 
+      const currentOffset = reset ? 0 : offsetRef.current + ENTRIES_PER_PAGE;
+
+      isFetchingRef.current = true;
       setLoading(true);
+
       try {
         const result = await getJournalEntries({
-          limit,
-          offset: reset ? 0 : offset,
+          limit: ENTRIES_PER_PAGE,
+          offset: currentOffset,
           query: query || undefined,
           sortBy,
           mood,
         });
 
         if (result.success && result.data) {
-          if (reset) {
-            setEntries(result.data.entries);
-          } else {
-            setEntries((prev) => [...prev, ...result.data!.entries]);
-          }
+          setEntries((prev) =>
+            reset ? result.data!.entries : [...prev, ...result.data!.entries],
+          );
+
+          hasMoreRef.current = result.data.hasMore;
+          offsetRef.current = currentOffset;
           setHasMore(result.data.hasMore);
-          if (!reset) {
-            setOffset((prev) => prev + result.data!.entries.length);
-          }
         }
       } catch (error) {
-        console.error("Failed to fetch entries:", error);
+        console.error("[Fetch] Error:", error);
       } finally {
+        isFetchingRef.current = false;
         setLoading(false);
       }
     },
-    [loading, offset, query, sortBy, mood],
+    [query, sortBy, mood],
   );
 
+  // Reset and fetch when filters change
   useEffect(() => {
-    // Reset and fetch when filters change
-    setOffset(0);
     setEntries([]);
+    offsetRef.current = 0;
+    hasMoreRef.current = true;
     setHasMore(true);
+    isFetchingRef.current = false;
     fetchEntries(true);
-  }, [query, sortBy, mood]);
+  }, [query, sortBy, mood, fetchEntries]);
 
-  useEffect(() => {
-    if (offset === 0) return; // Don't fetch on initial load
+  // Callback ref for the sentinel element - sets up observer when element mounts
+  const lastEntryRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (!node) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
-          fetchEntries();
-        }
-      },
-      { threshold: 0.5, rootMargin: "0px 0px 50px 0px" },
-    );
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (
+            entries[0].isIntersecting &&
+            hasMoreRef.current &&
+            !isFetchingRef.current
+          ) {
+            fetchEntries(false);
+          }
+        },
+        {
+          rootMargin: "100px",
+          threshold: 0.1,
+        },
+      );
 
-    if (observerRef.current) {
-      observer.observe(observerRef.current);
-    }
+      observer.observe(node);
 
-    return () => observer.disconnect();
-  }, [hasMore, loading, offset, fetchEntries]);
+      // Cleanup function - disconnect observer when node unmounts
+      return () => observer.disconnect();
+    },
+    [fetchEntries],
+  );
 
   const handleEntryClick = useCallback(
     (entryId: number) => {
@@ -86,16 +106,13 @@ export function useJournalEntries() {
   );
 
   return {
-    // State
     query,
     sortBy,
     mood,
     entries,
     loading,
     hasMore,
-    observerRef,
-
-    // Actions
+    lastEntryRef,
     setQuery,
     setSortBy,
     setMood,
