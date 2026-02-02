@@ -24,9 +24,10 @@ export default transporter;
 export async function sendWeeklyInsightsEmail(
   userEmail: string,
   userName: string,
+  userId: string,
 ): Promise<EmailResult> {
   try {
-    const htmlContent = generateWeeklyInsightsEmailHTML(userName);
+    const htmlContent = generateWeeklyInsightsEmailHTML(userName, userId);
 
     const mailOptions = {
       from: process.env.GMAIL_USER,

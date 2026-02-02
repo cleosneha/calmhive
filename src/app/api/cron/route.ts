@@ -170,7 +170,7 @@ async function aggregateMonthlyDataForAllUsers(): Promise<void> {
 
 async function sendWeeklyInsightsEmails(): Promise<void> {
   try {
-    // Get all users with email and name
+    // Get all users with email and name, excluding those who opted out
     const users = await prisma.user.findMany({
       select: {
         id: true,
@@ -181,6 +181,7 @@ async function sendWeeklyInsightsEmails(): Promise<void> {
         plan: {
           isNot: null,
         },
+        stopEmail: false, // Only send to users who haven't opted out
       },
     });
 
@@ -196,6 +197,7 @@ async function sendWeeklyInsightsEmails(): Promise<void> {
       const result = await sendWeeklyInsightsEmail(
         user.email,
         user.name || "User",
+        user.id,
       );
 
       if (result.success) {

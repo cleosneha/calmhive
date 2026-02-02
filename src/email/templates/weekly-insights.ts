@@ -4,7 +4,10 @@
  * Matches CalmHive theme and brand identity
  */
 
-export function generateWeeklyInsightsEmailHTML(userName: string): string {
+export function generateWeeklyInsightsEmailHTML(
+  userName: string,
+  userId: string,
+): string {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   return `
@@ -216,6 +219,14 @@ export function generateWeeklyInsightsEmailHTML(userName: string): string {
           <p style="font-size: 12px; color: #aaa;">
             © 2026 CalmHive. All rights reserved.
           </p>
+          <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #eee;">
+            <p style="font-size: 12px; color: #888; margin: 0 0 8px 0;">
+              Don't want to receive these weekly updates?
+            </p>
+            <a href="${appUrl}/api/unsubscribe?userId=${userId}" style="color: #666; text-decoration: underline; font-size: 12px;">
+              Unsubscribe from weekly emails
+            </a>
+          </div>
         </div>
       </div>
     </body>

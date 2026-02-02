@@ -7,6 +7,7 @@ export interface UserProfileData {
   email: string;
   name: string | null;
   image: string | null;
+  stopEmail: boolean;
   onboarding: {
     age: number;
     goals: string;
@@ -36,6 +37,7 @@ export async function fetchUserProfile(): Promise<UserProfileData | null> {
         email: true,
         name: true,
         image: true,
+        stopEmail: true,
         onboarding: {
           select: {
             age: true,
@@ -68,6 +70,7 @@ export async function fetchUserProfile(): Promise<UserProfileData | null> {
       email: userWithOnboarding.email,
       name: userWithOnboarding.name,
       image: userWithOnboarding.image,
+      stopEmail: userWithOnboarding.stopEmail,
       onboarding: userWithOnboarding.onboarding
         ? {
             ...userWithOnboarding.onboarding,

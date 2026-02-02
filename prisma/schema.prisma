@@ -27,6 +27,7 @@ model User {
     badges                        String[]  @default([])
     encryptedPin                  String?
     recentlyVisitedJournalEntries Int[]     @default([]) // Array of JournalEntry IDs (max 6, most recent first)
+    stopEmail                     Boolean   @default(false)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
