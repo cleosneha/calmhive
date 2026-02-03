@@ -117,6 +117,15 @@ export async function processRemoveDays(
   const daysToRemove = extractedEdit!.daysToRemove || [];
   console.log("  📅 [remove_days] daysToRemove:", daysToRemove);
 
+  // Handle case where no days need to be removed (plan already matches requested days)
+  if (daysToRemove.length === 1 && daysToRemove[0] === "none") {
+    console.log("  ✅ [remove_days] No days to remove - plan already matches");
+    return {
+      shouldConfirm: false,
+      errorMessage: "Your plan is already set to the specified days.",
+    };
+  }
+
   // If days not specified, ask user
   if (daysToRemove.length === 0) {
     console.log(
@@ -153,6 +162,14 @@ export async function processRemoveDays(
   }
 
   console.log("  ✅ [remove_days] Validation passed");
+  let confirmMessage = `⚠️ **Confirmation Required**\n\nYou want to remove **${validation.normalizedDays!.join(", ")}** from your plan. All tasks on these days will be permanently deleted.\n\n`;
+
+  if (validation.missingDays && validation.missingDays.length > 0) {
+    confirmMessage += `Note: The following days you specified don't exist in your plan and were ignored: ${validation.missingDays.join(", ")}.\n\n`;
+  }
+
+  confirmMessage += `Do you want to proceed?\n\n[CONFIRM_BUTTON][CANCEL_BUTTON]`;
+
   return {
     shouldConfirm: true,
     pendingEdit: {
@@ -169,7 +186,7 @@ export async function processRemoveDays(
         ],
       },
     },
-    confirmMessage: `⚠️ **Confirmation Required**\n\nYou want to remove **${validation.normalizedDays!.join(", ")}** from your plan. All tasks on these days will be permanently deleted.\n\nDo you want to proceed?\n\n[CONFIRM_BUTTON][CANCEL_BUTTON]`,
+    confirmMessage,
   };
 }
 

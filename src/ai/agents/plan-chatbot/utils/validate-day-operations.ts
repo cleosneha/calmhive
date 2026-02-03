@@ -154,22 +154,14 @@ export async function validateRemoveDays(
     (day) => !existingDays.includes(day),
   );
 
-  if (missingDays.length === normalizedDays.length) {
-    errors.push(
-      `None of the specified days (${normalizedDays.join(", ")}) exist in your plan.`,
-    );
-    return { isValid: false, errors, missingDays };
-  }
-
-  if (missingDays.length > 0) {
-    errors.push(
-      `These days don't exist in your plan: ${missingDays.join(", ")}.`,
-    );
-  }
+  // Filter to only existing days
+  const validDaysToRemove = normalizedDays.filter(
+    (day) => !missingDays.includes(day),
+  );
 
   // Check if removing would leave plan empty
   const remainingDays = existingDays.filter(
-    (day) => !normalizedDays.includes(day),
+    (day) => !validDaysToRemove.includes(day),
   );
   if (remainingDays.length === 0) {
     errors.push(
@@ -178,10 +170,15 @@ export async function validateRemoveDays(
     return { isValid: false, errors };
   }
 
+  if (validDaysToRemove.length === 0) {
+    errors.push("No valid days to remove from your plan.");
+    return { isValid: false, errors };
+  }
+
   return {
-    isValid: errors.length === 0,
+    isValid: true,
     errors,
-    normalizedDays: normalizedDays.filter((d) => !missingDays.includes(d)),
+    normalizedDays: validDaysToRemove,
     existingDays,
     missingDays,
   };

@@ -69,7 +69,8 @@ Day Operation Rules (CRITICAL - check these first):
   * ALWAYS extract all days mentioned and set DAYS_TO_ADD
 - REMOVE_DAYS: Keywords "remove days", "delete days", "get rid of days", "make my current plan of 2 days - monday and tuesday"
   * Example: "remove Monday from plan" → EDIT_TYPE=remove_days, DAYS_TO_REMOVE=Monday
-* "make my current plan of 2 days - monday and tuesday" → EDIT_TYPE=remove_days, DAYS_TO_REMOVE=other days(exclude day off) not monday and tuesday
+  * For "make my current plan of X days - day1, day2, day3", set EDIT_TYPE=remove_days, DAYS_TO_REMOVE=all days in the Plan that are not day1, day2, day3. If no days to remove (listed days match current plan), set DAYS_TO_REMOVE=none
+  * ALWAYS check the Plan context to determine what days exist. Do not assume the plan has 7 days or any specific days. Only remove days that actually exist in the plan.
   * ALWAYS extract all days mentioned and set DAYS_TO_REMOVE
 - DELETE_PLAN: Keywords "delete entire plan", "remove whole plan", "delete everything", "clear all tasks", "start over"
   * Example: "delete the entire plan" → EDIT_TYPE=delete_plan
