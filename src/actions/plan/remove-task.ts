@@ -26,7 +26,7 @@ interface RemoveTaskResponse {
  * - Otherwise, updates the plan's embedding with remaining tasks
  */
 export async function removeTask(
-  input: RemoveTaskInput
+  input: RemoveTaskInput,
 ): Promise<RemoveTaskResponse> {
   try {
     const user = await getCurrentUser();
@@ -107,7 +107,7 @@ export async function removeTask(
     // Recalculate hoursSummary
     const newHoursSummary = calculateHoursSummaryFromTasks(
       remainingTasks,
-      plan.daysOff
+      plan.daysOff,
     );
 
     // Update plan with new hoursSummary
@@ -130,13 +130,13 @@ export async function removeTask(
       user.id,
       updatedPlan.id,
       updatedPlan.tasks,
-      updatedPlan.daysOff
+      updatedPlan.daysOff,
     );
 
     if (!embedResult.success) {
       console.warn(
         "⚠️ Failed to update plan embedding after task deletion:",
-        embedResult.error
+        embedResult.error,
       );
       // Don't fail the operation if embedding fails, as the DB is already updated
     }

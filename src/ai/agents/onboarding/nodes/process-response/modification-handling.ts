@@ -21,7 +21,7 @@ function getQuestionIndexByKey(key: string): number {
 export async function handleModificationRequest(
   validationResult: ValidationResult,
   question: OnboardingQuestion,
-  step: number
+  step: number,
 ): Promise<Partial<OnboardingStateType> | null> {
   // Check if modification is requested
   if (
@@ -34,7 +34,7 @@ export async function handleModificationRequest(
 
   // Find the question being modified
   const modifiedQuestion = ONBOARDING_QUESTIONS.find(
-    (q) => q.key === validationResult.modifiedField
+    (q) => q.key === validationResult.modifiedField,
   );
 
   if (!modifiedQuestion) {
@@ -45,7 +45,7 @@ export async function handleModificationRequest(
   const modifiedValidation = await validateUserResponse(
     validationResult.modifiedValue,
     modifiedQuestion.text,
-    question.text // Current question as "next" for context
+    question.text, // Current question as "next" for context
   );
 
   // Check if modification has safety issues
@@ -100,7 +100,7 @@ export async function handleModificationRequest(
       question,
       step,
       updatedResponses,
-      acknowledgmentMsg
+      acknowledgmentMsg,
     );
   }
 
@@ -108,7 +108,7 @@ export async function handleModificationRequest(
   const message = buildMessage(
     { ...modifiedValidation, followUpText: acknowledgmentMsg },
     undefined,
-    question
+    question,
   );
 
   return {
@@ -129,7 +129,7 @@ async function handleGoalsModification(
   currentQuestion: OnboardingQuestion,
   currentStep: number,
   updatedResponses: Record<string, string>,
-  acknowledgmentMsg: string
+  acknowledgmentMsg: string,
 ): Promise<Partial<OnboardingStateType>> {
   // Build acknowledgment message
   let followUp = acknowledgmentMsg;
@@ -147,7 +147,7 @@ async function handleGoalsModification(
     const message = buildMessage(
       { ...validationResult, followUpText: followUp },
       undefined,
-      undefined
+      undefined,
     );
 
     return {
@@ -164,7 +164,7 @@ async function handleGoalsModification(
   const goalRevalidation = await validateUserResponse(
     validationResult.modifiedValue ?? "",
     goalsQuestion?.text ?? "What are your main goals for using CalmHive?",
-    "Tell me more about this goal."
+    "Tell me more about this goal.",
   );
 
   if (goalRevalidation.goalSpecificQuestion) {
@@ -175,7 +175,7 @@ async function handleGoalsModification(
     const message = buildMessage(
       { ...goalRevalidation, followUpText: followUp },
       undefined,
-      undefined
+      undefined,
     );
 
     return {
@@ -191,7 +191,7 @@ async function handleGoalsModification(
   const message = buildMessage(
     { ...modifiedValidation, followUpText: followUp },
     undefined,
-    undefined
+    undefined,
   );
 
   return {

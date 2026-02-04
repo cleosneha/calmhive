@@ -33,7 +33,7 @@ export interface ValidationResult {
 export async function validateUserResponse(
   userResponse: string,
   currentQuestionText: string,
-  nextQuestionText: string
+  nextQuestionText: string,
 ): Promise<ValidationResult> {
   const trimmedResponse = userResponse.trim();
 
@@ -41,9 +41,8 @@ export async function validateUserResponse(
   // If question asks for age, verify numeric age is in [4, 110]
   // and map to an age range. If invalid, prompt user to re-enter.
   try {
-    const { mapAgeToRange, isAgeQuestion } = await import(
-      "../utils/age-mapper"
-    );
+    const { mapAgeToRange, isAgeQuestion } =
+      await import("../utils/age-mapper");
     if (isAgeQuestion(currentQuestionText)) {
       const mapped = mapAgeToRange(trimmedResponse);
       if (!mapped) {
@@ -73,7 +72,7 @@ export async function validateUserResponse(
     const llmResult = await performLLMValidation(
       trimmedResponse,
       currentQuestionText,
-      nextQuestionText
+      nextQuestionText,
     );
 
     console.log("\n✅ [Validation Logic Check]");

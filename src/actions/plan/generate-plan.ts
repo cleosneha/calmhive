@@ -23,7 +23,6 @@ export async function generatePlan(): Promise<
       };
     }
 
-
     // 2. Check if plan already exists
     const existingPlan = await prisma.plan.findUnique({
       where: { userId: user.id },
@@ -61,7 +60,7 @@ export async function generatePlan(): Promise<
         configurable: {
           thread_id: `plan-${user.id}-${Date.now()}`,
         },
-      }
+      },
     );
 
     // 5. Check for errors
@@ -119,7 +118,7 @@ export async function generatePlan(): Promise<
       user.id,
       plan.id,
       plan.tasks,
-      onboarding.daysOff
+      onboarding.daysOff,
     );
 
     if (!embedResult.success) {
@@ -142,7 +141,7 @@ export async function generatePlan(): Promise<
       ]);
       await pool.query(
         "DELETE FROM checkpoint_writes WHERE thread_id LIKE $1",
-        [`plan-${user.id}%`]
+        [`plan-${user.id}%`],
       );
 
       await pool.end();
