@@ -40,6 +40,7 @@ import type { Mood } from "@/types/journal";
 import { useJournalEntries } from "@/hooks/use-journal-entries";
 import { useJournalHome } from "@/hooks/use-journal-home";
 import { SecurityPinDialog } from "@/components/journal/security-pin-dialog";
+import { DeleteEntryDialog } from "@/components/journal/delete-entry-dialog";
 
 const MOODS: Mood[] = [
   "HAPPY",
@@ -71,6 +72,11 @@ export default function RightSheet() {
 
   const [isLockedDialogOpen, setIsLockedDialogOpen] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [entryToDelete, setEntryToDelete] = useState<{
+    id: number;
+    title: string;
+  } | null>(null);
 
   const handleEntryClickWithClose = (entryId: number) => {
     setIsSheetOpen(false);
@@ -80,6 +86,21 @@ export default function RightSheet() {
   const handleEditWithClose = (entryId: number, e: React.MouseEvent) => {
     setIsSheetOpen(false);
     handleEdit(entryId, e);
+  };
+
+  const handleDeleteClick = (entryId: number, entryTitle: string) => {
+    setEntryToDelete({ id: entryId, title: entryTitle });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (entryToDelete) {
+      const event = new MouseEvent(
+        "click",
+      ) as unknown as React.MouseEvent<HTMLElement>;
+      handleDelete(entryToDelete.id, event);
+      setEntryToDelete(null);
+    }
   };
 
   const handlePinSuccess = () => {
@@ -95,7 +116,7 @@ export default function RightSheet() {
     );
 
     // Navigate to locked chats section
-    window.location.href = "/user/journal/locked-chats";
+    window.location.href = "/user/journal/locked-entries";
   };
 
   return (
@@ -233,7 +254,7 @@ export default function RightSheet() {
                           </div>
                         )}
                         <span className="text-xs text-[var(--ch-muted)]">
-                          {entry.date.toLocaleDateString("en-US")}
+                          {entry.date.toLocaleDateString("en-GB")}
                         </span>
                         {entry.isPrivate && (
                           <span className="text-xs text-[var(--ch-muted)]">
@@ -276,7 +297,9 @@ export default function RightSheet() {
                         {entry.isPrivate ? "Make Public" : "Mark as Private"}
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={(e) => handleDelete(entry.id, e)}
+                        onClick={(e) =>
+                          handleDeleteClick(entry.id, entry.title)
+                        }
                         className="text-red-600 focus:text-red-600"
                       >
                         <FiTrash className="mr-2 h-4 w-4" />
@@ -315,6 +338,13 @@ export default function RightSheet() {
           </div>
         </div>
       </SheetContent>
+
+      <DeleteEntryDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={confirmDelete}
+        entryTitle={entryToDelete?.title}
+      />
     </Sheet>
   );
 }

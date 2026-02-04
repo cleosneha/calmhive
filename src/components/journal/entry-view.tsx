@@ -36,6 +36,14 @@ export default function EntryView({ entry, onEdit }: EntryViewProps) {
     }).format(date);
   };
 
+  const formatDateOnly = (date: Date) => {
+    return new Intl.DateTimeFormat("en-GB", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(date);
+  };
+
   const onShare = async () => {
     try {
       const base64 = await generateEntryPDF(entry);
@@ -78,14 +86,14 @@ export default function EntryView({ entry, onEdit }: EntryViewProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-3xl font-bold">{entry.title}</h1>
+    <div className="max-w-4xl mx-auto  sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3 sm:gap-0">
+        <h1 className="text-2xl sm:text-3xl font-bold">{entry.title}</h1>
         <div className="flex items-center gap-2">
           {entry.mood && (
-            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-sm">
+            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs sm:text-sm">
               {React.createElement(getMoodIcon(entry.mood).icon, {
-                className: `${getMoodIcon(entry.mood).color} text-lg`,
+                className: `${getMoodIcon(entry.mood).color} text-base sm:text-lg`,
               })}
               <span className="capitalize">{entry.mood.toLowerCase()}</span>
             </div>
@@ -108,18 +116,36 @@ export default function EntryView({ entry, onEdit }: EntryViewProps) {
           </Button>
         </div>
       </div>
-      <div className="mb-4 text-sm text-gray-600">
-        Created: {formatDate(entry.createdAt)}
-        {entry.updatedAt && (
-          <span> | Updated: {formatDate(entry.updatedAt)}</span>
-        )}
-        {entry.isPrivate && <span> | Private</span>}
-        {entry.pinned && <span> | Pinned</span>}
+      <div className="mb-4 text-xs sm:text-sm text-gray-600 space-y-1 sm:space-y-0">
+        <div className="hidden sm:block">
+          Created: {formatDate(entry.createdAt)}
+          {entry.updatedAt && (
+            <span> | Updated: {formatDate(entry.updatedAt)}</span>
+          )}
+          {entry.isPrivate && <span> | Private</span>}
+          {entry.pinned && <span> | Pinned</span>}
+        </div>
+        <div className="sm:hidden flex flex-wrap gap-2">
+          <span>{formatDateOnly(entry.createdAt)}</span>
+          {entry.updatedAt && <span>{formatDateOnly(entry.updatedAt)}</span>}
+          {entry.isPrivate && (
+            <span className="px-2 py-1 bg-gray-100 rounded text-[10px]">
+              Private
+            </span>
+          )}
+          {entry.pinned && (
+            <span className="px-2 py-1 bg-gray-100 rounded text-[10px]">
+              Pinned
+            </span>
+          )}
+        </div>
       </div>
-      <div className="prose max-w-none mb-6 prose-sm prose-p:my-2 prose-p:min-h-[1.5rem] prose-li:my-1 prose-strong:font-bold prose-em:italic prose-u:underline prose-ul:list-disc prose-ul:ml-6 prose-ul:my-2 prose-li:ml-2 [&_p:empty]:min-h-[1.5rem] [&_p:empty]:block">
+      <div className="prose prose-sm sm:prose-base max-w-none mb-6 prose-p:my-2 prose-p:min-h-[1.5rem] prose-li:my-1 prose-strong:font-bold prose-em:italic prose-u:underline prose-ul:list-disc prose-ul:ml-4 sm:prose-ul:ml-6 prose-ul:my-2 prose-li:ml-2 [&_p:empty]:min-h-[1.5rem] [&_p:empty]:block">
         <div dangerouslySetInnerHTML={{ __html: entry.content }} />
       </div>
-      <Button onClick={onEdit}>Edit</Button>
+      <Button onClick={onEdit} className="w-full sm:w-auto">
+        Edit
+      </Button>
     </div>
   );
 }

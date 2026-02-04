@@ -17,7 +17,6 @@ type Entry = {
 export default function LockedChatsPage() {
   const [isVerified, setIsVerified] = useState(false);
   const [entries, setEntries] = useState<Entry[]>([]);
-  const [userImage, setUserImage] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
 
   // Check if user is already verified
@@ -48,7 +47,6 @@ export default function LockedChatsPage() {
 
       if (result.success && result.data) {
         setEntries(result.data.entries);
-        setUserImage(result.data.userImage);
         setIsVerified(true);
 
         // Store verification in localStorage
@@ -95,7 +93,7 @@ export default function LockedChatsPage() {
         description="Enter your security PIN to view your private journal entries."
       />
 
-      {isVerified && <LockedChats entries={entries} userImage={userImage} />}
+      {isVerified && <LockedChats entries={entries} />}
     </>
   );
 }

@@ -70,7 +70,7 @@ export default function JournalHomeMobile({
             <h3 className="font-medium text-sm truncate">{entry.title}</h3>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-xs text-[var(--ch-muted)]">
-                {entry.date.toLocaleDateString("en-US", {
+                {entry.date.toLocaleDateString("en-GB", {
                   day: "2-digit",
                   month: "short",
                 })}

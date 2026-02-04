@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +25,7 @@ import { TiPin } from "react-icons/ti";
 import { TbClockFilled } from "react-icons/tb";
 import { useJournalHome } from "@/hooks/use-journal-home";
 import { stripHtml } from "@/utils/formatting";
+import { DeleteEntryDialog } from "@/components/journal/delete-entry-dialog";
 
 type Entry = {
   id: number;
@@ -52,6 +53,11 @@ export default function JournalHome({
   quote,
 }: JournalHomeProps) {
   const router = useRouter();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [entryToDelete, setEntryToDelete] = useState<{
+    id: number;
+    title: string;
+  } | null>(null);
 
   const {
     pinnedRef,
@@ -89,6 +95,21 @@ export default function JournalHome({
       return () => recentEl.removeEventListener("scroll", handleRecentScroll);
     }
   }, [recentEntries, handleRecentScroll, recentRef]);
+
+  const handleDeleteClick = (entryId: number, entryTitle: string) => {
+    setEntryToDelete({ id: entryId, title: entryTitle });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (entryToDelete) {
+      const event = new MouseEvent(
+        "click",
+      ) as unknown as React.MouseEvent<HTMLElement>;
+      handleDelete(entryToDelete.id, event);
+      setEntryToDelete(null);
+    }
+  };
 
   const renderCard = (entry: Entry) => (
     <Card
@@ -139,7 +160,7 @@ export default function JournalHome({
                 {entry.isPrivate ? "Make Public" : "Mark as Private"}
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={(e) => handleDelete(entry.id, e)}
+                onClick={(e) => handleDeleteClick(entry.id, entry.title)}
                 className="text-red-600 focus:text-red-600"
               >
                 <FiTrash className="mr-2 h-4 w-4" />
@@ -174,7 +195,7 @@ export default function JournalHome({
             )}
           </div>
           <div className="text-xs text-[var(--ch-slate)]">
-            {entry.date.toLocaleDateString("en-US", {
+            {entry.date.toLocaleDateString("en-GB", {
               day: "2-digit",
               month: "short",
             })}
@@ -342,6 +363,13 @@ export default function JournalHome({
           </div>
         </main>
       </div>
+
+      <DeleteEntryDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={confirmDelete}
+        entryTitle={entryToDelete?.title}
+      />
     </div>
   );
 }

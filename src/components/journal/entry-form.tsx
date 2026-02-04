@@ -56,6 +56,14 @@ export default function EntryForm({ entry, mode, onSave }: EntryFormProps) {
     }).format(date);
   };
 
+  const formatDateOnly = (date: Date) => {
+    return new Intl.DateTimeFormat("en-GB", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(date);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
@@ -69,28 +77,34 @@ export default function EntryForm({ entry, mode, onSave }: EntryFormProps) {
   const updatedAt = mode === "edit" ? new Date() : undefined;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto sm:p-6">
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <Input
             placeholder="Heading"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="text-2xl font-bold border-none shadow-none p-0 focus-visible:ring-0"
+            className="text-xl sm:text-2xl font-bold border-none shadow-none p-0 focus-visible:ring-0"
           />
         </div>
-        <div className="mb-4 text-sm text-gray-600">
-          Created: {formatDate(createdAt)}
-          {updatedAt && <span> | Updated: {formatDate(updatedAt)}</span>}
+        <div className="mb-4 text-xs sm:text-sm text-gray-600">
+          <div className="hidden sm:block">
+            Created: {formatDate(createdAt)}
+            {updatedAt && <span> | Updated: {formatDate(updatedAt)}</span>}
+          </div>
+          <div className="sm:hidden text-[10px]">
+            <div>Created: {formatDateOnly(createdAt)}</div>
+            {updatedAt && <div>Updated: {formatDateOnly(updatedAt)}</div>}
+          </div>
         </div>
-        <div className="mb-4 flex items-center space-x-6 text-xs">
-          <div className="flex items-center space-x-2 ">
-            <span>Mood:</span>
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:space-x-6 space-y-3 sm:space-y-0 text-xs">
+          <div className="flex items-center space-x-2">
+            <span className="whitespace-nowrap">Mood:</span>
             <Select
               value={mood}
               onValueChange={(value: Mood) => setMood(value)}
             >
-              <SelectTrigger className="w-32" size="sm">
+              <SelectTrigger className="w-24 sm:w-32" size="sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -197,8 +211,8 @@ export default function EntryForm({ entry, mode, onSave }: EntryFormProps) {
           onChange={setContent}
           placeholder="Write your entry..."
         />
-        <div className="flex items-center justify-end">
-          <Button type="submit" variant="default">
+        <div className="flex items-center justify-end mt-6">
+          <Button type="submit" variant="default" className="w-full sm:w-auto">
             Save Changes
           </Button>
         </div>

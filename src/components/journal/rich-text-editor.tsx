@@ -220,7 +220,7 @@ export default function RichTextEditor({
   return (
     <div className="w-full mb-4">
       {/* Toolbar */}
-      <div className="flex flex-wrap gap-2 mb-3 p-2 bg-gray-50 border border-gray-200 rounded-lg">
+      <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 p-1 sm:p-2 bg-gray-50 border border-gray-200 rounded-lg">
         {/* Text Style Buttons */}
         <Button
           type="button"
@@ -230,10 +230,10 @@ export default function RichTextEditor({
             editor.chain().focus().toggleBold().run();
             setIsBoldActive(!isBoldActive);
           }}
-          className="h-8 w-8 p-0"
+          className="h-6 w-6 sm:h-8 sm:w-8 p-0"
           title="Bold"
         >
-          <FiBold className="w-4 h-4" />
+          <FiBold className="w-3 h-3 sm:w-4 sm:h-4" />
         </Button>
 
         <Button
@@ -244,10 +244,10 @@ export default function RichTextEditor({
             editor.chain().focus().toggleItalic().run();
             setIsItalicActive(!isItalicActive);
           }}
-          className="h-8 w-8 p-0"
+          className="h-6 w-6 sm:h-8 sm:w-8 p-0"
           title="Italic"
         >
-          <FiItalic className="w-4 h-4" />
+          <FiItalic className="w-3 h-3 sm:w-4 sm:h-4" />
         </Button>
 
         <Button
@@ -258,10 +258,10 @@ export default function RichTextEditor({
             editor.chain().focus().toggleUnderline().run();
             setIsUnderlineActive(!isUnderlineActive);
           }}
-          className="h-8 w-8 p-0"
+          className="h-6 w-6 sm:h-8 sm:w-8 p-0"
           title="Underline"
         >
-          <FiUnderline className="w-4 h-4" />
+          <FiUnderline className="w-3 h-3 sm:w-4 sm:h-4" />
         </Button>
 
         <div className="w-px bg-gray-300" />
@@ -272,7 +272,7 @@ export default function RichTextEditor({
           size="sm"
           variant={activeFontSize === "14px" ? "default" : "outline"}
           onClick={() => handleFontSizeClick("14px")}
-          className="h-8 px-2 text-xs"
+          className="h-6 sm:h-8 px-1 sm:px-2 text-[10px] sm:text-xs"
           title="14px"
         >
           14px
@@ -283,7 +283,7 @@ export default function RichTextEditor({
           size="sm"
           variant={activeFontSize === "16px" ? "default" : "outline"}
           onClick={() => handleFontSizeClick("16px")}
-          className="h-8 px-2 text-xs"
+          className="h-6 sm:h-8 px-1 sm:px-2 text-[10px] sm:text-xs"
           title="16px"
         >
           16px
@@ -294,7 +294,7 @@ export default function RichTextEditor({
           size="sm"
           variant={activeFontSize === "20px" ? "default" : "outline"}
           onClick={() => handleFontSizeClick("20px")}
-          className="h-8 px-2 text-xs"
+          className="h-6 sm:h-8 px-1 sm:px-2 text-[10px] sm:text-xs"
           title="20px"
         >
           20px
@@ -305,7 +305,7 @@ export default function RichTextEditor({
           size="sm"
           variant={activeFontSize === "24px" ? "default" : "outline"}
           onClick={() => handleFontSizeClick("24px")}
-          className="h-8 px-2 text-xs"
+          className="h-6 sm:h-8 px-1 sm:px-2 text-[10px] sm:text-xs"
           title="24px"
         >
           24px
@@ -319,10 +319,10 @@ export default function RichTextEditor({
           size="sm"
           variant={isBulletListActive ? "default" : "outline"}
           onClick={() => editor?.chain().focus().toggleBulletList().run()}
-          className="h-8 w-8 p-0"
+          className="h-6 w-6 sm:h-8 sm:w-8 p-0"
           title="Bullet list"
         >
-          <FiList className="w-4 h-4" />
+          <FiList className="w-3 h-3 sm:w-4 sm:h-4" />
         </Button>
 
         {/* Color Picker */}
@@ -332,11 +332,11 @@ export default function RichTextEditor({
             size="sm"
             variant="outline"
             onClick={handleColorClick}
-            className="h-8 w-8 p-0"
+            className="h-6 w-6 sm:h-8 sm:w-8 p-0"
             title="Text color"
           >
             <div
-              className="w-4 h-4 rounded border border-gray-400"
+              className="w-3 h-3 sm:w-4 sm:h-4 rounded border border-gray-400"
               style={{
                 backgroundColor:
                   editor.getAttributes("textStyle").color || "#000000",
@@ -361,7 +361,10 @@ export default function RichTextEditor({
       </div>
 
       {/* Editor */}
-      <EditorContent editor={editor} className="border-gray-200 rounded-lg" />
+      <EditorContent
+        editor={editor}
+        className="border-gray-200 rounded-lg min-h-72 sm:min-h-96"
+      />
     </div>
   );
 }
