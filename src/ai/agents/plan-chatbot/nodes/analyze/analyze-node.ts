@@ -3,6 +3,7 @@ import type { EditAnalysisResult } from "../../types";
 import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { processUserMessage, HARD_CODED_MESSAGES } from "../../utils";
 import { buildEditPreview, buildPreviewMessage } from "../../helpers";
+import { determineIfDoable } from "../../utils/is-doable";
 import { handleClarificationResponse } from "./clarifications";
 import {
   validateAddTask,
@@ -131,6 +132,26 @@ export async function analyzeNode(
   // PRIORITY 5: Handle edit requests with confirmation
   if (analysis.isEditRequest) {
     console.log("  ✏️ EDIT REQUEST - preparing confirmation");
+
+    // Check if edit is doable by chatbot
+    const doabilityCheck = determineIfDoable(
+      analysis.editType,
+      analysis.extractedEdit?.modifyType,
+    );
+    console.log("  🔍 Doability check:", doabilityCheck);
+
+    if (!doabilityCheck.isDoable) {
+      return {
+        mode: "query",
+        messages: [
+          new AIMessage(
+            doabilityCheck.reason ||
+              "This task cannot be performed by the chatbot. Please try doing it manually.",
+          ),
+        ],
+        responseHandled: true,
+      };
+    }
 
     // Check for unsupported edit types or multiple operations FIRST
     if (analysis.editType === "other" || !analysis.editType) {

@@ -24,6 +24,8 @@ export interface EditAnalysisResult {
   isSafe: boolean;
   isRelevant: boolean;
   quotaExceeded?: boolean;
+  isDoable?: boolean; // Whether the chatbot can actually perform this action
+  undoableReason?: string; // Why the action is not doable (if applicable)
   editType?:
     | "add_task"
     | "remove_task"

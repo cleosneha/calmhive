@@ -4,6 +4,7 @@ export { HARD_CODED_MESSAGES } from "./hardcoded-messages";
 export { retrievePlanFromEmbeddings } from "./retrieve-plan";
 export { invokeLLM } from "./llm-service";
 export { buildProcessMessagePrompt } from "./prompts";
+export { determineIfDoable } from "./is-doable";
 export {
   convertTo24Hour,
   normalizeTimeRange,

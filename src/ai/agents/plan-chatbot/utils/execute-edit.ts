@@ -403,7 +403,7 @@ export async function executePlanEdit(
         result = {
           success: true,
           message: `✅ Marked all activities on **${day}** as **${status}**: ${activityNames}`,
-          previousData,
+          previousData: { tasks: previousData },
         };
         break;
       }
