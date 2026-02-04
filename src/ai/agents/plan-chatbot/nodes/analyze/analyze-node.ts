@@ -91,6 +91,7 @@ export async function analyzeNode(
   const { analysis, answer } = await processUserMessage(
     userMessage,
     state.userId,
+    state.messages, // Pass conversation history for context
   );
 
   console.log("  📊 Analysis complete:", {

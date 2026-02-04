@@ -17,7 +17,7 @@ export interface PlanChatResponse {
  */
 export async function processPlanChatMessage(
   userMessage: string,
-  _threadId: string, // Deprecated: kept for backward compatibility, ignored in favor of user-specific thread ID
+  threadId: string, // Use the session-specific thread ID from initialization
 ): Promise<PlanChatResponse> {
   try {
     // Get current user
@@ -29,16 +29,26 @@ export async function processPlanChatMessage(
       };
     }
 
-    // Create user-specific thread ID to prevent cross-user collisions
-    // Format: plan-chat-{userId}
-    const userSpecificThreadId = `plan-chat-${user.id}`;
+    // Use the provided thread ID (which includes timestamp for session isolation)
+    // Validate it belongs to this user for security
+    if (!threadId.startsWith(`plan-chat-${user.id}`)) {
+      console.error(
+        "[processPlanChatMessage] Thread ID mismatch - possible security issue",
+      );
+      return {
+        success: false,
+        error: "Invalid session",
+      };
+    }
+
+    console.log("[processPlanChatMessage] Using thread ID:", threadId);
 
     // Compile graph
     const graph = compilePlanChatbotGraph();
 
     // Get current state or initialize
     const config = {
-      configurable: { thread_id: userSpecificThreadId },
+      configurable: { thread_id: threadId },
     };
 
     const currentState = await graph.getState(config);
@@ -108,7 +118,7 @@ export async function processPlanChatMessage(
     return {
       success: true,
       messages,
-      threadId: userSpecificThreadId,
+      threadId: threadId,
     };
   } catch (error) {
     console.error("Error processing plan chat message:", error);
@@ -144,7 +154,7 @@ function parseActionButtons(
 }
 
 /**
- * Initialize plan chatbot session
+ * Initialize plan chatbot session - starts fresh with unique session ID
  */
 export async function initializePlanChatSession(): Promise<PlanChatResponse> {
   try {
@@ -157,14 +167,20 @@ export async function initializePlanChatSession(): Promise<PlanChatResponse> {
       };
     }
 
-    // Create user-specific thread ID to prevent cross-user collisions
-    // Format: plan-chat-{userId}
-    const userSpecificThreadId = `plan-chat-${user.id}`;
+    // Create unique thread ID for each session to ensure fresh start on page refresh
+    // Format: plan-chat-{userId}-{timestamp}
+    const timestamp = Date.now();
+    const userSpecificThreadId = `plan-chat-${user.id}-${timestamp}`;
+
+    console.log(
+      "[initializePlanChatSession] Starting fresh session:",
+      userSpecificThreadId,
+    );
 
     // Compile graph
     const graph = compilePlanChatbotGraph();
 
-    // Initialize with greeting
+    // Initialize with greeting using unique thread ID
     const config = {
       configurable: { thread_id: userSpecificThreadId },
     };

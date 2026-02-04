@@ -184,6 +184,22 @@ export function buildPreviewMessage(analysis: EditAnalysisResult): string {
       }
     }
 
+    case "modify_task_bulk": {
+      const statusText =
+        extractedEdit.status === "done"
+          ? "completed"
+          : extractedEdit.status === "pending"
+            ? "pending"
+            : extractedEdit.status === "partial"
+              ? "partially completed"
+              : "updated";
+      return (
+        `Perfect! I will mark all activities on **${extractedEdit.day}** as **${statusText}**.\n\n` +
+        `Are you sure you want to update the status of all activities on this day?\n\n` +
+        `[CONFIRM_BUTTON]\n[CANCEL_BUTTON]`
+      );
+    }
+
     case "remove_task":
       return (
         `Are you sure you want to remove this task?\n\n` +

@@ -33,6 +33,7 @@ export interface EditAnalysisResult {
     | "remove_days"
     | "copy_day"
     | "rename_day"
+    | "modify_task_bulk"
     | "swap_days"
     | "delete_plan"
     | "other";

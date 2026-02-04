@@ -2,7 +2,6 @@ import type { PlanChatbotStateType } from "../../../state";
 import type { EditAnalysisResult } from "../../../types";
 import { AIMessage } from "@langchain/core/messages";
 import { findTaskByActivity } from "../../../utils/validate-remove-task";
-import { checkTimeConflict } from "../../../helpers";
 import { buildPreviewMessage } from "../../../helpers";
 
 export async function validateModifyTask(
@@ -42,6 +41,48 @@ export async function validateModifyTask(
           ),
         ],
         responseHandled: true,
+      },
+    };
+  }
+
+  // Handle bulk status change for all activities on a day
+  if (
+    oldActivity.toLowerCase() === "all" &&
+    analysis.extractedEdit!.modifyType === "status"
+  ) {
+    console.log(
+      `  ✏️ BULK STATUS CHANGE - marking all activities on ${day} as ${analysis.extractedEdit!.status}`,
+    );
+
+    return {
+      isValid: true,
+      needsClarification: false,
+      response: {
+        waitingForConfirmation: true,
+        pendingEdit: {
+          type: "modify_task_bulk",
+          data: {
+            ...analysis.extractedEdit,
+            oldActivity: "all",
+            day: day,
+            status: analysis.extractedEdit!.status,
+          },
+          description: `Mark all activities on ${day} as ${analysis.extractedEdit!.status}`,
+          preview: {
+            changes: [
+              {
+                field: "Status of all activities",
+                newValue: analysis.extractedEdit!.status || "Unknown",
+              },
+            ],
+          },
+        },
+        messages: [
+          new AIMessage(
+            `I will mark all activities on **${day}** as **${analysis.extractedEdit!.status}**.`,
+          ),
+        ],
+        awaitingClarification: null,
       },
     };
   }

@@ -25,6 +25,7 @@ export async function executePlanEdit(
     | "add_task"
     | "remove_task"
     | "modify_task"
+    | "modify_task_bulk"
     | "change_days_off"
     | "add_days_off"
     | "remove_days"
@@ -340,6 +341,68 @@ export async function executePlanEdit(
         result = {
           success: true,
           message: `✅ Task updated successfully on **${updated.day}**: **${updated.activity}**.`,
+          previousData,
+        };
+        break;
+      }
+
+      case "modify_task_bulk": {
+        const { day, status } = data as {
+          day?: string;
+          status?: "pending" | "done" | "partial";
+        };
+
+        if (!day || !status) {
+          return {
+            success: false,
+            error: "Day and status are required for bulk status update",
+          };
+        }
+
+        console.log(
+          `[modify_task_bulk] Updating all tasks on ${day} to status: ${status}`,
+        );
+
+        // Find all tasks on the specified day
+        const tasksToUpdate = plan.tasks.filter(
+          (t) => t.day.toLowerCase() === day.toLowerCase(),
+        );
+
+        if (tasksToUpdate.length === 0) {
+          return {
+            success: false,
+            error: `No activities found on ${day}`,
+          };
+        }
+
+        // Store previous data for all tasks
+        const previousData = tasksToUpdate.map((t) => ({
+          taskId: t.id,
+          activity: t.activity,
+          status: t.status,
+        }));
+
+        // Update all tasks
+        const updatePromises = tasksToUpdate.map((task) =>
+          prisma.task.update({
+            where: { id: task.id },
+            data: { status },
+          }),
+        );
+
+        const updatedTasks = await Promise.all(updatePromises);
+
+        console.log(
+          `[modify_task_bulk] Updated ${updatedTasks.length} tasks on ${day} to status: ${status}`,
+        );
+
+        const activityNames = updatedTasks
+          .map((t) => `**${t.activity}**`)
+          .join(", ");
+
+        result = {
+          success: true,
+          message: `✅ Marked all activities on **${day}** as **${status}**: ${activityNames}`,
           previousData,
         };
         break;

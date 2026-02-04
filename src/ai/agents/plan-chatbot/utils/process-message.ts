@@ -2,6 +2,7 @@ import type { EditAnalysisResult } from "../types";
 import { invokeLLM } from "./llm-service";
 import { retrievePlanFromEmbeddings } from "./retrieve-plan";
 import { buildProcessMessagePrompt } from "./prompts";
+import type { BaseMessage } from "@langchain/core/messages";
 
 /**
  * Combined message processing - analyzes intent and answers query in single LLM call
@@ -9,6 +10,7 @@ import { buildProcessMessagePrompt } from "./prompts";
 export async function processUserMessage(
   userMessage: string,
   userId: string,
+  conversationHistory?: BaseMessage[],
 ): Promise<{
   analysis: EditAnalysisResult;
   answer?: string;
@@ -17,9 +19,30 @@ export async function processUserMessage(
     // Get plan context first
     const planContext = await retrievePlanFromEmbeddings(userId);
 
+    // Build conversation context from history if provided
+    let conversationContext = "";
+    if (conversationHistory && conversationHistory.length > 0) {
+      const historyLines = conversationHistory
+        .slice(-10) // Limit to last 10 messages to avoid token bloat
+        .map((msg) => {
+          const content =
+            typeof msg.content === "string"
+              ? msg.content
+              : JSON.stringify(msg.content);
+          const role = msg._getType() === "human" ? "User" : "Assistant";
+          return `${role}: ${content}`;
+        });
+      conversationContext =
+        "Conversation history:\n" + historyLines.join("\n") + "\n\n";
+      console.log(
+        `  📋 Including ${historyLines.length} previous messages for context`,
+      );
+    }
+
     const prompt = buildProcessMessagePrompt(
       userMessage,
       planContext ?? undefined,
+      conversationContext || undefined,
     );
 
     console.log("  🤖 Invoking LLM...");

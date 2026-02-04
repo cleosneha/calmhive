@@ -37,6 +37,7 @@ export const PlanChatbotState = Annotation.Root({
       | "rename_day"
       | "swap_days"
       | "delete_plan"
+      | "modify_task_bulk"
       | "other";
     data: Record<string, unknown>;
     description: string;
@@ -63,6 +64,7 @@ export const PlanChatbotState = Annotation.Root({
       | "copy_day"
       | "rename_day"
       | "swap_days"
+      | "modify_task_bulk"
       | "other";
     data: Record<string, unknown>;
     previousData?: Record<string, unknown>;
@@ -89,6 +91,7 @@ export const PlanChatbotState = Annotation.Root({
       | "add_days_off"
       | "add_task"
       | "modify_task"
+      | "modify_task_bulk"
       | null;
     context?: Record<string, unknown>;
   } | null>({
