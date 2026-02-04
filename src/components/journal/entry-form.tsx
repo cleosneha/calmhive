@@ -4,14 +4,7 @@ import React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -19,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MoreVertical } from "lucide-react";
+import RichTextEditor from "./rich-text-editor";
 import type { Mood } from "@/types/journal";
 import { getMoodIcon } from "@/utils/mood-icons";
 import { toast } from "sonner";
@@ -90,130 +83,121 @@ export default function EntryForm({ entry, mode, onSave }: EntryFormProps) {
           Created: {formatDate(createdAt)}
           {updatedAt && <span> | Updated: {formatDate(updatedAt)}</span>}
         </div>
-        <Textarea
-          placeholder="Write your entry..."
+        <div className="mb-4 flex items-center space-x-6 text-xs">
+          <div className="flex items-center space-x-2 ">
+            <span>Mood:</span>
+            <Select
+              value={mood}
+              onValueChange={(value: Mood) => setMood(value)}
+            >
+              <SelectTrigger className="w-32" size="sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="HAPPY">
+                  <div className="flex items-center gap-2">
+                    {React.createElement(getMoodIcon("HAPPY").icon, {
+                      className: `${getMoodIcon("HAPPY").color} text-xs`,
+                    })}
+                    Happy
+                  </div>
+                </SelectItem>
+                <SelectItem value="SAD">
+                  <div className="flex items-center gap-2">
+                    {React.createElement(getMoodIcon("SAD").icon, {
+                      className: `${getMoodIcon("SAD").color} text-xs`,
+                    })}
+                    Sad
+                  </div>
+                </SelectItem>
+                <SelectItem value="ANGRY">
+                  <div className="flex items-center gap-2">
+                    {React.createElement(getMoodIcon("ANGRY").icon, {
+                      className: `${getMoodIcon("ANGRY").color} text-xs`,
+                    })}
+                    Angry
+                  </div>
+                </SelectItem>
+                <SelectItem value="ANXIOUS">
+                  <div className="flex items-center gap-2">
+                    {React.createElement(getMoodIcon("ANXIOUS").icon, {
+                      className: `${getMoodIcon("ANXIOUS").color} text-xs`,
+                    })}
+                    Anxious
+                  </div>
+                </SelectItem>
+                <SelectItem value="CALM">
+                  <div className="flex items-center gap-2">
+                    {React.createElement(getMoodIcon("CALM").icon, {
+                      className: `${getMoodIcon("CALM").color} text-xs`,
+                    })}
+                    Calm
+                  </div>
+                </SelectItem>
+                <SelectItem value="EXCITED">
+                  <div className="flex items-center gap-2">
+                    {React.createElement(getMoodIcon("EXCITED").icon, {
+                      className: `${getMoodIcon("EXCITED").color} text-xs`,
+                    })}
+                    Excited
+                  </div>
+                </SelectItem>
+                <SelectItem value="TIRED">
+                  <div className="flex items-center gap-2">
+                    {React.createElement(getMoodIcon("TIRED").icon, {
+                      className: `${getMoodIcon("TIRED").color} text-xs`,
+                    })}
+                    Tired
+                  </div>
+                </SelectItem>
+                <SelectItem value="NEUTRAL">
+                  <div className="flex items-center gap-2">
+                    {React.createElement(getMoodIcon("NEUTRAL").icon, {
+                      className: `${getMoodIcon("NEUTRAL").color} text-xs`,
+                    })}
+                    Neutral
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="private"
+              checked={isPrivate}
+              onCheckedChange={(checked) => {
+                if (checked && pinned) {
+                  toast.error("Cannot make pinned entries private");
+                  return;
+                }
+                setIsPrivate(checked);
+              }}
+              disabled={pinned}
+            />
+            <label htmlFor="private">Private</label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="pinned"
+              checked={pinned}
+              onCheckedChange={(checked) => {
+                if (checked && isPrivate) {
+                  toast.error("Cannot pin private entries");
+                  return;
+                }
+                setPinned(checked);
+              }}
+              disabled={isPrivate}
+            />
+            <label htmlFor="pinned">Pin to top</label>
+          </div>
+        </div>
+        <RichTextEditor
           value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="min-h-96 mb-4"
+          onChange={setContent}
+          placeholder="Write your entry..."
         />
-        <div className="flex items-center justify-between">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                <div
-                  className="flex items-center space-x-2 w-full"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <span>Mood:</span>
-                  <Select
-                    value={mood}
-                    onValueChange={(value: Mood) => setMood(value)}
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="HAPPY">
-                        <div className="flex items-center gap-2">
-                          {React.createElement(getMoodIcon("HAPPY").icon, {
-                            className: `${getMoodIcon("HAPPY").color} text-lg`,
-                          })}
-                          Happy
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="SAD">
-                        <div className="flex items-center gap-2">
-                          {React.createElement(getMoodIcon("SAD").icon, {
-                            className: `${getMoodIcon("SAD").color} text-lg`,
-                          })}
-                          Sad
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="ANGRY">
-                        <div className="flex items-center gap-2">
-                          {React.createElement(getMoodIcon("ANGRY").icon, {
-                            className: `${getMoodIcon("ANGRY").color} text-lg`,
-                          })}
-                          Angry
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="ANXIOUS">
-                        <div className="flex items-center gap-2">
-                          {React.createElement(getMoodIcon("ANXIOUS").icon, {
-                            className: `${getMoodIcon("ANXIOUS").color} text-lg`,
-                          })}
-                          Anxious
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="CALM">
-                        <div className="flex items-center gap-2">
-                          {React.createElement(getMoodIcon("CALM").icon, {
-                            className: `${getMoodIcon("CALM").color} text-lg`,
-                          })}
-                          Calm
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="EXCITED">
-                        <div className="flex items-center gap-2">
-                          {React.createElement(getMoodIcon("EXCITED").icon, {
-                            className: `${getMoodIcon("EXCITED").color} text-lg`,
-                          })}
-                          Excited
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="TIRED">
-                        <div className="flex items-center gap-2">
-                          {React.createElement(getMoodIcon("TIRED").icon, {
-                            className: `${getMoodIcon("TIRED").color} text-lg`,
-                          })}
-                          Tired
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="NEUTRAL">
-                        <div className="flex items-center gap-2">
-                          {React.createElement(getMoodIcon("NEUTRAL").icon, {
-                            className: `${getMoodIcon("NEUTRAL").color} text-lg`,
-                          })}
-                          Neutral
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                <div
-                  className="flex items-center space-x-2 w-full"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Switch
-                    id="private"
-                    checked={isPrivate}
-                    onCheckedChange={setIsPrivate}
-                  />
-                  <label htmlFor="private">Private</label>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                <div
-                  className="flex items-center space-x-2 w-full"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Switch
-                    id="pinned"
-                    checked={pinned}
-                    onCheckedChange={setPinned}
-                  />
-                  <label htmlFor="pinned">Pin to top</label>
-                </div>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex items-center justify-end">
           <Button type="submit" variant="default">
             Save Changes
           </Button>

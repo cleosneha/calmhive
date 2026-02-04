@@ -10,9 +10,22 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { FiSearch, FiLock } from "react-icons/fi";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  FiSearch,
+  FiLock,
+  FiEdit,
+  FiTrash,
+  FiMoreVertical,
+} from "react-icons/fi";
 import { MdKeyboardDoubleArrowLeft } from "react-icons/md";
 import { BsPin } from "react-icons/bs";
+import { TiPin } from "react-icons/ti";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -25,6 +38,7 @@ import {
 import { getMoodIcon } from "@/utils/mood-icons";
 import type { Mood } from "@/types/journal";
 import { useJournalEntries } from "@/hooks/use-journal-entries";
+import { useJournalHome } from "@/hooks/use-journal-home";
 import { SecurityPinDialog } from "@/components/journal/security-pin-dialog";
 
 const MOODS: Mood[] = [
@@ -52,7 +66,21 @@ export default function RightSheet() {
     handleEntryClick,
   } = useJournalEntries();
 
+  const { handleEdit, handlePin, handleDelete, handleMarkPrivate } =
+    useJournalHome();
+
   const [isLockedDialogOpen, setIsLockedDialogOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  const handleEntryClickWithClose = (entryId: number) => {
+    setIsSheetOpen(false);
+    handleEntryClick(entryId);
+  };
+
+  const handleEditWithClose = (entryId: number, e: React.MouseEvent) => {
+    setIsSheetOpen(false);
+    handleEdit(entryId, e);
+  };
 
   const handlePinSuccess = () => {
     // Store verification in localStorage with 30-minute expiration
@@ -71,7 +99,7 @@ export default function RightSheet() {
   };
 
   return (
-    <Sheet>
+    <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
       {/* Thin handle column */}
       <SheetTrigger asChild>
         <Button
@@ -183,34 +211,79 @@ export default function RightSheet() {
                 <div
                   key={entry.id}
                   ref={isLastEntry && hasMore ? lastEntryRef : undefined}
-                  onClick={() => handleEntryClick(entry.id)}
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--ch-taupe)] cursor-pointer transition-colors border-b border-slate-100 last:border-b-0"
                 >
-                  {entry.pinned && (
-                    <BsPin className="text-[var(--ch-sage-dark)] flex-shrink-0" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-sm truncate">
-                      {entry.title}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      {entry.mood && (
-                        <div className="text-xs">
-                          {React.createElement(getMoodIcon(entry.mood).icon, {
-                            className: `${getMoodIcon(entry.mood).color} text-sm`,
-                          })}
-                        </div>
-                      )}
-                      <span className="text-xs text-[var(--ch-muted)]">
-                        {entry.date.toLocaleDateString("en-US")}
-                      </span>
-                      {entry.isPrivate && (
+                  <div
+                    className="flex items-center gap-3 flex-1 min-w-0"
+                    onClick={() => handleEntryClickWithClose(entry.id)}
+                  >
+                    {entry.pinned && (
+                      <BsPin className="text-[var(--ch-sage-dark)] flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-sm truncate">
+                        {entry.title}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        {entry.mood && (
+                          <div className="text-xs">
+                            {React.createElement(getMoodIcon(entry.mood).icon, {
+                              className: `${getMoodIcon(entry.mood).color} text-sm`,
+                            })}
+                          </div>
+                        )}
                         <span className="text-xs text-[var(--ch-muted)]">
-                          Private
+                          {entry.date.toLocaleDateString("en-US")}
                         </span>
-                      )}
+                        {entry.isPrivate && (
+                          <span className="text-xs text-[var(--ch-muted)]">
+                            Private
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:bg-[var(--ch-slate-dark)]/10"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <FiMoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={(e) => handleEditWithClose(entry.id, e)}
+                      >
+                        <FiEdit className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => handlePin(entry.id, e)}
+                        disabled={entry.isPrivate}
+                      >
+                        <TiPin className="mr-2 h-4 w-4" />
+                        {entry.pinned ? "Unpin" : "Pin"}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => handleMarkPrivate(entry.id, e)}
+                        disabled={entry.pinned}
+                      >
+                        <FiLock className="mr-2 h-4 w-4" />
+                        {entry.isPrivate ? "Make Public" : "Mark as Private"}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => handleDelete(entry.id, e)}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        <FiTrash className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               );
             })}

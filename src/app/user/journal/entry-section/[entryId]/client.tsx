@@ -59,9 +59,18 @@ export default function EntrySection({
       const { editJournalEntry } =
         await import("@/actions/journal/edit-journal-entry");
       result = await editJournalEntry(entryId, data);
-      if (result.success) {
+      if (result.success && result.data) {
+        setEntry({
+          id: result.data.id,
+          title: result.data.title,
+          content: result.data.finalContent,
+          mood: result.data.mood,
+          pinned: result.data.pinned,
+          isPrivate: result.data.isPrivate,
+          createdAt: result.data.createdAt,
+          updatedAt: result.data.updatedAt,
+        } as Entry);
         router.push(`/user/journal/entry-section/${entryId}?mode=show`);
-        router.refresh();
       }
     }
     if (!result?.success) {

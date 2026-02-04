@@ -21,6 +21,7 @@ import {
 import { TiPin } from "react-icons/ti";
 import { TbClockFilled } from "react-icons/tb";
 import { useJournalHome } from "@/hooks/use-journal-home";
+import { stripHtml } from "@/utils/formatting";
 
 type Entry = {
   id: number;
@@ -80,7 +81,7 @@ export default function JournalHomeMobile({
             </div>
             {entry.excerpt && (
               <p className="text-xs text-[var(--ch-slate)] mt-1 line-clamp-2">
-                {entry.excerpt}
+                {stripHtml(entry.excerpt)}
               </p>
             )}
           </div>
@@ -101,11 +102,17 @@ export default function JournalHomeMobile({
               <FiEdit className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={(e) => handlePin(entry.id, e)}>
+            <DropdownMenuItem
+              onClick={(e) => handlePin(entry.id, e)}
+              disabled={entry.isPrivate}
+            >
               <TiPin className="mr-2 h-4 w-4" />
               {entry.pinned ? "Unpin" : "Pin"}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={(e) => handleMarkPrivate(entry.id, e)}>
+            <DropdownMenuItem
+              onClick={(e) => handleMarkPrivate(entry.id, e)}
+              disabled={entry.pinned}
+            >
               <FiLock className="mr-2 h-4 w-4" />
               {entry.isPrivate ? "Make Public" : "Mark as Private"}
             </DropdownMenuItem>

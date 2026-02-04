@@ -24,6 +24,7 @@ import {
 import { TiPin } from "react-icons/ti";
 import { TbClockFilled } from "react-icons/tb";
 import { useJournalHome } from "@/hooks/use-journal-home";
+import { stripHtml } from "@/utils/formatting";
 
 type Entry = {
   id: number;
@@ -123,11 +124,17 @@ export default function JournalHome({
                 <FiEdit className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => handlePin(entry.id, e)}>
+              <DropdownMenuItem
+                onClick={(e) => handlePin(entry.id, e)}
+                disabled={entry.isPrivate}
+              >
                 <TiPin className="mr-2 h-4 w-4" />
                 {entry.pinned ? "Unpin" : "Pin"}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => handleMarkPrivate(entry.id, e)}>
+              <DropdownMenuItem
+                onClick={(e) => handleMarkPrivate(entry.id, e)}
+                disabled={entry.pinned}
+              >
                 <FiLock className="mr-2 h-4 w-4" />
                 {entry.isPrivate ? "Make Public" : "Mark as Private"}
               </DropdownMenuItem>
@@ -142,10 +149,14 @@ export default function JournalHome({
           </DropdownMenu>
         </div>
 
-        <div className="flex-1 p-3">
+        <div className="flex-1 p-3 overflow-hidden">
           {entry.excerpt ? (
-            <p className="text-xs text-[var(--ch-slate)]">{entry.excerpt}</p>
-          ) : null}
+            <p className="text-xs text-[var(--ch-slate)] line-clamp-4 whitespace-normal leading-relaxed">
+              {stripHtml(entry.excerpt)}
+            </p>
+          ) : (
+            <p className="text-xs text-[var(--ch-slate)]/50">No content</p>
+          )}
         </div>
 
         <div className="p-3 flex items-center justify-between">

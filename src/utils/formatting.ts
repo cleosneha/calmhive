@@ -19,3 +19,24 @@ export function formatHoursHuman(hours: number): string {
   if (h > 0) return `${h} hr`;
   return `${m} mins`;
 }
+
+/**
+ * Strip HTML tags from a string and return plain text
+ */
+export function stripHtml(html: string): string {
+  if (!html) return "";
+
+  // Check if we're in a browser environment
+  if (typeof document === "undefined") {
+    // Server-side: use regex to strip HTML tags
+    return html
+      .replace(/<[^>]*>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .trim();
+  }
+
+  // Client-side: use DOM parsing for better accuracy
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = html;
+  return tempDiv.textContent || tempDiv.innerText || "";
+}

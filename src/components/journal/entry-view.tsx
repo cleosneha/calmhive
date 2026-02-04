@@ -83,10 +83,11 @@ export default function EntryView({ entry, onEdit }: EntryViewProps) {
         <h1 className="text-3xl font-bold">{entry.title}</h1>
         <div className="flex items-center gap-2">
           {entry.mood && (
-            <div className="text-2xl">
+            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-sm">
               {React.createElement(getMoodIcon(entry.mood).icon, {
-                className: getMoodIcon(entry.mood).color,
+                className: `${getMoodIcon(entry.mood).color} text-lg`,
               })}
+              <span className="capitalize">{entry.mood.toLowerCase()}</span>
             </div>
           )}
           <Button
@@ -115,7 +116,9 @@ export default function EntryView({ entry, onEdit }: EntryViewProps) {
         {entry.isPrivate && <span> | Private</span>}
         {entry.pinned && <span> | Pinned</span>}
       </div>
-      <div className="prose max-w-none mb-6">{entry.content}</div>
+      <div className="prose max-w-none mb-6 prose-sm prose-p:my-2 prose-p:min-h-[1.5rem] prose-li:my-1 prose-strong:font-bold prose-em:italic prose-u:underline prose-ul:list-disc prose-ul:ml-6 prose-ul:my-2 prose-li:ml-2 [&_p:empty]:min-h-[1.5rem] [&_p:empty]:block">
+        <div dangerouslySetInnerHTML={{ __html: entry.content }} />
+      </div>
       <Button onClick={onEdit}>Edit</Button>
     </div>
   );

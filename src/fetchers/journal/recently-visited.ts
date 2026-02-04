@@ -7,7 +7,15 @@ export async function getJournalHomeData(userId: string) {
       select: { recentlyVisitedJournalEntries: true },
     });
 
-    let recentEntries: { id: number; title: string; date: Date }[] = [];
+    let recentEntries: {
+      id: number;
+      title: string;
+      date: Date;
+      excerpt: string;
+      mood?: string;
+      pinned: boolean;
+      isPrivate: boolean;
+    }[] = [];
     if (user?.recentlyVisitedJournalEntries?.length) {
       // fetch only non-private entries and minimal fields
       const entries = await prisma.journalEntry.findMany({
@@ -20,6 +28,10 @@ export async function getJournalHomeData(userId: string) {
           id: true,
           title: true,
           date: true,
+          finalContent: true,
+          mood: true,
+          pinned: true,
+          isPrivate: true,
         },
       });
 
@@ -31,7 +43,17 @@ export async function getJournalHomeData(userId: string) {
         .slice(0, 6)
         .map((id) => {
           const e = entriesById.get(id)!;
-          return { id: e.id, title: e.title, date: e.date };
+          return {
+            id: e.id,
+            title: e.title,
+            date: e.date,
+            excerpt:
+              e.finalContent.slice(0, 100) +
+              (e.finalContent.length > 100 ? "..." : ""),
+            mood: e.mood?.toString(),
+            pinned: e.pinned,
+            isPrivate: e.isPrivate,
+          };
         });
     }
 
@@ -56,8 +78,8 @@ export async function getJournalHomeData(userId: string) {
       title: entry.title,
       date: entry.date,
       excerpt:
-        entry.finalContent.slice(0, 50) +
-        (entry.finalContent.length > 50 ? "..." : ""),
+        entry.finalContent.slice(0, 100) +
+        (entry.finalContent.length > 100 ? "..." : ""),
       mood: entry.mood?.toString(),
       pinned: entry.pinned,
       isPrivate: entry.isPrivate,

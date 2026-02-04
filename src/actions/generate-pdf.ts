@@ -19,7 +19,7 @@ export async function generateEntryPDF(entry: Entry): Promise<string> {
   try {
     /* ---------------- PDF Setup ---------------- */
     const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage();
+    let page = pdfDoc.addPage();
     const { width, height } = page.getSize();
 
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -114,13 +114,25 @@ export async function generateEntryPDF(entry: Entry): Promise<string> {
 
     yPosition -= 20;
 
-    /* ---------------- Content ---------------- */
+    /* ---------------- Content (HTML to Plain Text) ---------------- */
 
-    const contentLines = entry.content.split("\n");
+    // Strip HTML tags and convert to plain text
+    const plainContent = entry.content
+      .replace(/<[^>]*>/g, " ") // Remove HTML tags
+      .replace(/&nbsp;/g, " ") // Replace nbsp with space
+      .replace(/&amp;/g, "&") // Replace &amp; with &
+      .replace(/&lt;/g, "<") // Replace &lt; with <
+      .replace(/&gt;/g, ">") // Replace &gt; with >
+      .replace(/&quot;/g, '"') // Replace &quot; with "
+      .replace(/&#39;/g, "'") // Replace &#39; with '
+      .trim();
+
+    const contentLines = plainContent.split("\n");
+    const contentMargin = 100; // Reserve space at bottom for CTA
 
     for (const line of contentLines) {
-      if (yPosition < 100) {
-        pdfDoc.addPage();
+      if (yPosition < contentMargin) {
+        page = pdfDoc.addPage();
         yPosition = height - 50;
       }
 
@@ -135,7 +147,7 @@ export async function generateEntryPDF(entry: Entry): Promise<string> {
       yPosition -= 15;
     }
 
-    /* ---------------- CTA Section ---------------- */
+    /* ---------------- CTA Section (on last page only) ---------------- */
     const ctaY = 120;
     const ctaHeight = 80;
     const ctaWidth = width - 100;

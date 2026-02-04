@@ -19,11 +19,17 @@ export async function pinEntry(entryId: number) {
       },
       select: {
         pinned: true,
+        isPrivate: true,
       },
     });
 
     if (!entry) {
       return { success: false, message: "Entry not found" };
+    }
+
+    // Check if entry is private - cannot pin private entries
+    if (entry.isPrivate) {
+      return { success: false, message: "Cannot pin private entries" };
     }
 
     // Toggle the pinned status
