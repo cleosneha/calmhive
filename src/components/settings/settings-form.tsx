@@ -13,8 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import Image from "next/image";
+import { DatePicker } from "@/components/shared/date-picker/date-picker";
 import { FaSpinner, FaPencil, FaX } from "react-icons/fa6";
+import Image from "next/image";
 
 const DAYS_OF_WEEK = [
   "Monday",
@@ -34,11 +35,39 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
   const [isEditMode, setIsEditMode] = useState(false);
   const {
     formState,
+    setFormState,
     handleInputChange,
     handleDaysOffChange,
     handleSubmit,
     isLoading,
   } = useSettingsForm(initialData, () => setIsEditMode(false));
+
+  // Store original state for reset
+  const originalState = {
+    name: initialData.name || "",
+    dateOfBirth: initialData.onboarding?.dateOfBirth
+      ? new Date(initialData.onboarding.dateOfBirth)
+          .toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })
+          .replace(/\//g, "/")
+      : "",
+    goals: initialData.onboarding?.goals || "",
+    timeAvailability: initialData.onboarding?.timeAvailability.toString() || "",
+    activities: initialData.onboarding?.activities || "",
+    energeticTimeFrom:
+      initialData.onboarding?.energeticTime?.split("-")[0] || "",
+    energeticTimeTo: initialData.onboarding?.energeticTime?.split("-")[1] || "",
+    daysOff: initialData.onboarding?.daysOff || [],
+    additionalNotes: initialData.onboarding?.additionalNotes || "",
+  };
+
+  const handleCancelEdit = () => {
+    setFormState(originalState);
+    setIsEditMode(false);
+  };
 
   return (
     <div className="space-y-8">
@@ -70,11 +99,6 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
               {initialData.name || "User"}
             </h2>
             <p className="text-[var(--ch-slate)] mt-1">{initialData.email}</p>
-            {initialData.onboarding?.age && (
-              <p className="text-sm text-[var(--ch-slate)] mt-1">
-                Age: {initialData.onboarding.age}
-              </p>
-            )}
           </div>
         </div>
       </div>
@@ -104,7 +128,7 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => setIsEditMode(false)}
+              onClick={handleCancelEdit}
               title="Cancel editing"
             >
               <FaX className="h-5 w-5 text-red-500" />
@@ -135,17 +159,18 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
           </Field>
 
           <Field>
-            <FieldLabel className="text-[var(--ch-slate-dark)]">Age</FieldLabel>
+            <FieldLabel className="text-[var(--ch-slate-dark)]">
+              Date of Birth
+            </FieldLabel>
+            <FieldDescription className="text-xs text-[var(--ch-slate)] mb-2">
+              Your date of birth in DD/MM/YYYY format
+            </FieldDescription>
             <FieldContent>
-              <Input
-                type="number"
-                placeholder="Your age"
-                value={formState.age}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  handleInputChange("age", e.target.value)
-                }
+              <DatePicker
+                value={formState.dateOfBirth}
+                onChange={(date) => handleInputChange("dateOfBirth", date)}
                 disabled={!isEditMode}
-                className="border-[var(--ch-sage-light)]/30 focus:border-[var(--ch-sage)] focus:ring-[var(--ch-sage)] disabled:bg-slate-50 disabled:cursor-not-allowed"
+                className="border-[var(--ch-sage-light)]/30 focus-within:border-[var(--ch-sage)] focus-within:ring-[var(--ch-sage)] disabled:opacity-60"
               />
             </FieldContent>
           </Field>
@@ -314,7 +339,7 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
           <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-slate-200">
             <Button
               type="button"
-              onClick={() => setIsEditMode(false)}
+              onClick={handleCancelEdit}
               variant="outline"
               className="border-[var(--ch-slate-light)] text-[var(--ch-slate-dark)] hover:bg-slate-50 w-full sm:w-auto"
             >

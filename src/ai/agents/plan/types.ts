@@ -18,7 +18,7 @@ export interface PlanTask {
  */
 export interface OnboardingData {
   userId: string;
-  age: number;
+  dateOfBirth: Date;
   goals: string;
   goalSpecificInfo: Record<string, unknown>;
   timeAvailability: number; // in minutes per day (e.g., 45, 60, 120)

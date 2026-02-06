@@ -5,13 +5,13 @@ import { prisma } from "@/lib/db";
 
 interface UpdateProfileInput {
   name: string;
-  age: number;
   goals: string;
   timeAvailability: number;
   activities: string;
   energeticTime: string;
   daysOff: string[];
   additionalNotes: string;
+  dateOfBirth: string; // DD/MM/YYYY format
 }
 
 interface UpdateProfileResult {
@@ -43,11 +43,38 @@ export async function updateUserProfile(
       };
     }
 
-    // Validation: Age should be a number between 1 and 120
-    if (isNaN(input.age) || input.age < 1 || input.age > 120) {
+    // Validation: Date of birth format (DD/MM/YYYY)
+    const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+    if (!dateRegex.test(input.dateOfBirth)) {
       return {
         success: false,
-        message: "Age must be a valid number between 1 and 120",
+        message: "Date of birth must be in DD/MM/YYYY format",
+      };
+    }
+
+    // Parse and validate date
+    const [day, month, year] = input.dateOfBirth.split("/").map(Number);
+    const dateOfBirth = new Date(Date.UTC(year, month - 1, day));
+
+    // Check if date is valid
+    if (
+      dateOfBirth.getUTCDate() !== day ||
+      dateOfBirth.getUTCMonth() !== month - 1 ||
+      dateOfBirth.getUTCFullYear() !== year
+    ) {
+      return {
+        success: false,
+        message: "Invalid date. Please enter a valid date.",
+      };
+    }
+
+    // Check if date is not in the future
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    if (dateOfBirth > today) {
+      return {
+        success: false,
+        message: "Date of birth cannot be in the future.",
       };
     }
 
@@ -120,10 +147,10 @@ export async function updateUserProfile(
     });
 
     // Update or create onboarding
-    await prisma.onboarding.upsert({
+    await prisma.onboarding.update({
       where: { userId: user.id },
-      update: {
-        age: input.age,
+      data: {
+        dateOfBirth: dateOfBirth,
         goals: input.goals,
         timeAvailability: input.timeAvailability,
         activities: input.activities,
@@ -131,18 +158,6 @@ export async function updateUserProfile(
         daysOff: input.daysOff,
         additionalNotes: input.additionalNotes,
         updatedAt: new Date(),
-      },
-      create: {
-        userId: user.id,
-        age: input.age,
-        goals: input.goals,
-        goalSpecificInfo: {},
-        timeAvailability: input.timeAvailability,
-        activities: input.activities,
-        energeticTime: input.energeticTime,
-        daysOff: input.daysOff,
-        additionalNotes: input.additionalNotes,
-        termsAccepted: true,
       },
     });
 

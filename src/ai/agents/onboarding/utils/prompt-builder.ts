@@ -4,7 +4,7 @@ export function buildLLMPrompt(
   type: PromptType,
   userResponse: string,
   currentQuestion: string,
-  nextQuestion: string
+  nextQuestion: string,
 ) {
   switch (type) {
     case "main_goals":
@@ -15,7 +15,7 @@ Response: "${userResponse}"
 
 Output:
 MODIFICATION_REQUIRED: [yes/no]
-MODIFIED_FIELD: [readiness/age/activities/timeAvailability/energeticTime/daysOff/anythingElse or "none"]
+MODIFIED_FIELD: [readiness/dateOfBirth/activities/timeAvailability/energeticTime/daysOff/anythingElse or "none"]
 MODIFIED_VALUE: [new value or "none"]
 RELEVANCE: [yes/no] - no if off-topic/spam AND not a modification
 SAFETY: [safe/concern]
@@ -27,7 +27,7 @@ GOAL_OPTIONS: [3 options only if RELEVANCE=yes and MODIFICATION_REQUIRED=no]
 FOLLOW_UP: [Brief warm acknowledgment of their goal, , might contain a small fact(only if RELEVANCE=yes and MODIFICATION_REQUIRED=no and EXPECTATION_MISMATCH=no)]
 
 Rules:
-- MODIFICATION_REQUIRED=yes if correcting/changing ANY previous field (e.g., "my age is 40", "I said morning not evening", "activities are reading", "no daysOff")
+- MODIFICATION_REQUIRED=yes if correcting/changing ANY previous field (e.g., "my date of birth is 15/03/1990", "I said morning not evening", "activities are reading", "no daysOff")
 - MODIFIED_FIELD: identify field being modified OR "none"
 - MODIFIED_VALUE: [new value or "none"]
 - RELEVANCE=yes if user describes valid wellness goal for CalmHive and no only if off-topic AND not modifying a field
@@ -46,7 +46,7 @@ Response: "${userResponse}"
 
 Output:
 MODIFICATION_REQUIRED: [yes/no]
-MODIFIED_FIELD: [goals/readiness/age/activities/timeAvailability/energeticTime/daysOff or "none"]
+MODIFIED_FIELD: [goals/readiness/dateOfBirth/activities/timeAvailability/energeticTime/daysOff or "none"]
 MODIFIED_VALUE: [new value or "none"]
 RELEVANCE: [yes/no]
 SAFETY: [safe/concern]
@@ -59,7 +59,7 @@ GOAL_OPTIONS: [Only if MODIFIED_FIELD=goals: 3 concrete options]
 
 Rules:
 - This question requests MORE DETAILS about the user's existing goal, but the user MAY also request modifications to any previous field
-- MODIFICATION_REQUIRED=yes if user explicitly asks to change any previous field (e.g., "change my main goal", "my age is 30", "I said evening not morning", "activities are hiking")
+- MODIFICATION_REQUIRED=yes if user explicitly asks to change any previous field (e.g., "change my main goal", "my date of birth is 15/03/1990", "I said evening not morning", "activities are hiking")
 - MODIFIED_FIELD: identify which field (use "goals" if changing main goal) or "none"
 - When MODIFIED_FIELD=goals: generate GOAL_SPECIFIC_QUESTION and GOAL_OPTIONS and treat as a new goal flow
 - If user simply provides details (e.g., "exam pressure", "work stress"), treat as answering current question (MODIFICATION_REQUIRED=no)
@@ -77,7 +77,7 @@ Next: "${nextQuestion}"
 
 Output:
 MODIFICATION_REQUIRED: [yes/no]
-MODIFIED_FIELD: [readiness/age/goals/stressAspect/habitArea/sleepChallenge/goalSpecificInfo/timeAvailability/activities/energeticTime/daysOff/anythingElse or "none"]
+MODIFIED_FIELD: [readiness/dateOfBirth/goals/stressAspect/habitArea/sleepChallenge/goalSpecificInfo/timeAvailability/activities/energeticTime/daysOff/anythingElse or "none"]
 MODIFIED_VALUE: [new value or "none"]
 RELEVANCE: [yes/no]
 SAFETY: [safe/concern]

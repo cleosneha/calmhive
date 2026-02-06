@@ -70,7 +70,7 @@ export interface GoalSpecificInfo {
  */
 export interface OnboardingResponses {
   responses: {
-    age: string;
+    dateOfBirth: string;
     goals: string;
     goalSpecificInfo: GoalSpecificInfo | null;
     timeAvailability: string;

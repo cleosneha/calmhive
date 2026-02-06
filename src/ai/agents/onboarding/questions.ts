@@ -9,7 +9,7 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     followUps: {
       "Yes, ready to start": {
         text: "",
-        nextKey: "age",
+        nextKey: "dateOfBirth",
       },
       "No, not ready yet": {
         text: "No pressure at all! Take your time. Please tell me whenever you feel good to go. 🤍",
@@ -18,15 +18,13 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     },
   },
   {
-    key: "age",
-    text: "Great! So let's start with the first question.\n\nWhat's your age?",
-    options: [], // No options, user should type a number
+    key: "dateOfBirth",
+    text: "Great! So let's start with the first question.\n\nWhat's your date of birth? Please enter in DD/MM/YYYY format (e.g., 15/03/1990).",
+    options: [], // No options, user should type a date
     required: true,
     /**
-     * The followUps for age are now dynamic. The code that handles onboarding should:
-     * 1. Use mapAgeToRange from utils/age-mapper.ts to map the user's input to a range.
-     * 2. Use the followUps below to select the right message for that range.
-     * 3. If no match, use the 'default'.
+     * The followUps for dateOfBirth are dynamic based on age calculated from DOB.
+     * The handler will calculate age from DOB and use the age range to select the appropriate follow-up.
      */
     followUps: {
       "Under 18": {

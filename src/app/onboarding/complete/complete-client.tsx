@@ -24,7 +24,7 @@ import PlanGenerationLoading from "@/components/plan/plan-generation-loading";
 
 interface Props {
   responses: {
-    age: string;
+    dateOfBirth: string;
     goals: string;
     goalSpecificInfo: GoalSpecificInfo | null;
     timeAvailability: string;

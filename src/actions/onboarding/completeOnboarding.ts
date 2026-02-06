@@ -5,6 +5,7 @@ import db from "@/lib/db";
 import { createCheckpointer } from "@/ai/agents/onboarding";
 import type { Prisma } from "@prisma/client";
 import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
+import { parseDDMMYYYY } from "@/ai/agents/onboarding/utils/dob-validator";
 import { compileOnboardingGraph } from "@/ai/agents/onboarding";
 let graphInstance: Awaited<ReturnType<typeof compileOnboardingGraph>> | null =
   null;
@@ -75,12 +76,12 @@ export async function completeOnboarding() {
 
   function parseGoalSpecificInfo(
     responses: Record<string, unknown>,
-    currentGoalQuestion: string
+    currentGoalQuestion: string,
   ): Prisma.InputJsonValue {
     if (responses.goalSpecificInfo) {
       const parsed = parseJSON<GoalSpecificInfo>(
         responses.goalSpecificInfo,
-        {} as GoalSpecificInfo
+        {} as GoalSpecificInfo,
       );
       if (
         parsed &&
@@ -104,7 +105,7 @@ export async function completeOnboarding() {
           "daysOff",
           "anythingElse",
           "readiness",
-          "age",
+          "dateOfBirth",
         ].includes(nextKey)
       ) {
         const answer = responses[nextKey];
@@ -124,8 +125,18 @@ export async function completeOnboarding() {
 
   const parsedDaysOff = parseDaysOff(responses.daysOff);
 
+  // Parse date of birth from DD/MM/YYYY format
+  const dateOfBirthString = String(responses.dateOfBirth || "");
+  const parsedDOB = parseDDMMYYYY(dateOfBirthString);
+
+  if (!parsedDOB) {
+    throw new Error(
+      "Invalid date of birth format. Please use DD/MM/YYYY format.",
+    );
+  }
+
   const onboardingData = {
-    age: responses.age ? parseInt(String(responses.age), 10) : 0,
+    dateOfBirth: parsedDOB,
     goals: String(responses.goals || ""),
     goalSpecificInfo: parseGoalSpecificInfo(responses, currentGoalQuestion),
     timeAvailability: (() => {

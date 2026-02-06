@@ -1,5 +1,6 @@
 import type { OnboardingData } from "../types";
 import { getAvailableDays } from "../tools/days-off-checker";
+import { calculateAgeFromDOB } from "@/utils/age-calculator";
 
 /**
  * Build the system prompt for plan generation
@@ -15,11 +16,12 @@ export function buildPlanGenerationPrompt(
     typeof data.goalSpecificInfo === "object"
       ? JSON.stringify(data.goalSpecificInfo)
       : String(data.goalSpecificInfo);
+  const age = calculateAgeFromDOB(data.dateOfBirth);
 
   return `You are CalmHive's wellness plan generator. Create a personalized weekly plan for a user based on their onboarding responses.
 
 **User Profile:**
-- Age: ${data.age}
+- Age: ${age}
 - Goals: ${data.goals}
 - Goal Details: ${goalInfo}
 - Available Time: ${timeAvailabilityHours} hours per day (${

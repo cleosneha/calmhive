@@ -9,7 +9,7 @@ export interface UserProfileData {
   image: string | null;
   stopEmail: boolean;
   onboarding: {
-    age: number;
+    dateOfBirth: Date;
     goals: string;
     goalSpecificInfo: unknown;
     timeAvailability: string;
@@ -40,7 +40,7 @@ export async function fetchUserProfile(): Promise<UserProfileData | null> {
         stopEmail: true,
         onboarding: {
           select: {
-            age: true,
+            dateOfBirth: true,
             goals: true,
             goalSpecificInfo: true,
             timeAvailability: true,

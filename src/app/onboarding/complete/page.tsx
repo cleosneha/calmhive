@@ -7,6 +7,10 @@ export default async function OnboardingCompletePage() {
   // Server fetch - type-safe
   const data = await getOnboardingResponses();
   const responses = data.responses;
+  console.log(
+    "✅ Onboarding responses fetched for completion page:",
+    responses,
+  );
 
   return (
     <Suspense fallback={<Loading />}>

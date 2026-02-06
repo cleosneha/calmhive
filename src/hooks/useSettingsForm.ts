@@ -6,7 +6,7 @@ import { timeFormatToMinutes } from "@/utils/time-parser";
 
 interface UseSettingsFormState {
   name: string;
-  age: string;
+  dateOfBirth: string;
   goals: string;
   timeAvailability: string;
   activities: string;
@@ -37,7 +37,15 @@ export function useSettingsForm(
 ): UseSettingsFormReturn {
   const [formState, setFormState] = useState<UseSettingsFormState>({
     name: initialData.name || "",
-    age: initialData.onboarding?.age.toString() || "",
+    dateOfBirth: initialData.onboarding?.dateOfBirth
+      ? new Date(initialData.onboarding.dateOfBirth)
+          .toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })
+          .replace(/\//g, "/")
+      : "",
     goals: initialData.onboarding?.goals || "",
     timeAvailability: initialData.onboarding?.timeAvailability.toString() || "",
     activities: initialData.onboarding?.activities || "",
@@ -79,9 +87,6 @@ export function useSettingsForm(
         if (!formState.name.trim()) {
           throw new Error("Name is required");
         }
-        if (!formState.age.trim()) {
-          throw new Error("Age is required");
-        }
         if (!formState.goals.trim()) {
           throw new Error("Goals are required");
         }
@@ -106,16 +111,11 @@ export function useSettingsForm(
           throw new Error("Energetic time range is required");
         }
 
-        // Client-side validation: name and age
+        // Client-side validation: name only
         if (!/^[a-zA-Z\s'-]+$/.test(formState.name.trim())) {
           throw new Error(
             "Name should contain only letters, spaces, hyphens, and apostrophes",
           );
-        }
-
-        const ageNum = parseInt(formState.age, 10);
-        if (isNaN(ageNum) || ageNum < 1 || ageNum > 120) {
-          throw new Error("Age must be a valid number between 1 and 120");
         }
 
         // Validate energetic time duration client-side (30 min - 4 hrs)
@@ -148,7 +148,7 @@ export function useSettingsForm(
 
         const result = await updateUserProfile({
           name: formState.name.trim(),
-          age: ageNum,
+          dateOfBirth: formState.dateOfBirth,
           goals: formState.goals.trim(),
           timeAvailability: timeAvailabilityMinutes,
           activities: formState.activities.trim(),

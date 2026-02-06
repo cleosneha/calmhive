@@ -7,7 +7,7 @@ import type { OnboardingData } from "../types";
  * This is the entry point for the plan generation workflow
  */
 export async function fetchOnboardingDataNode(
-  state: PlanStateType
+  state: PlanStateType,
 ): Promise<Partial<PlanStateType>> {
   try {
     const { userId } = state;
@@ -35,7 +35,7 @@ export async function fetchOnboardingDataNode(
     // Note: timeAvailability is stored in minutes in the database
     const onboardingData: OnboardingData = {
       userId: onboarding.userId,
-      age: onboarding.age,
+      dateOfBirth: onboarding.dateOfBirth,
       goals: onboarding.goals,
       goalSpecificInfo: onboarding.goalSpecificInfo as Record<string, unknown>,
       timeAvailability: onboarding.timeAvailability,

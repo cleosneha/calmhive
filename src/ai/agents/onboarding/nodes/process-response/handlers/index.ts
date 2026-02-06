@@ -1,7 +1,7 @@
 import type { OnboardingStateType } from "../../../state";
 import type { OnboardingQuestion } from "@/types/onboarding";
 import type { ValidationResult } from "../../../tools/validation";
-import { handleAgeResponse } from "./age-handler";
+import { handleDateOfBirthResponse } from "./dob-handler";
 import { handleGoalsResponse } from "./goals-handler";
 import { handleTimeAvailabilityResponse } from "./time-availability-handler";
 import { handleGoalSpecificInfoResponse } from "./goal-specific-info-handler";
@@ -14,7 +14,7 @@ import { handleGeneralResponse } from "./general-handler";
  * Each handler takes (question, userInput, validationResult, state) and returns state update or null
  */
 export const questionHandlers = {
-  age: handleAgeResponse,
+  dateOfBirth: handleDateOfBirthResponse,
   goals: handleGoalsResponse,
   timeAvailability: handleTimeAvailabilityResponse,
   goalSpecificInfo: handleGoalSpecificInfoResponse,
@@ -31,7 +31,7 @@ export async function executeQuestionHandler(
   userInput: string,
   validationResult: ValidationResult,
   state: OnboardingStateType,
-  step: number
+  step: number,
 ): Promise<Partial<OnboardingStateType> | null> {
   const handler =
     questionHandlers[question.key as keyof typeof questionHandlers];
@@ -46,6 +46,6 @@ export async function executeQuestionHandler(
     userInput,
     validationResult,
     state,
-    step
+    step,
   );
 }

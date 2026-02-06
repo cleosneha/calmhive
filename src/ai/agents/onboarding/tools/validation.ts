@@ -33,38 +33,48 @@ export interface ValidationResult {
 export async function validateUserResponse(
   userResponse: string,
   currentQuestionText: string,
-  nextQuestionText: string
+  nextQuestionText: string,
 ): Promise<ValidationResult> {
   const trimmedResponse = userResponse.trim();
 
-  // ===== STEP 6.5: Age validation (rule-based, no LLM) =====
-  // If question asks for age, verify numeric age is in [4, 110]
-  // and map to an age range. If invalid, prompt user to re-enter.
+  // ===== STEP 6.5: Date of Birth validation (rule-based, no LLM) =====
+  // If question asks for date of birth, verify format is DD/MM/YYYY
+  // and validate age is in [4, 110]. If invalid, prompt user to re-enter.
   try {
-    const { mapAgeToRange, isAgeQuestion } = await import(
-      "../utils/age-mapper"
-    );
-    if (isAgeQuestion(currentQuestionText)) {
-      const mapped = mapAgeToRange(trimmedResponse);
-      if (!mapped) {
+    const { validateDateOfBirth, isDateOfBirthQuestion } =
+      await import("../utils/dob-validator");
+    if (isDateOfBirthQuestion(currentQuestionText)) {
+      console.log("[Validation] DOB question detected");
+      const validation = validateDateOfBirth(trimmedResponse);
+      console.log("[Validation] DOB validation result:", validation);
+      if (!validation.isValid) {
+        console.log(
+          "[Validation] DOB validation failed:",
+          validation.errorMessage,
+        );
         return {
           isValid: false,
           isRelevant: false,
           hasSafetyIssue: false,
-          errorMessage: HARD_CODED_MESSAGES.AGE_INVALID,
+          errorMessage:
+            validation.errorMessage || HARD_CODED_MESSAGES.DOB_INVALID,
         };
       }
 
-      // Valid age input — return early with mapped response to skip LLM
+      // Valid DOB input — return early with age range to skip LLM
+      console.log(
+        "[Validation] DOB validation passed, age range:",
+        validation.ageRange,
+      );
       return {
         isValid: true,
         isRelevant: true,
         hasSafetyIssue: false,
-        mappedResponse: mapped,
+        mappedResponse: validation.ageRange,
       };
     }
   } catch (err) {
-    console.warn("Age validation helper failed:", err);
+    console.warn("DOB validation helper failed:", err);
     // Fall through to LLM validation if helper import fails
   }
 
@@ -73,7 +83,7 @@ export async function validateUserResponse(
     const llmResult = await performLLMValidation(
       trimmedResponse,
       currentQuestionText,
-      nextQuestionText
+      nextQuestionText,
     );
 
     console.log("\n✅ [Validation Logic Check]");

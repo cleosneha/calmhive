@@ -49,10 +49,10 @@ export default function OnboardingPage() {
         <Link href="/onboarding/chat" className="w-full">
           <Button
             size="lg"
-            className="w-full bg-[var(--ch-sage-dark)] hover:bg-[var(--ch-sage-dark)]/90 text-white font-semibold rounded-xl transition-all duration-200 group text-base md:text-lg xl:text-xl 2xl:text-2xl py-3 md:py-4 xl:py-5 2xl:py-6"
+            className="w-full bg-[var(--ch-sage-dark)] hover:bg}-[var(--ch-sage-dark)]/90 text-white font-semibold rounded-xl transition-all duration-200 group text-base md:text-lg xl:text-xl 2xl:text-2xl py-3 md:py-4 xl:py-5 2xl:py-6"
           >
             <span>Start the Journey</span>
-            <FiArrowRight className="ml-2 group-hover:translate-x-1 transition-transform text-lg md:text-xl xl:text-2xl 2xl:text-3xl" />
+            <FiArrowRight className="ml-2 g text-lg md:text-xl xl:text-2xl 2xl:text-3xl" />
           </Button>
         </Link>
       </div>

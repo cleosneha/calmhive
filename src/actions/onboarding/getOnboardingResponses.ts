@@ -2,6 +2,7 @@
 import { getCurrentUser } from "@/actions/auth";
 import db from "@/lib/db";
 import type { GoalSpecificInfo, OnboardingResponses } from "@/types/onboarding";
+import { formatDateToDDMMYYYY } from "@/ai/agents/onboarding/utils/dob-validator";
 
 // Retrieve the current onboarding responses
 export async function getOnboardingResponses(): Promise<OnboardingResponses> {
@@ -47,7 +48,7 @@ export async function getOnboardingResponses(): Promise<OnboardingResponses> {
 
   return {
     responses: {
-      age: onboarding.age?.toString() || "",
+      dateOfBirth: formatDateToDDMMYYYY(onboarding.dateOfBirth),
       goals: onboarding.goals,
       goalSpecificInfo,
       timeAvailability: onboarding.timeAvailability?.toString() || "",

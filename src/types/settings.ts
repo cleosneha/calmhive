@@ -6,7 +6,7 @@ export type TimeOfDay = "morning" | "afternoon" | "evening";
 
 export interface UserSettingsFormData {
   name: string;
-  age: number;
+  dateOfBirth: Date;
   goals: string;
   timeAvailability: number;
   activities: string;

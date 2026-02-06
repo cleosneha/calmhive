@@ -95,6 +95,8 @@ export async function requireVerifiedEmail() {
 export async function requireOnboarding() {
   const { user, isVerified, isOnboarded } = await getAuthState();
 
+  console.log("🔐 Auth state in requireOnboarding:", { isOnboarded });
+
   if (!user) {
     redirect("/login");
   }
