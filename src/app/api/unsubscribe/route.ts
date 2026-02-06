@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { connection } from "next/server";
 
 /**
  * Unsubscribe from weekly insights emails
  * Updates the user's stopEmail field to true
  */
 export async function GET(request: NextRequest) {
+  await connection(); // Mark route as dynamic
+
   try {
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
     const userId = searchParams.get("userId");
 
     if (!userId) {
