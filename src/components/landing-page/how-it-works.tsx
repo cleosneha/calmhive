@@ -64,8 +64,8 @@ export default function HowItWorks() {
           </p>
         </div>
 
-        <div className="mt-12 flex justify-center">
-          <div className="flex flex-wrap gap-6 w-full justify-center">
+        <div className="mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-7xl mx-auto">
             {steps.map((step, i) => {
               const Icon = step.Icon;
               return (
@@ -79,7 +79,7 @@ export default function HowItWorks() {
                     delay: i * 0.08,
                     ease: [0.22, 1, 0.36, 1],
                   }}
-                  className="relative overflow-hidden flex flex-col gap-8 rounded-2xl border border-[var(--ch-sage-light)]/30 bg-white/60 p-10 md:p-12 shadow-[22px_26px_36px_-12px_rgba(2,_31,_0,_0.08)] backdrop-blur-sm w-[calc(33.333%-1rem)] min-h-70"
+                  className="relative overflow-hidden flex flex-col gap-8 rounded-2xl border border-[var(--ch-sage-light)]/30 bg-white/60 p-10 md:p-12 shadow-[22px_26px_36px_-12px_rgba(2,_31,_0,_0.08)] backdrop-blur-sm min-h-70"
                 >
                   {/* Subtle, centered gradient circle (background of card) */}
                   <motion.div
