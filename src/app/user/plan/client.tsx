@@ -8,7 +8,6 @@ import AddTaskDialog from "@/components/plan/add-task";
 import { usePlanData } from "@/hooks/use-plan-data";
 import { Button } from "@/components/ui/button";
 import { BsStars } from "react-icons/bs";
-import { FiX } from "react-icons/fi";
 import { MdAdd } from "react-icons/md";
 import { toast } from "sonner";
 
@@ -44,8 +43,8 @@ interface Props {
 
 // Status icons and labels removed; only activity name is displayed in table cells.
 
-export default function PlanClient({ plan: initialPlan, userId }: Props) {
-  const { plan, refreshPlan, isRefreshing } = usePlanData(initialPlan);
+export default function PlanClient({ plan: initialPlan }: Props) {
+  const { plan, refreshPlan } = usePlanData(initialPlan);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);

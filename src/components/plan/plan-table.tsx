@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import TaskHoverCard from "@/components/plan/hover-card";
 import {
@@ -65,7 +64,6 @@ export default function PlanTable({ plan, onEdit, onRefresh }: Props) {
     setHolidayPopupOpen,
     selectedDate,
     isRemovingHoliday,
-    dayOrder,
     statusClasses,
     sortedTasks,
     handleStatusChange,
@@ -76,16 +74,6 @@ export default function PlanTable({ plan, onEdit, onRefresh }: Props) {
     getDayDate,
     getDayDateStr,
   } = usePlanTable(plan, onRefresh);
-
-  // Convert holidays array to a Set of date strings for O(1) lookup
-  const holidayDates = useMemo(() => {
-    const dateSet = new Set<string>();
-    plan.holidays.forEach((holiday) => {
-      const d = new Date(holiday.date);
-      dateSet.add(d.toISOString().split("T")[0]);
-    });
-    return dateSet;
-  }, [plan.holidays]);
 
   return (
     <div className="shadow-lg overflow-hidden hidden md:block">

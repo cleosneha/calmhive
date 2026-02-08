@@ -26,7 +26,6 @@ import {
 import TaskEditDialog from "@/components/plan/task-edit";
 import { HolidayPopup } from "@/components/plan/holiday-popup";
 import { usePlanTable } from "@/hooks/use-plan-table";
-import { getDateForDayOfWeek, dateToISOString } from "@/utils/date";
 import { Button } from "@/components/ui/button";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 
@@ -257,7 +256,7 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
                                 if (!open) setEditingTaskId(null);
                               }}
                               task={task}
-                              onSave={async (updatedTask) => {
+                              onSave={async () => {
                                 setEditingTaskId(null);
                               }}
                               onTaskSaved={onRefresh}
