@@ -7,7 +7,7 @@ export default function Purpose() {
   const words = ["Noise", "Pressure", "Overthinking"];
 
   return (
-    <section id="purpose" className="w-full py-16 bg-transparent">
+    <section id="purpose" className="w-full py-10 md:py-16 bg-transparent">
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center max-w-4xl mx-auto">
           <h3 className="text-3xl font-semibold text-[var(--ch-sage-dark)]">
@@ -68,8 +68,8 @@ export default function Purpose() {
         </div>
 
         {/* Mobile View: small uniform pop-in images in a full-screen section */}
-        <div className="md:hidden w-full h-screen flex flex-col justify-start items-center pt-4">
-          <div className="flex flex-col items-center gap-4 w-full">
+        <div className="md:hidden w-full flex flex-col justify-start items-center py-12">
+          <div className="flex flex-col items-center gap-8 w-full">
             {[
               "/assets/landing-page/purpose-1.png",
               "/assets/landing-page/purpose-2.png",

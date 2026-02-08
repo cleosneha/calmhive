@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { FiSend, FiPlay } from "react-icons/fi";
+import { FiSend, FiPlay, FiX } from "react-icons/fi";
 import Image from "next/image";
 import ChatMessages from "@/components/onboarding/chat-messages";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,10 @@ import { usePlanChatbotSession } from "@/hooks/usePlanChatbotSession";
 
 export default function PlanChatbot({
   onPlanUpdate,
+  onClose,
 }: {
   onPlanUpdate?: () => void;
+  onClose?: () => void;
 }) {
   const {
     messages,
@@ -88,12 +90,19 @@ export default function PlanChatbot({
         <div className="px-4 py-3 border-b border-[var(--ch-sage-dark)]/10 flex items-center justify-between flex-shrink-0">
           <div>
             <h2 className="text-sm font-semibold text-[var(--ch-sage-dark)]">
-              Plan Assistant
+              Vyra
             </h2>
             <p className="text-xs text-[var(--foreground)]/60">
               Get help with your wellness plan
             </p>
           </div>
+          <button
+            onClick={onClose}
+            className="text-[var(--ch-sage-dark)] hover:bg-[var(--ch-sage-dark)]/10 rounded-lg p-2 transition"
+            aria-label="Close chatbot"
+          >
+            <FiX className="text-xl" />
+          </button>
         </div>
 
         <div className="px-4 py-8 flex-1 flex flex-col items-center justify-center gap-8">
@@ -143,12 +152,19 @@ export default function PlanChatbot({
       <div className="px-4 py-3 border-b border-[var(--ch-sage-dark)]/10 flex items-center justify-between bg-white z-10 flex-shrink-0">
         <div>
           <h2 className="text-sm font-semibold text-[var(--ch-sage-dark)]">
-            Plan Assistant
+            Vyra
           </h2>
           <p className="text-xs text-[var(--foreground)]/60">
-            Ask questions or request changes to your plan
+            Get help with your wellness plan
           </p>
         </div>
+        <button
+          onClick={onClose}
+          className="text-[var(--ch-sage-dark)] hover:bg-[var(--ch-sage-dark)]/10 rounded-lg p-2 transition"
+          aria-label="Close chatbot"
+        >
+          <FiX className="text-xl" />
+        </button>
       </div>
 
       {/* Scrollable Messages Area */}

@@ -108,20 +108,20 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
               value={day}
               className="border border-slate-200 rounded-lg shadow-sm hover:shadow-md transition-shadow mb-4 last:mb-0 bg-white"
             >
-              <div className="flex items-center justify-between px-4 py-3.5 hover:bg-[var(--ch-sage-dark)]/5">
-                <AccordionTrigger className="flex-1 px-0 py-0 hover:bg-transparent [&[data-state=open]>svg]:pr-2">
-                  <div className="text-left flex-1">
-                    <h3 className="font-semibold text-base text-[var(--ch-sage-dark)]">
-                      {day}
-                    </h3>
-                    {dayHours && (
-                      <p className="text-sm text-[var(--foreground)]/60 mt-1">
-                        {dayHours}
-                      </p>
-                    )}
-                  </div>
-                </AccordionTrigger>
+              <AccordionTrigger className="px-4 py-3.5 hover:bg-[var(--ch-sage-dark)]/5 w-full justify-between">
+                <div className="text-left">
+                  <h3 className="font-semibold text-base text-[var(--ch-sage-dark)]">
+                    {day}
+                  </h3>
+                  {dayHours && (
+                    <p className="text-sm text-[var(--foreground)]/60 mt-1">
+                      {dayHours}
+                    </p>
+                  )}
+                </div>
+              </AccordionTrigger>
 
+              <AccordionContent className="pt-3 pb-4 px-4">
                 {isDayHolidayFlag ? (
                   <Button
                     onClick={(e) => {
@@ -130,7 +130,7 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
                     }}
                     disabled={isRemovingHoliday}
                     size="xs"
-                    className="ml-2 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 transition-colors shadow-sm flex-shrink-0"
+                    className="mb-4 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 transition-colors shadow-sm"
                   >
                     Remove Holiday
                   </Button>
@@ -141,14 +141,11 @@ export default function PlanTableMobile({ plan, onRefresh }: Props) {
                       openHolidayPopup(dayDate);
                     }}
                     size="xs"
-                    className="ml-2 rounded-2xl bg-slate-50 text-black border border-slate-500 hover:bg-slate-100 transition-colors shadow-md flex-shrink-0"
+                    className="mb-4 rounded-2xl bg-slate-50 text-black border border-slate-500 hover:bg-slate-100 transition-colors shadow-md"
                   >
                     Mark as Holiday
                   </Button>
                 )}
-              </div>
-
-              <AccordionContent className="pt-3 pb-4 px-4">
                 <Accordion type="single" collapsible className="w-full">
                   <div className="space-y-3">
                     {tasks.map((task) => (

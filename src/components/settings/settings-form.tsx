@@ -58,8 +58,9 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
     timeAvailability: initialData.onboarding?.timeAvailability.toString() || "",
     activities: initialData.onboarding?.activities || "",
     energeticTimeFrom:
-      initialData.onboarding?.energeticTime?.split("-")[0] || "",
-    energeticTimeTo: initialData.onboarding?.energeticTime?.split("-")[1] || "",
+      initialData.onboarding?.energeticTime?.split("-")[0]?.trim() || "",
+    energeticTimeTo:
+      initialData.onboarding?.energeticTime?.split("-")[1]?.trim() || "",
     daysOff: initialData.onboarding?.daysOff || [],
     additionalNotes: initialData.onboarding?.additionalNotes || "",
   };
@@ -109,7 +110,7 @@ export function SettingsForm({ initialData }: SettingsFormProps) {
         className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 sm:p-8 space-y-6"
       >
         {/* Form Header with Edit Button */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-200 gap-3">
+        <div className="flex sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-200 gap-3">
           <h2 className="text-xl font-bold text-[var(--ch-slate-dark)]">
             Settings
           </h2>

@@ -156,7 +156,7 @@ export default function PlanClient({ plan: initialPlan, userId }: Props) {
           {/* Tooltip */}
           {showTooltip && (
             <div className="absolute bottom-full right-0 mb-3 bg-[var(--ch-sage-dark)] text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap shadow-lg z-40">
-              Ask/Edit with AI
+              Ask/Edit with Vyra
               <div className="absolute top-full right-2 w-2 h-2 bg-[var(--ch-sage-dark)] transform rotate-45"></div>
             </div>
           )}
@@ -170,7 +170,7 @@ export default function PlanClient({ plan: initialPlan, userId }: Props) {
             aria-label="Open AI Chatbot"
             size="icon"
           >
-            <BsStars className="w-6 h-6" />
+            <BsStars className="w-14 h-14" />
           </Button>
         </div>
       </div>
@@ -189,20 +189,12 @@ export default function PlanClient({ plan: initialPlan, userId }: Props) {
 
         {/* Modal centered on screen */}
         <div className="relative w-full sm:w-140 h-[90vh] max-h-[90vh] bg-white rounded-lg shadow-2xl flex flex-col z-50 overflow-hidden">
-          {/* Close Button */}
-          <Button
-            onClick={() => setIsChatbotOpen(false)}
-            variant="ghost"
-            size="icon"
-            className="absolute top-4 right-4 text-[var(--foreground)]/60 hover:text-[var(--foreground)] transition z-10"
-            aria-label="Close chatbot"
-          >
-            <FiX className="w-5 h-5" />
-          </Button>
-
           {/* Chatbot Component */}
           <div className="flex-1 min-h-0">
-            <PlanChatbot onPlanUpdate={handleRefresh} />
+            <PlanChatbot
+              onPlanUpdate={handleRefresh}
+              onClose={() => setIsChatbotOpen(false)}
+            />
           </div>
         </div>
       </div>

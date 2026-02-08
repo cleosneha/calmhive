@@ -56,7 +56,7 @@ export default function FAQ() {
   return (
     <section
       id="faq"
-      className="my-16 py-16 bg-white/80 backdrop-blur-sm rounded-2xl mx-auto"
+      className="my-8 md:my-16 py-10 md:py-16 bg-white/80 backdrop-blur-sm rounded-2xl mx-auto"
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-24">
         <div className="text-center max-w-4xl mx-auto">

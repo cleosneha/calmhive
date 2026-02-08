@@ -114,13 +114,13 @@ export default function JournalHome({
   const renderCard = (entry: Entry) => (
     <Card
       key={entry.id}
-      className="w-[200px] h-[220px] flex-none p-0 overflow-hidden cursor-pointer shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] rounded-3xl scroll-snap-align-start"
+      className="w-[200px] h-[220px] flex-none p-0 overflow-hidden cursor-pointer shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] rounded-3xl scroll-snap-align-start "
       onClick={() =>
         router.push(`/user/journal/entry-section/${entry.id}?mode=show`)
       }
     >
-      <div className="h-full flex flex-col">
-        <div className="flex items-center justify-between p-3 bg-[var(--ch-slate-dark)]/6">
+      <div className="h-full flex flex-col ">
+        <div className="flex items-center justify-between p-3 bg-gradient-to-r from-[var(--ch-sage-light)]/10 to-[var(--ch-sage)]/10">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="w-8 h-8 rounded-md bg-[var(--ch-slate-dark)]/10 flex items-center justify-center text-[var(--ch-slate)]">
               <FiFileText />
@@ -218,20 +218,30 @@ export default function JournalHome({
       <div className="flex items-start gap-6">
         {/* Main content */}
         <main className="flex-1">
-          <div className="mb-6">
-            <div className="flex gap-4 justify-center items-center">
+          <div className="mb-6 max-w-2xl mx-auto items-center">
+            <div className="flex gap-4 items-center">
               <Card
-                className="aspect-square min-w-[120px] p-0 overflow-hidden rounded-3xl cursor-pointer"
+                className="w-full p-0 overflow-hidden rounded-3xl cursor-pointer"
                 onClick={() => router.push("/user/journal/entry-section/new")}
               >
                 <div className="h-full flex flex-col">
-                  <div className="flex flex-col items-center justify-center gap-3 p-3 bg-[var(--ch-slate-dark)]/6">
-                    <h4 className="font-semibold text-[var(--ch-slate-dark)] truncate">
-                      New Entry
+                  <div className="flex flex-col  justify-center gap-4 p-8 bg-gradient-to-r from-[var(--ch-sage-light)]/10 to-[var(--ch-sage)]/10">
+                    <h4 className="font-bold text-2xl text-[var(--ch-slate-dark)]">
+                      Add New Entry
                     </h4>
-                    <div className="w-10 h-10 rounded-full bg-[var(--ch-sage-dark)] flex items-center justify-center text-white shadow-md">
-                      <FiPlus />
-                    </div>
+                    <p className="text-sm text-[var(--ch-slate)] italic max-w-md ">
+                      &ldquo;Every thought matters. Write today, understand
+                      tomorrow.&rdquo;
+                    </p>
+                    <Button
+                      className="mt-2 bg-[var(--ch-sage-dark)] text-white px-6 py-2 rounded-lg hover:bg-[var(--ch-sage-dark)]/90 transition flex items-center gap-2 font-medium max-w-fit"
+                      onClick={() =>
+                        router.push("/user/journal/entry-section/new")
+                      }
+                    >
+                      <FiPlus className="text-lg" />
+                      New Entry
+                    </Button>
                   </div>
                 </div>
               </Card>
@@ -267,7 +277,7 @@ export default function JournalHome({
                 ) : (
                   <Card className="w-[200px] h-[220px] flex-none p-0 overflow-hidden shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] rounded-3xl scroll-snap-align-start">
                     <div className="h-full flex flex-col">
-                      <div className="flex items-center gap-3 p-3 bg-[var(--ch-slate-dark)]/6">
+                      <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-[var(--ch-sage-light)]/10 to-[var(--ch-sage)]/10">
                         <div className="w-8 h-8 rounded-md bg-[var(--ch-slate-dark)]/10 flex items-center justify-center text-[var(--ch-slate)]">
                           <FiFileText />
                         </div>
@@ -329,7 +339,7 @@ export default function JournalHome({
                 ) : (
                   <Card className="w-[200px] h-[220px] flex-none p-0 overflow-hidden shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] rounded-3xl scroll-snap-align-start">
                     <div className="h-full flex flex-col">
-                      <div className="flex items-center gap-3 p-3 bg-[var(--ch-slate-dark)]/6">
+                      <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-[var(--ch-sage-light)]/10 to-[var(--ch-sage)]/10">
                         <div className="w-8 h-8 rounded-md bg-[var(--ch-slate-dark)]/10 flex items-center justify-center text-[var(--ch-slate)]">
                           <FiFileText />
                         </div>

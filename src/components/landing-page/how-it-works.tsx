@@ -51,7 +51,7 @@ export default function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="my-15 py-14 bg-white/80 backdrop-blur-sm rounded-2xl"
+      className="my-8 py-10 md:py-14 bg-white/80 backdrop-blur-sm rounded-2xl"
     >
       <div className="max-w-[90vw] mx-auto px-6 lg:px-8">
         <div className="text-center max-w-4xl mx-auto">
@@ -64,7 +64,7 @@ export default function HowItWorks() {
           </p>
         </div>
 
-        <div className="mt-12">
+        <div className="mt-8 md:mt-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-7xl mx-auto">
             {steps.map((step, i) => {
               const Icon = step.Icon;
@@ -79,7 +79,7 @@ export default function HowItWorks() {
                     delay: i * 0.08,
                     ease: [0.22, 1, 0.36, 1],
                   }}
-                  className="relative overflow-hidden flex flex-col gap-8 rounded-2xl border border-[var(--ch-sage-light)]/30 bg-white/60 p-10 md:p-12 shadow-[22px_26px_36px_-12px_rgba(2,_31,_0,_0.08)] backdrop-blur-sm min-h-70"
+                  className="relative overflow-hidden flex flex-col gap-8 rounded-2xl border border-[var(--ch-sage-light)]/30 bg-white/60 p-6 md:p-10 lg:p-12 shadow-[22px_26px_36px_-12px_rgba(2,_31,_0,_0.08)] backdrop-blur-sm min-h-70"
                 >
                   {/* Subtle, centered gradient circle (background of card) */}
                   <motion.div

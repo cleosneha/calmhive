@@ -12,8 +12,7 @@ import {
   FiSettings,
   FiMenu,
 } from "react-icons/fi";
-import { MdLogout, MdDeleteForever } from "react-icons/md";
-import { toast } from "sonner";
+import { MdLogout } from "react-icons/md";
 import {
   Sheet,
   SheetContent,
@@ -27,20 +26,9 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useSignOut } from "@/hooks/useSession";
 import { useRouter } from "next/navigation";
-import { deleteUserAccount } from "@/actions/settings/delete-account";
 
 const navLinks = [
   { href: "/user/journal", icon: <FiBook />, label: "Journal" },
@@ -66,54 +54,26 @@ export default function HamburgerHeader() {
   const { signOut } = useSignOut();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     router.push("/login");
   };
 
-  const handleConfirmDelete = async () => {
-    setIsDeleting(true);
-    try {
-      const result = await deleteUserAccount();
-      if ("success" in result && result.success) {
-        // Use window.location for hard redirect
-        window.location.href = "/login";
-      } else {
-        toast.error(
-          "message" in result
-            ? result.message
-            : "Failed to delete account. Please try again.",
-        );
-        setIsDeleting(false);
-        setShowDeleteDialog(false);
-      }
-    } catch (error) {
-      console.error("Error deleting account:", error);
-      toast.error("Failed to delete account. Please try again.");
-      setIsDeleting(false);
-      setShowDeleteDialog(false);
-    }
-  };
-
-  const handleDeleteAccount = () => {
-    setShowDeleteDialog(true);
-  };
-
   return (
     <>
       {/* Mobile Header */}
       <header className="fixed top-0 left-0 right-0 z-40 bg-white border-b border-[var(--sidebar-border)] p-4 flex items-center justify-between md:hidden">
-        <Image
-          src="/calmhive.png"
-          alt="CalmHive Logo"
-          width={32}
-          height={32}
-          className="transition-all duration-200"
-          priority
-        />
+        <Link href="/">
+          <Image
+            src="/calmhive.png"
+            alt="CalmHive Logo"
+            width={32}
+            height={32}
+            className="transition-all duration-200"
+            priority
+          />
+        </Link>
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button
@@ -130,13 +90,15 @@ export default function HamburgerHeader() {
             <div className="flex flex-col h-full">
               {/* Header with user initials menu inside sheet */}
               <div className="flex items-center justify-between p-4 border-b border-[var(--sidebar-border)]">
-                <Image
-                  src="/calmhive.png"
-                  alt="CalmHive Logo"
-                  width={32}
-                  height={32}
-                  priority
-                />
+                <Link href="/">
+                  <Image
+                    src="/calmhive.png"
+                    alt="CalmHive Logo"
+                    width={32}
+                    height={32}
+                    priority
+                  />
+                </Link>
               </div>
 
               {/* Navigation */}
@@ -182,16 +144,6 @@ export default function HamburgerHeader() {
                         </span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={handleDeleteAccount}
-                        disabled={isDeleting}
-                        className="text-[var(--destructive)] hover:bg-[var(--destructive)]/10 focus:bg-[var(--destructive)]/10"
-                      >
-                        <span className="flex items-center gap-2">
-                          <MdDeleteForever className="text-lg" />
-                          {isDeleting ? "Deleting..." : "Delete Account"}
-                        </span>
-                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -200,34 +152,6 @@ export default function HamburgerHeader() {
           </SheetContent>
         </Sheet>
       </header>
-
-      {/* Delete Account Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent className="bg-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-[var(--destructive)]">
-              Delete Account
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete your account? This action cannot
-              be undone and will permanently delete all your data including
-              journal entries, plans, insights, and vector embeddings.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="cursor-pointer">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              disabled={isDeleting}
-              className="bg-[var(--destructive)] hover:bg-[var(--destructive)]/90 text-white cursor-pointer"
-            >
-              {isDeleting ? "Deleting..." : "Delete Account"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

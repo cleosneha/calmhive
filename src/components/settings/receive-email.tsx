@@ -30,7 +30,7 @@ export function ReceiveEmail({ currentStopEmail }: ReceiveEmailProps) {
 
   return (
     <div className="bg-white rounded-lg border p-6 shadow-sm">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-6 sm:flex-row items-start sm:items-center justify-between">
         <div className="flex items-start gap-3">
           <div>
             <h3 className="text-lg font-semibold text-[var(--ch-slate-dark)]">
