@@ -1,24 +1,12 @@
 /**
- * Time-based greeting using user's actual timezone
+ * Determines greeting based on local time
  *
  * Rules:
  * - 03:00 – 11:59 → Good morning
  * - 12:00 – 15:59 → Good afternoon
  * - 16:00 – 02:59 → Good evening
  */
-
-export function getTimeGreeting(
-  timeZone: string,
-  now: Date = new Date(),
-): string {
-  const hour = Number(
-    new Intl.DateTimeFormat("en-US", {
-      hour: "numeric",
-      hour12: false,
-      timeZone,
-    }).format(now),
-  );
-
+export function getTimeGreeting(hour: number): string {
   if (hour >= 3 && hour < 12) return "Good morning";
   if (hour >= 12 && hour < 16) return "Good afternoon";
   return "Good evening";
@@ -42,24 +30,8 @@ const JOURNAL_QUOTES = [
 // ------------------------------------------------------------------
 
 /**
- * Returns greeting message + random journaling quote
+ * Get random journaling quote
  */
-export function getGreeting(params: {
-  timeZone: string;
-  userName?: string;
-  now?: Date;
-}) {
-  const { timeZone, userName, now = new Date() } = params;
-
-  const greeting = getTimeGreeting(timeZone, now);
-  const firstName = userName?.split(" ")?.[0]?.trim();
-  const message = firstName ? `Hey ${firstName}, ${greeting}` : greeting;
-
-  const quote =
-    JOURNAL_QUOTES[Math.floor(Math.random() * JOURNAL_QUOTES.length)];
-
-  return {
-    message,
-    quote,
-  };
+export function getRandomQuote(): string {
+  return JOURNAL_QUOTES[Math.floor(Math.random() * JOURNAL_QUOTES.length)];
 }
