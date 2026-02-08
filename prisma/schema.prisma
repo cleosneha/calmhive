@@ -28,6 +28,7 @@ model User {
     encryptedPin                  String?
     recentlyVisitedJournalEntries Int[]     @default([]) // Array of JournalEntry IDs (max 6, most recent first)
     stopEmail                     Boolean   @default(false)
+    welcomeEmailSent              Boolean   @default(false) // Flag to track if welcome email has been sent
     streak                        Int       @default(0) // Current consecutive days with task activity
     maxStreak                     Int       @default(0) // Highest streak ever achieved
     lastStreakUpdate              DateTime? // Last date when user updated any task status (UTC)

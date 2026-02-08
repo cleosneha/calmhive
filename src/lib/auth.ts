@@ -1,5 +1,4 @@
 import { betterAuth } from "better-auth";
-import { createAuthMiddleware } from "better-auth/api";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import db from "./db";
@@ -32,19 +31,6 @@ export const auth = betterAuth({
   },
   plugins: [nextCookies()], // Add nextCookies plugin for server actions cookie handling
   hooks: {
-    after: createAuthMiddleware(async (ctx) => {
-      if (ctx.path.startsWith("/sign-up") || ctx.path.startsWith("/sign-in")) {
-        const newSession = ctx.context.newSession;
-        if (newSession) {
-          sendWelcomeEmail(
-            newSession.user.email,
-            newSession.user.name || "there",
-          ).catch((error) => {
-            console.error("Failed to send welcome email:", error);
-          });
-        }
-      }
-    }),
     session: {
       created: async ({ session, user }: SessionCallbackParams) => {
         // Fetch user with onboarded field from DB
@@ -67,10 +53,25 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (user) => {
-          // Send welcome email when user is created
-          sendWelcomeEmail(user.email, user.name || "there").catch((error) => {
-            console.error("Failed to send welcome email:", error);
-          });
+          // Send welcome email only if not already sent
+          if (!user.welcomeEmailSent) {
+            try {
+              const result = await sendWelcomeEmail(
+                user.email,
+                user.name || "there",
+              );
+
+              // Update the flag in database after successful email send
+              if (result.success) {
+                await db.user.update({
+                  where: { id: user.id },
+                  data: { welcomeEmailSent: true },
+                });
+              }
+            } catch (error) {
+              console.error("Failed to send welcome email:", error);
+            }
+          }
         },
       },
     },
@@ -78,6 +79,11 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       onboarded: {
+        type: "boolean",
+        defaultValue: false,
+        required: false,
+      },
+      welcomeEmailSent: {
         type: "boolean",
         defaultValue: false,
         required: false,
