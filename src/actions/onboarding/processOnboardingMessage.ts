@@ -20,6 +20,7 @@ export async function processOnboardingMessage(userMessage: string): Promise<
       currentGoalSpecificQuestion: string;
       selectedDays: string[];
       isMultiSelectMode: boolean;
+      waitingForDateFormat: boolean;
     }
   | ApiError
 > {
@@ -37,7 +38,7 @@ export async function processOnboardingMessage(userMessage: string): Promise<
 
     const result = await graphInstance.invoke(
       { messages: [new HumanMessage(userMessage)] },
-      { configurable: { thread_id: user.id } }
+      { configurable: { thread_id: user.id } },
     );
 
     return {
@@ -47,8 +48,8 @@ export async function processOnboardingMessage(userMessage: string): Promise<
           typeof msg.content === "string"
             ? msg.content
             : Array.isArray(msg.content)
-            ? msg.content.map((c) => ("text" in c ? c.text : "")).join("")
-            : String(msg.content),
+              ? msg.content.map((c) => ("text" in c ? c.text : "")).join("")
+              : String(msg.content),
       })),
       step: result.step,
       isComplete: result.isComplete,
@@ -57,6 +58,7 @@ export async function processOnboardingMessage(userMessage: string): Promise<
       currentGoalSpecificQuestion: result.currentGoalSpecificQuestion || "",
       selectedDays: result.selectedDays || [],
       isMultiSelectMode: result.isMultiSelectMode || false,
+      waitingForDateFormat: result.waitingForDateFormat || false,
     };
   } catch (error) {
     console.error("❌ Error in onboarding message processing:", error);

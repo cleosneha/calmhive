@@ -18,6 +18,7 @@ interface OnboardingSessionState {
   firstName: string;
   selectedDays: string[];
   isMultiSelectMode: boolean;
+  waitingForDateFormat: boolean;
 }
 
 interface ErrorResponse {
@@ -46,6 +47,7 @@ export function useOnboardingSession() {
     firstName: "",
     selectedDays: [],
     isMultiSelectMode: false,
+    waitingForDateFormat: false,
   });
 
   // Initialize onboarding session
@@ -76,6 +78,7 @@ export function useOnboardingSession() {
             ? result.selectedDays
             : [],
           isMultiSelectMode: !!result.isMultiSelectMode,
+          waitingForDateFormat: !!result.waitingForDateFormat,
         }));
       } catch (error) {
         console.error("Failed to start onboarding:", error);
@@ -152,6 +155,7 @@ export function useOnboardingSession() {
             ? result.selectedDays
             : [],
           isMultiSelectMode: !!result.isMultiSelectMode,
+          waitingForDateFormat: !!result.waitingForDateFormat,
           loading: false,
         }));
       } catch (error: unknown) {
@@ -201,6 +205,7 @@ export function useOnboardingSession() {
                 ? result.selectedDays
                 : [],
               isMultiSelectMode: !!result.isMultiSelectMode,
+              waitingForDateFormat: !!result.waitingForDateFormat,
               loading: false,
             }));
             return;
@@ -223,7 +228,7 @@ export function useOnboardingSession() {
         }));
       }
     },
-    [state.input]
+    [state.input],
   );
 
   const handleInputKeyDown = useCallback(
@@ -232,7 +237,7 @@ export function useOnboardingSession() {
         handleSend();
       }
     },
-    [state.loading, handleSend]
+    [state.loading, handleSend],
   );
 
   const setInput = useCallback((input: string) => {
@@ -284,7 +289,7 @@ export function useOnboardingSession() {
       "Sunday",
     ];
     const selectedDaysWithoutNone = state.selectedDays.filter(
-      (d) => d !== "None"
+      (d) => d !== "None",
     );
     if (selectedDaysWithoutNone.length === allDays.length) {
       setState((prev) => ({

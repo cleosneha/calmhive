@@ -16,7 +16,7 @@ export async function handleCustomResponse(
   question: OnboardingQuestion,
   userInput: string,
   step: number,
-  state: OnboardingStateType
+  state: OnboardingStateType,
 ): Promise<Partial<OnboardingStateType> | null> {
   const isLastQuestion = isLastQuestionIndex(step);
   const nextQuestionText = isLastQuestion
@@ -32,7 +32,7 @@ export async function handleCustomResponse(
     validationResult = await validateUserResponse(
       userInput,
       question.text,
-      nextQuestionText
+      nextQuestionText,
     );
   } catch (err) {
     console.error("Error validating user response via LLM:", err);
@@ -46,7 +46,7 @@ export async function handleCustomResponse(
   const modificationResult = await handleModificationRequest(
     validationResult,
     question,
-    step
+    step,
   );
   console.log(
     "  🔧 [Modification Check]",
@@ -55,7 +55,7 @@ export async function handleCustomResponse(
     "| modifiedField:",
     validationResult.modifiedField,
     "| modifiedValue:",
-    validationResult.modifiedValue
+    validationResult.modifiedValue,
   );
   if (modificationResult) {
     console.log("  ✅ Modification handled, returning result");
@@ -78,6 +78,23 @@ export async function handleCustomResponse(
 
   // PRIORITY 4: Handle irrelevant response
   if (!validationResult.isRelevant) {
+    // If it's a DOB format clarification or full year request, let the handler deal with it
+    if (
+      validationResult.needsFormatClarification ||
+      validationResult.needsFullYear
+    ) {
+      const handlerResult = await executeQuestionHandler(
+        question,
+        userInput,
+        validationResult,
+        state,
+        step,
+      );
+      if (handlerResult) {
+        return handlerResult;
+      }
+    }
+
     return {
       messages: [new AIMessage(validationResult.errorMessage || "")],
       step,
@@ -90,7 +107,7 @@ export async function handleCustomResponse(
     userInput,
     validationResult,
     state,
-    step
+    step,
   );
 
   if (handlerResult) {
@@ -116,8 +133,8 @@ export async function handleCustomResponse(
         buildMessage(
           validationResult,
           undefined,
-          ONBOARDING_QUESTIONS[step + 1]
-        )
+          ONBOARDING_QUESTIONS[step + 1],
+        ),
       ),
     ],
   };
@@ -129,7 +146,7 @@ export async function handleCustomResponse(
 function handleSkipRequest(
   question: OnboardingQuestion,
   step: number,
-  isLastQuestion: boolean
+  isLastQuestion: boolean,
 ): Partial<OnboardingStateType> {
   const isOptionalQuestion = !question.required;
 

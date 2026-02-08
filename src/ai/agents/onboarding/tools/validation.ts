@@ -22,6 +22,9 @@ export interface ValidationResult {
   goalOptions?: string[]; // Answer options for goal-specific question
   // New: readiness detection carried from LLM for the greeting question
   readiness?: "yes" | "no";
+  // DOB validation flags
+  needsFormatClarification?: boolean;
+  needsFullYear?: boolean;
 }
 
 /**
@@ -37,40 +40,17 @@ export async function validateUserResponse(
 ): Promise<ValidationResult> {
   const trimmedResponse = userResponse.trim();
 
-  // ===== STEP 6.5: Date of Birth validation (rule-based, no LLM) =====
-  // If question asks for date of birth, verify format is DD/MM/YYYY
-  // and validate age is in [4, 110]. If invalid, prompt user to re-enter.
+  // ===== STEP 6.5: Date of Birth validation - handled by DOB handler directly =====
+  // Skip LLM validation for DOB questions - let the handler deal with it
   try {
-    const { validateDateOfBirth, isDateOfBirthQuestion } =
-      await import("../utils/dob-validator");
+    const { isDateOfBirthQuestion } = await import("../utils/dob-validator");
     if (isDateOfBirthQuestion(currentQuestionText)) {
-      console.log("[Validation] DOB question detected");
-      const validation = validateDateOfBirth(trimmedResponse);
-      console.log("[Validation] DOB validation result:", validation);
-      if (!validation.isValid) {
-        console.log(
-          "[Validation] DOB validation failed:",
-          validation.errorMessage,
-        );
-        return {
-          isValid: false,
-          isRelevant: false,
-          hasSafetyIssue: false,
-          errorMessage:
-            validation.errorMessage || HARD_CODED_MESSAGES.DOB_INVALID,
-        };
-      }
-
-      // Valid DOB input — return early with age range to skip LLM
-      console.log(
-        "[Validation] DOB validation passed, age range:",
-        validation.ageRange,
-      );
+      console.log("[Validation] DOB question detected - passing to handler");
+      // Return valid so it passes to DOB handler
       return {
         isValid: true,
         isRelevant: true,
         hasSafetyIssue: false,
-        mappedResponse: validation.ageRange,
       };
     }
   } catch (err) {

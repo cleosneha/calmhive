@@ -19,7 +19,7 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
   },
   {
     key: "dateOfBirth",
-    text: "Great! So let's start with the first question.\n\nWhat's your date of birth? Please enter in DD/MM/YYYY format (e.g., 15/03/1990).",
+    text: "Great! So let's start with the first question.\n\nWhat's your date of birth? You can enter it in any format you like (e.g., 15/03/1990, 21st October 2023, October 21 1990, etc.).",
     options: [], // No options, user should type a date
     required: true,
     /**

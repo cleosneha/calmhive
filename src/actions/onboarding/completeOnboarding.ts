@@ -5,7 +5,6 @@ import db from "@/lib/db";
 import { createCheckpointer } from "@/ai/agents/onboarding";
 import type { Prisma } from "@prisma/client";
 import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
-import { parseDDMMYYYY } from "@/ai/agents/onboarding/utils/dob-validator";
 import { compileOnboardingGraph } from "@/ai/agents/onboarding";
 let graphInstance: Awaited<ReturnType<typeof compileOnboardingGraph>> | null =
   null;
@@ -127,9 +126,19 @@ export async function completeOnboarding() {
 
   // Parse date of birth from DD/MM/YYYY format
   const dateOfBirthString = String(responses.dateOfBirth || "");
-  const parsedDOB = parseDDMMYYYY(dateOfBirthString);
 
-  if (!parsedDOB) {
+  // Parse DD/MM/YYYY to Date
+  const dobParts = dateOfBirthString.split("/");
+  const parsedDOB =
+    dobParts.length === 3
+      ? new Date(
+          parseInt(dobParts[2], 10),
+          parseInt(dobParts[1], 10) - 1,
+          parseInt(dobParts[0], 10),
+        )
+      : null;
+
+  if (!parsedDOB || isNaN(parsedDOB.getTime())) {
     throw new Error(
       "Invalid date of birth format. Please use DD/MM/YYYY format.",
     );

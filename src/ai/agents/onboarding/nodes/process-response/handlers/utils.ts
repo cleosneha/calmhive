@@ -6,14 +6,18 @@ import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
 
 /**
  * Type definition for handler functions
+ * Supports both sync and async handlers
  */
 export type QuestionHandler = (
   question: OnboardingQuestion,
   userInput: string,
   validationResult: ValidationResult,
   state: OnboardingStateType,
-  step: number
-) => Partial<OnboardingStateType> | null;
+  step: number,
+) =>
+  | Partial<OnboardingStateType>
+  | null
+  | Promise<Partial<OnboardingStateType> | null>;
 
 /** Default acknowledgment message */
 const DEFAULT_ACK = "Thank you for sharing!";
@@ -39,7 +43,7 @@ export function buildStateUpdate(
   responses: Record<string, string>,
   messages: AIMessage[],
   step: number,
-  extras?: Partial<OnboardingStateType>
+  extras?: Partial<OnboardingStateType>,
 ): Partial<OnboardingStateType> {
   return {
     responses,
@@ -54,7 +58,7 @@ export function buildStateUpdate(
  */
 export function getFollowUp(
   question: OnboardingQuestion,
-  userInput?: string
+  userInput?: string,
 ): { text: string; nextKey: string } | null {
   if (!question.followUps) return null;
 
@@ -70,7 +74,7 @@ export function getFollowUp(
  */
 export function getNextStep(
   followUp: { nextKey: string } | null,
-  currentStep: number
+  currentStep: number,
 ): number {
   if (!followUp) return currentStep + 1;
 
@@ -83,13 +87,13 @@ export function getNextStep(
  */
 export function getSelectedOption(
   question: OnboardingQuestion,
-  userInput: string
+  userInput: string,
 ): string | null {
   if (!question.options) return null;
 
   return (
     question.options.find(
-      (opt) => opt.toLowerCase() === userInput.toLowerCase()
+      (opt) => opt.toLowerCase() === userInput.toLowerCase(),
     ) || null
   );
 }
@@ -101,7 +105,7 @@ export function getSelectedOption(
 export function buildMessage(
   validationResult: ValidationResult,
   followUpText?: string,
-  nextQuestion?: OnboardingQuestion
+  nextQuestion?: OnboardingQuestion,
 ): string {
   let message = "";
 
@@ -143,8 +147,8 @@ export function buildMessage(
 export function createSimpleHandler(
   responseTransformer?: (
     userInput: string,
-    state: OnboardingStateType
-  ) => Record<string, string>
+    state: OnboardingStateType,
+  ) => Record<string, string>,
 ): QuestionHandler {
   return (question, userInput, validationResult, state, step) => {
     const followUp = getFollowUp(question);
@@ -154,7 +158,7 @@ export function createSimpleHandler(
     const message = buildMessage(
       validationResult,
       followUp?.text,
-      nextQuestion
+      nextQuestion,
     );
 
     const responses = responseTransformer

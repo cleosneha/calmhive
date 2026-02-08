@@ -84,20 +84,44 @@ export async function handleModificationRequest(
 
   // For dateOfBirth modifications, validate DD/MM/YYYY format
   if (normalizedField === "dateOfBirth") {
-    const { validateDateOfBirth, formatDateToDDMMYYYY } =
-      await import("../../utils/dob-validator");
-    const validation = validateDateOfBirth(validationResult.modifiedValue);
-    if (!validation.isValid || !validation.dateOfBirth) {
+    const { formatDateToDDMMYYYY } = await import("../../utils/dob-validator");
+
+    // Validate DD/MM/YYYY format
+    const datePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+    const match = validationResult.modifiedValue.match(datePattern);
+
+    if (!match) {
       return {
         messages: [
           new AIMessage(
-            validation.errorMessage || HARD_CODED_MESSAGES.DOB_INVALID,
+            "Please provide date of birth in DD/MM/YYYY format (e.g., 15/03/1990)",
           ),
         ],
         step,
       };
     }
-    processedValue = formatDateToDDMMYYYY(validation.dateOfBirth);
+
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const year = parseInt(match[3], 10);
+
+    // Basic validation
+    if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900) {
+      return {
+        messages: [new AIMessage(HARD_CODED_MESSAGES.DOB_INVALID)],
+        step,
+      };
+    }
+
+    try {
+      const dateObj = new Date(year, month - 1, day);
+      processedValue = formatDateToDDMMYYYY(dateObj);
+    } catch {
+      return {
+        messages: [new AIMessage(HARD_CODED_MESSAGES.DOB_INVALID)],
+        step,
+      };
+    }
   }
 
   // Valid modification - update the response and acknowledge

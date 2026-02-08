@@ -1,4 +1,9 @@
-export type PromptType = "main_goals" | "goal_specific_info" | "default";
+export type PromptType =
+  | "main_goals"
+  | "goal_specific_info"
+  | "date_of_birth"
+  | "date_format_clarification"
+  | "default";
 
 export function buildLLMPrompt(
   type: PromptType,
@@ -67,6 +72,43 @@ Rules:
 - SAFETY=concern only for crisis
 - FOLLOW_UP: acknowledge only if genuinely answering (not modifying)
 - EXPECTATION_MISMATCH: yes if negative/dismissive`;
+
+    case "date_of_birth":
+      return `Parse date of birth: "${userResponse}"
+
+Output (one per line, exact format):
+STATUS: [VALID|AMBIGUOUS|NEEDS_FULL_YEAR|INVALID]
+DAY: [1-31 or none]
+MONTH: [1-12 or none]
+YEAR: [full year or none]
+ERROR: [message or none]
+MODIFICATION_REQUIRED: [yes|no]
+MODIFIED_FIELD: [field or none]
+MODIFIED_VALUE: [value or none]
+
+Rules:
+- Numeric date ambiguous if BOTH first≤12 AND second≤12 (e.g., 08/07/2004 is ambiguous)
+- Parse any format: text (21 October 2004), numeric (21/10/2004), natural (October 21)
+- 2-digit year → NEEDS_FULL_YEAR
+- Day 1-31, month 1-12, year 1900-${new Date().getFullYear()}
+- Check day valid for month (Feb=28/29)
+- Detect modifications like "my goal is X"`;
+
+    case "date_format_clarification":
+      return `Date "${currentQuestion}" is ambiguous. User said: "${userResponse}"
+
+Output (one per line, exact format):
+CLARIFICATION: [yes|no]
+FORMAT: [DD/MM/YYYY|MM/DD/YYYY|none]
+MODIFICATION_REQUIRED: [yes|no]
+MODIFIED_FIELD: [field or none]
+MODIFIED_VALUE: [value or none]
+
+Rules:
+- CLARIFICATION=yes if specifying format (dd/mm, day/month, first one, etc)
+- "first one"=DD/MM/YYYY, "second one"=MM/DD/YYYY
+- Otherwise CLARIFICATION=no
+- Detect other field modifications`;
 
     default:
       return `Analyze if user is modifying a previous answer OR answering the current question.

@@ -13,4 +13,13 @@ export interface LLMValidationResult {
   goalSpecificQuestion?: string; // Contextual follow-up question for goal
   goalOptions?: string[]; // Answer options for the goal-specific question
   readiness?: "yes" | "no";
+  // DOB-specific fields
+  dobStatus?: "VALID" | "AMBIGUOUS" | "NEEDS_FULL_YEAR" | "INVALID";
+  day?: number;
+  month?: number;
+  year?: number;
+  dobError?: string;
+  // Format clarification fields
+  clarification?: boolean;
+  dateFormat?: "DD/MM/YYYY" | "MM/DD/YYYY";
 }

@@ -55,6 +55,16 @@ export const OnboardingState = Annotation.Root({
     reducer: (_, value) => value,
     default: () => false,
   }),
+
+  // DOB format clarification
+  waitingForDateFormat: Annotation<boolean>({
+    reducer: (_, value) => value,
+    default: () => false,
+  }),
+  tentativeDateInput: Annotation<string>({
+    reducer: (_, value) => value,
+    default: () => "",
+  }),
 });
 
 export type OnboardingStateType = typeof OnboardingState.State;

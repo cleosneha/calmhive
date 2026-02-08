@@ -21,6 +21,7 @@ export async function startOnboardingSession(): Promise<
       firstName: string;
       selectedDays: string[];
       isMultiSelectMode: boolean;
+      waitingForDateFormat: boolean;
     }
   | ApiError
 > {
@@ -33,7 +34,7 @@ export async function startOnboardingSession(): Promise<
     // Always invoke to get fresh or existing state
     const result = await graphInstance.invoke(
       { userId: user.id, userName: user.name || "there" },
-      { configurable: { thread_id: user.id } }
+      { configurable: { thread_id: user.id } },
     );
 
     // Map messages from graph
@@ -43,8 +44,8 @@ export async function startOnboardingSession(): Promise<
         typeof msg.content === "string"
           ? msg.content
           : Array.isArray(msg.content)
-          ? msg.content.map((c) => ("text" in c ? c.text : "")).join("")
-          : String(msg.content),
+            ? msg.content.map((c) => ("text" in c ? c.text : "")).join("")
+            : String(msg.content),
     }));
 
     return {
@@ -57,6 +58,7 @@ export async function startOnboardingSession(): Promise<
       firstName: (user.name || "there").split(" ")[0],
       selectedDays: result.selectedDays || [],
       isMultiSelectMode: result.isMultiSelectMode || false,
+      waitingForDateFormat: result.waitingForDateFormat || false,
     };
   } catch (error) {
     console.error("❌ Error starting onboarding session:", error);
