@@ -28,6 +28,14 @@ export default function LoginPage() {
 
     const result = await login({ email, password });
     if ("error" in result) {
+      // Check if this is an unverified email error
+      if (result.code === "EMAIL_NOT_VERIFIED") {
+        toast.info(result.error || "Please verify your email first.");
+        setIsLoading(false);
+        // Redirect to verify-email page with email in query params
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+        return;
+      }
       toast.error(result.error || "Login failed. Please try again.");
     } else {
       toast.success("Login successful!");

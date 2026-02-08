@@ -36,10 +36,13 @@ export default function RegisterPage() {
         password,
         confirmPassword,
       });
-      if ("error" in result) {
+
+      if (result.status === "error") {
         toast.error(result.error || "Registration failed. Please try again.");
       } else {
-        toast.success("Account created! Please verify your email.");
+        toast.success(
+          result.message || "Account created! Please verify your email.",
+        );
         router.push(`/verify-email?email=${encodeURIComponent(email)}`);
       }
     } catch (err) {

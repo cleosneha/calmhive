@@ -3,6 +3,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import type { BetterAuthSession } from "@/types/auth";
 
 /**
  * Get the current authenticated user session
@@ -15,7 +16,7 @@ export async function getSession() {
     });
 
     return session;
-  } catch (error) {
+  } catch {
     // During prerendering, headers() may reject
     return null;
   }
@@ -45,7 +46,7 @@ export async function getCurrentUser() {
  */
 export async function getAuthState() {
   const session = await getSession();
-  const user = session?.user;
+  const user = session?.user as BetterAuthSession["user"] | null;
 
   return {
     user,

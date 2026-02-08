@@ -49,33 +49,7 @@ export const auth = betterAuth({
       },
     },
   },
-  databaseHooks: {
-    user: {
-      create: {
-        after: async (user) => {
-          // Send welcome email only if not already sent
-          if (!user.welcomeEmailSent) {
-            try {
-              const result = await sendWelcomeEmail(
-                user.email,
-                user.name || "there",
-              );
-
-              // Update the flag in database after successful email send
-              if (result.success) {
-                await db.user.update({
-                  where: { id: user.id },
-                  data: { welcomeEmailSent: true },
-                });
-              }
-            } catch (error) {
-              console.error("Failed to send welcome email:", error);
-            }
-          }
-        },
-      },
-    },
-  },
+  databaseHooks: {}, // Removed welcome email hook - moved to OTP verification
   user: {
     additionalFields: {
       onboarded: {

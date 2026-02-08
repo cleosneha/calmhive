@@ -24,7 +24,8 @@ export interface BetterAuthSession {
     image?: string;
     createdAt: Date;
     updatedAt: Date;
-    onboarded?: boolean;
+    onboarded: boolean;
+    welcomeEmailSent: boolean;
   };
 }
 

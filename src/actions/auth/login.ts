@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import db from "@/lib/db";
 import { apiError } from "@/utils/api-error";
 import { apiResponse } from "@/utils/api-response";
+import { sendOTP } from "./otp";
 
 /**
  * Sign in user with email and password
@@ -18,6 +19,37 @@ export async function login({
   password: string;
 }) {
   try {
+    // First, check if user exists and if their email is verified
+    const user = await db.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        emailVerified: true,
+        accounts: {
+          select: {
+            providerId: true,
+          },
+        },
+      },
+    });
+
+    // If user exists but email is not verified, send OTP and return unverified status
+    if (user && !user.emailVerified) {
+      // Check if user has a credential account (registered with email/password)
+      const hasCredentialAccount = user.accounts.some(
+        (acc) => acc.providerId === "credential",
+      );
+
+      if (hasCredentialAccount) {
+        // Send OTP for verification
+        await sendOTP(email);
+        return apiError(
+          "Your email is not verified. We've sent an OTP to your email.",
+          "EMAIL_NOT_VERIFIED",
+        );
+      }
+    }
+
     const headersList = await headers();
 
     // Call Better Auth's signInEmail endpoint
@@ -62,7 +94,7 @@ export async function login({
       if (user && user.accounts.length > 0) {
         // Check if user has only OAuth accounts (no credential/password account)
         const hasCredentialAccount = user.accounts.some(
-          (acc) => acc.providerId === "credential"
+          (acc) => acc.providerId === "credential",
         );
 
         if (!hasCredentialAccount) {
@@ -80,7 +112,7 @@ export async function login({
 
           return apiError(
             `This account is registered with ${providerNames}. Please sign in with ${providerNames} instead.`,
-            "OAUTH_ACCOUNT"
+            "OAUTH_ACCOUNT",
           );
         }
       }
@@ -94,7 +126,7 @@ export async function login({
     }
 
     return apiError(
-      err instanceof Error ? err.message : "Login failed. Please try again."
+      err instanceof Error ? err.message : "Login failed. Please try again.",
     );
   }
 }

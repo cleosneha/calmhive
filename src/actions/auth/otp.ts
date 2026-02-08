@@ -2,6 +2,7 @@
 
 import db from "@/lib/db";
 import { sendOTPEmail } from "@/lib/email-service";
+import { sendWelcomeEmail } from "@/email/service";
 import { apiResponse } from "@/utils/api-response";
 import { apiError } from "@/utils/api-error";
 
@@ -83,6 +84,7 @@ export async function verifyOTP(email: string, otp: string) {
         emailVerified: true,
         name: true,
         onboarded: true,
+        welcomeEmailSent: true,
         createdAt: true,
         updatedAt: true,
         verificationCode: true,
@@ -106,7 +108,7 @@ export async function verifyOTP(email: string, otp: string) {
     ) {
       return apiError(
         "OTP has expired. Please request a new one.",
-        "OTP_EXPIRED"
+        "OTP_EXPIRED",
       );
     }
 
@@ -120,13 +122,31 @@ export async function verifyOTP(email: string, otp: string) {
       },
     });
 
+    // Send welcome email after successful verification (if not already sent)
+    if (!user.welcomeEmailSent) {
+      try {
+        const result = await sendWelcomeEmail(user.email, user.name || "there");
+
+        // Update the flag in database after successful email send
+        if (result.success) {
+          await db.user.update({
+            where: { id: user.id },
+            data: { welcomeEmailSent: true },
+          });
+        }
+      } catch (error) {
+        console.error("Failed to send welcome email:", error);
+        // Don't fail verification if welcome email fails
+      }
+    }
+
     return apiResponse(
       {
         id: user.id,
         email: user.email,
         name: user.name,
       },
-      "Email verified successfully"
+      "Email verified successfully",
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

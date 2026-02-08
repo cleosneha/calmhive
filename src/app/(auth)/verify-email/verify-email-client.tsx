@@ -42,7 +42,7 @@ export default function VerifyEmailClient() {
     try {
       const result = await verifyOTP(email, otp);
 
-      if ("error" in result) {
+      if (result.status === "error") {
         toast.error(result.error || "Failed to verify OTP");
       } else {
         toast.success("✓ Email verified successfully!");
@@ -62,7 +62,7 @@ export default function VerifyEmailClient() {
     setIsResending(true);
     try {
       const result = await resendOTP(email);
-      if ("error" in result) {
+      if (result.status === "error") {
         toast.error(result.error || "Failed to resend OTP");
       } else {
         toast.success(result.message || "OTP sent successfully to your email");
