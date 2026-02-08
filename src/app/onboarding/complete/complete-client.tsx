@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
@@ -43,6 +43,16 @@ export default function OnboardingCompleteClient({ responses }: Props) {
     answer: string;
   } | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Handle back button - redirect to home instead of going back through onboarding
+  useEffect(() => {
+    const handlePopState = () => {
+      router.replace("/");
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [router]);
 
   const openDialog = (question: string, answer: string) => {
     setSelected({ question, answer });
@@ -170,19 +180,22 @@ export default function OnboardingCompleteClient({ responses }: Props) {
             }
 
             const fullAnswer = answer;
+            // Use shortened question text for dateOfBirth on completion page
+            const displayQuestion =
+              key === "dateOfBirth" ? "What is your age?" : question.text;
 
             return (
               <Card
                 key={question.key}
                 role="button"
                 tabIndex={0}
-                aria-label={`Open details for: ${question.text}`}
+                aria-label={`Open details for: ${displayQuestion}`}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
-                    openDialog(question.text, answer);
+                    openDialog(displayQuestion, answer);
                   }
                 }}
-                onClick={() => openDialog(question.text, answer)}
+                onClick={() => openDialog(displayQuestion, answer)}
                 className="group relative cursor-pointer hover:shadow-lg transition-transform bg-[var(--ch-sage-light)]/30 gap-2 overflow-hidden"
               >
                 {/* Hover overlay */}
@@ -194,7 +207,7 @@ export default function OnboardingCompleteClient({ responses }: Props) {
 
                 <CardHeader>
                   <CardTitle className="text-[var(--ch-sage-dark)] leading-relaxed mb-1">
-                    {question.text}
+                    {displayQuestion}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex-1 pt-1">

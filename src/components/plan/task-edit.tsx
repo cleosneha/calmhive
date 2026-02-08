@@ -212,6 +212,7 @@ export default function TaskEditDialog({
                   <Textarea
                     placeholder="Add activity notes (supports markdown)"
                     rows={3}
+                    className="pr-10"
                     {...form.register("notes")}
                   />
 
@@ -228,7 +229,7 @@ export default function TaskEditDialog({
                           onClick={async () => {
                             if (aiUsedCount >= aiLimit) {
                               toast.error(
-                                `AI suggestion limit reached (${aiLimit}/24h)`
+                                `AI suggestion limit reached (${aiLimit}/24h)`,
                               );
                               return;
                             }
@@ -239,7 +240,7 @@ export default function TaskEditDialog({
                               "";
                             if (!activity.trim()) {
                               toast.error(
-                                "Please enter an activity title first"
+                                "Please enter an activity title first",
                               );
                               return;
                             }
@@ -253,7 +254,7 @@ export default function TaskEditDialog({
                               if (!countResult.success || !countResult.canUse) {
                                 toast.error(
                                   countResult.message ||
-                                    "Cannot generate notes at this time"
+                                    "Cannot generate notes at this time",
                                 );
                                 return;
                               }
@@ -263,7 +264,7 @@ export default function TaskEditDialog({
                                 await generateNotesSuggestion(activity);
                               if (!res.success) {
                                 toast.error(
-                                  res.message || "Failed to generate notes"
+                                  res.message || "Failed to generate notes",
                                 );
                                 return;
                               }
@@ -276,11 +277,11 @@ export default function TaskEditDialog({
 
                               // Update local count
                               setAiUsedCount(
-                                countResult.newCount || aiUsedCount + 1
+                                countResult.newCount || aiUsedCount + 1,
                               );
 
                               toast.success(
-                                "AI notes generated and inserted into Notes"
+                                "AI notes generated and inserted into Notes",
                               );
                             } catch (error) {
                               console.error("Error generating notes:", error);

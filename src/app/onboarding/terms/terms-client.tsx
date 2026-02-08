@@ -27,8 +27,8 @@ export default function TermsActions() {
       // Small delay to ensure session is updated before redirect
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Redirect to complete page
-      router.push("/onboarding/complete");
+      // Replace history instead of pushing to prevent back button issues
+      router.replace("/onboarding/complete");
     } catch (error) {
       console.error("Error completing onboarding:", error);
       toast.error("Something went wrong. Please try again.");
