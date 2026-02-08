@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "user" ADD COLUMN     "lastStreakUpdate" TIMESTAMP(3),
+ADD COLUMN     "maxStreak" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "streak" INTEGER NOT NULL DEFAULT 0;

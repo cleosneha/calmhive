@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { FiUser, FiAward } from "react-icons/fi";
+import { FiUser } from "react-icons/fi";
 import { useSession } from "@/hooks/useSession";
 
 interface ProfileCardProps {
   userName?: string;
   userEmail?: string;
-  badges?: string[];
+  currentStreak?: number;
+  maxStreak?: number;
   isLoading?: boolean;
 }
 
@@ -26,7 +26,8 @@ function getInitials(name?: string | null) {
 export function ProfileCard({
   userName,
   userEmail,
-  badges = [],
+  currentStreak = 0,
+  maxStreak = 0,
   isLoading = false,
 }: ProfileCardProps) {
   const [isHydrated, setIsHydrated] = useState(false);
@@ -87,46 +88,80 @@ export function ProfileCard({
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {/* User Info */}
-        <div className="border-b border-slate-200 pb-4">
+        <div className="border-b border-slate-200 pb-3">
           <p className="text-sm font-semibold text-slate-600 mb-1">Name</p>
           <p className="text-base font-medium text-slate-900">
             {userName || user?.name || "User"}
           </p>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 mt-0.5">
             {userEmail || user?.email}
           </p>
         </div>
 
-        {/* Badges */}
-        {badges.length > 0 && (
-          <div className="space-y-3">
-            <p className="text-sm font-semibold text-slate-600 flex items-center gap-2">
-              <FiAward className="w-4 h-4" />
-              Achievements
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {badges.map((badge, idx) => (
-                <Badge
-                  key={idx}
-                  variant="secondary"
-                  className="bg-[var(--ch-sage-light)]/20 text-[var(--ch-sage-dark)] border-[var(--ch-sage-dark)]/30 hover:bg-[var(--ch-sage-light)]/30"
-                >
-                  ✨ {badge}
-                </Badge>
-              ))}
+        {/* Streak Section */}
+        <div className="space-y-2">
+          {/* Streak Display - Different layouts for mobile and desktop */}
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-3 lg:gap-5 py-3 bg-gradient-to-br from-[var(--ch-sage-light)]/20 to-[var(--ch-sage-light)]/10 rounded-lg border border-[var(--ch-sage-dark)]/20">
+            {/* Fire Icon - Top on mobile, Left on desktop */}
+            <div className="lg:hidden">
+              <Image
+                src="/assets/streak.png"
+                alt="Streak fire"
+                width={64}
+                height={64}
+                className="object-contain"
+              />
+            </div>
+            <div className="hidden lg:block">
+              <Image
+                src="/assets/streak.png"
+                alt="Streak fire"
+                width={80}
+                height={80}
+                className="object-contain"
+              />
+            </div>
+
+            {/* Horizontal separator on mobile */}
+            <div className="w-full h-px bg-slate-300 lg:hidden" />
+
+            {/* Streak Stats */}
+            <div className="flex flex-row lg:flex-row items-center gap-5 lg:gap-6">
+              {/* Current Streak */}
+              <div className="text-center">
+                <p className="text-3xl lg:text-4xl font-bold text-[var(--ch-sage-dark)]">
+                  {currentStreak}
+                </p>
+                <p className="text-xs lg:text-sm text-slate-600 mt-0.5 font-medium">
+                  Current Streak
+                </p>
+              </div>
+
+              {/* Vertical Separator on desktop */}
+              <div className="hidden lg:block w-px h-14 bg-slate-300" />
+
+              {/* Max Streak */}
+              <div className="text-center">
+                <p className="text-3xl lg:text-4xl font-bold text-[var(--ch-orange-medium)]">
+                  {maxStreak}
+                </p>
+                <p className="text-xs lg:text-sm text-slate-600 mt-0.5 font-medium">
+                  Best Streak
+                </p>
+              </div>
             </div>
           </div>
-        )}
 
-        {badges.length === 0 && (
-          <div className="text-center py-4 bg-slate-50 rounded-lg">
-            <p className="text-sm text-slate-500">
-              Complete milestones to unlock badges
-            </p>
-          </div>
-        )}
+          {currentStreak === 0 && maxStreak === 0 && (
+            <div className="text-center py-2">
+              <p className="text-sm text-slate-500">
+                Complete tasks to start your streak! 🔥
+              </p>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

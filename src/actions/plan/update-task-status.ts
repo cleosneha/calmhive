@@ -2,6 +2,7 @@
 
 import { getCurrentUser } from "@/actions/auth";
 import prisma from "@/lib/db";
+import { updateStreak } from "./update-streak";
 
 interface UpdateTaskStatusInput {
   taskId: number;
@@ -18,7 +19,7 @@ interface UpdateTaskStatusResponse {
 }
 
 export async function updateTaskStatus(
-  input: UpdateTaskStatusInput
+  input: UpdateTaskStatusInput,
 ): Promise<UpdateTaskStatusResponse> {
   try {
     const user = await getCurrentUser();
@@ -67,10 +68,17 @@ export async function updateTaskStatus(
         status,
         plan: {
           update: {
-            updatedAt: new Date(),
+            updatedAt: new Date(), // Prisma converts to UTC automatically
           },
         },
       },
+    });
+
+    // Update user's streak
+    await updateStreak({
+      userId: user.id,
+      taskDate: task.day,
+      newStatus: status,
     });
 
     return {

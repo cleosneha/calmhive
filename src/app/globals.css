@@ -38,6 +38,7 @@
   --ch-offwhite: #ffffff; /* Warm Off-White (background) */
   --ch-taupe: #e6e1da; /* Light Taupe (cards) */
   --ch-bluegrey: #000000; /* Muted Blue-Grey (secondary actions) */
+  --ch-orange-medium: #f97316; /* Medium Orange (streak/fire accent) */
   --ch-text: #2f2f2f; /* Primary Text */
   --ch-muted: #6b6b6b; /* Soft muted text for secondary/subheadings */
   --ch-border-muted: rgba(0, 0, 0, 0.06); /* Subtle border color for cards */

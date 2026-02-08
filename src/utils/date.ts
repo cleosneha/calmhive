@@ -1,4 +1,36 @@
 /**
+ * Get today's date in UTC timezone
+ * Returns a date object with time set to 00:00:00 UTC
+ * Use this for DB operations to ensure consistency across timezones
+ */
+export function getTodayDateUTC(): Date {
+  const now = new Date();
+  return new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      0,
+      0,
+      0,
+      0,
+    ),
+  );
+}
+
+/**
+ * Get start of day in UTC for any date
+ * @param date - Date to convert
+ * @returns Date object at 00:00:00 UTC
+ */
+export function getStartOfDayUTC(date: Date): Date {
+  const d = new Date(date);
+  return new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0),
+  );
+}
+
+/**
  * Get today's date in the system's local timezone (without UTC conversion)
  * Returns a date object with time set to 00:00:00
  */

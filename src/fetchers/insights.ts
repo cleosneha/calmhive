@@ -253,7 +253,8 @@ export async function getUserProfileData(userId: string) {
     select: {
       name: true,
       email: true,
-      badges: true,
+      streak: true,
+      maxStreak: true,
     },
   });
 

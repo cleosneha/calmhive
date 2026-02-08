@@ -45,7 +45,8 @@ interface DashboardData {
   profile: {
     name: string | null;
     email: string;
-    badges: string[];
+    streak: number;
+    maxStreak: number;
   } | null;
 }
 
@@ -90,7 +91,7 @@ export default function InsightsClient({
         <InsightsHeader />
 
         {/* Top Section: AI Feedback + Profile Card */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-8">
           {/* Left: AI Feedback */}
           <div className="lg:col-span-2">
             <AIFeedback
@@ -100,11 +101,12 @@ export default function InsightsClient({
           </div>
 
           {/* Right: Profile Card */}
-          <div>
+          <div className="lg:col-span-2">
             <ProfileCard
               userName={profile?.name || "User"}
               userEmail={profile?.email || ""}
-              badges={profile?.badges || []}
+              currentStreak={profile?.streak || 0}
+              maxStreak={profile?.maxStreak || 0}
             />
           </div>
         </div>

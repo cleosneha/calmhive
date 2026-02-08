@@ -1,39 +1,73 @@
 /**
- * Calculate the start and end of a given week
- * Week runs from Sunday 00:00:00 to Saturday 23:59:59
+ * Calculate the start and end of a given week in UTC
+ * Week runs from Sunday 00:00:00 UTC to Saturday 23:59:59 UTC
+ * All dates stored in DB should use UTC for consistency across timezones
  */
 export function getWeekBounds(date: Date = new Date()): {
   weekStart: Date;
   weekEnd: Date;
 } {
-  const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
+  const dayOfWeek = date.getUTCDay(); // 0 = Sunday, 6 = Saturday
 
-  // Start of week (Sunday at 00:00:00)
-  const weekStart = new Date(date);
-  weekStart.setDate(date.getDate() - dayOfWeek);
-  weekStart.setHours(0, 0, 0, 0);
+  // Start of week (Sunday at 00:00:00 UTC)
+  const weekStart = new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate() - dayOfWeek,
+      0,
+      0,
+      0,
+      0,
+    ),
+  );
 
-  // End of week (Saturday at 23:59:59)
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
-  weekEnd.setHours(23, 59, 59, 999);
+  // End of week (Saturday at 23:59:59 UTC)
+  const weekEnd = new Date(
+    Date.UTC(
+      weekStart.getUTCFullYear(),
+      weekStart.getUTCMonth(),
+      weekStart.getUTCDate() + 6,
+      23,
+      59,
+      59,
+      999,
+    ),
+  );
 
   return { weekStart, weekEnd };
 }
 
 /**
- * Get the previous week's bounds
+ * Get the previous week's bounds in UTC
  */
 export function getPreviousWeekBounds(currentWeekStart: Date): {
   weekStart: Date;
   weekEnd: Date;
 } {
-  const previousWeekStart = new Date(currentWeekStart);
-  previousWeekStart.setDate(currentWeekStart.getDate() - 7);
+  const previousWeekStart = new Date(
+    Date.UTC(
+      currentWeekStart.getUTCFullYear(),
+      currentWeekStart.getUTCMonth(),
+      currentWeekStart.getUTCDate() - 7,
+      0,
+      0,
+      0,
+      0,
+    ),
+  );
 
-  const previousWeekEnd = new Date(previousWeekStart);
-  previousWeekEnd.setDate(previousWeekStart.getDate() + 6);
-  previousWeekEnd.setHours(23, 59, 59, 999);
+  const previousWeekEnd = new Date(
+    Date.UTC(
+      previousWeekStart.getUTCFullYear(),
+      previousWeekStart.getUTCMonth(),
+      previousWeekStart.getUTCDate() + 6,
+      23,
+      59,
+      59,
+      999,
+    ),
+  );
 
   return { weekStart: previousWeekStart, weekEnd: previousWeekEnd };
 }
