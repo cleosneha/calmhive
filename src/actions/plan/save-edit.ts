@@ -5,7 +5,6 @@ import prisma from "@/lib/db";
 import vectorStore from "@/ai/config/vector-store";
 import { calculateHoursSummaryFromTasks } from "@/utils/duration";
 import { v5 as uuidv5 } from "uuid";
-import { updateUserStreak } from "./streak-helper";
 
 const PLAN_NAMESPACE = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
 
@@ -379,16 +378,6 @@ export async function saveTaskEdit(
       // Log vector store error but don't fail the entire operation
       console.error("Vector store update failed:", vectorError);
       // Continue with success response since DB update succeeded
-    }
-
-    // Update user streak based on task activity (only if status changed)
-    if (updatedTask.status !== existingTask.status) {
-      try {
-        await updateUserStreak(user.id, updatedTask.day);
-      } catch (streakError) {
-        console.error("Error updating streak:", streakError);
-        // Don't fail the whole operation if streak update fails
-      }
     }
 
     // Only return allowed status values for TaskUpdateInput

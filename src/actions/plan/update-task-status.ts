@@ -3,6 +3,24 @@
 import { getCurrentUser } from "@/actions/auth";
 import prisma from "@/lib/db";
 import { updateStreak } from "./update-streak";
+import { updateUserStreak } from "./streak-helper";
+
+/**
+ * Get current day of week as string (Monday, Tuesday, etc.)
+ */
+function getCurrentDayOfWeek(): string {
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  const today = new Date();
+  return days[today.getDay()];
+}
 
 interface UpdateTaskStatusInput {
   taskId: number;
@@ -59,6 +77,27 @@ export async function updateTaskStatus(
       };
     }
 
+    // Check if task belongs to current day
+    const currentDay = getCurrentDayOfWeek();
+    if (task.day !== currentDay) {
+      return {
+        success: false,
+        message: `You can only update tasks for today (${currentDay}). This task is for ${task.day}.`,
+      };
+    }
+
+    // Prevent updating status if it's the same as current
+    if (task.status === status) {
+      return {
+        success: true,
+        message: "Task status is already set to this value",
+        data: {
+          id: task.id,
+          status: task.status,
+        },
+      };
+    }
+
     // Update task status
     const updatedTask = await prisma.task.update({
       where: {
@@ -74,12 +113,14 @@ export async function updateTaskStatus(
       },
     });
 
-    // Update user's streak
-    await updateStreak({
-      userId: user.id,
-      taskDate: task.day,
-      newStatus: status,
-    });
+    // Update user's streak using the helper function
+    // This ensures streak is updated based on all tasks of the day
+    try {
+      await updateUserStreak(user.id, task.day);
+    } catch (streakError) {
+      console.error("Error updating streak:", streakError);
+      // Don't fail the whole operation if streak update fails
+    }
 
     return {
       success: true,
