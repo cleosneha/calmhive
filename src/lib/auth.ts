@@ -2,8 +2,6 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import db from "./db";
-import { sendWelcomeEmail } from "@/email/service";
-import { SessionCallbackParams } from "@/types";
 
 export const auth = betterAuth({
   database: prismaAdapter(db, {
@@ -30,26 +28,6 @@ export const auth = betterAuth({
     },
   },
   plugins: [nextCookies()], // Add nextCookies plugin for server actions cookie handling
-  hooks: {
-    session: {
-      created: async ({ session, user }: SessionCallbackParams) => {
-        // Fetch user with onboarded field from DB
-        const dbUser = await db.user.findUnique({
-          where: { id: user.id },
-          select: { onboarded: true },
-        });
-
-        return {
-          session,
-          user: {
-            ...user,
-            onboarded: dbUser?.onboarded ?? false,
-          },
-        };
-      },
-    },
-  },
-  databaseHooks: {}, // Removed welcome email hook - moved to OTP verification
   user: {
     additionalFields: {
       onboarded: {
