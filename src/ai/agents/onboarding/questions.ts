@@ -19,7 +19,7 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
   },
   {
     key: "dateOfBirth",
-    text: "Great! So let's start with the first question.\n\nWhat's your date of birth? You can enter it in any format you like (e.g., 15/03/1990, 21st October 2023, October 21 1990, etc.).",
+    text: "Great! So let's start with the first question.\n\nWhat's your date of birth? ",
     options: [], // No options, user should type a date
     required: true,
     /**
@@ -176,7 +176,7 @@ export const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     required: true,
     followUps: {
       default: {
-        text: "Thank you for sharing that detail. It really helps me understand what matters most to you.",
+        text: "Got it! I've noted that down.",
         nextKey: "timeAvailability",
       },
     },

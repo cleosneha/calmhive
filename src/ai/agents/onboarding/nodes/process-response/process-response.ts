@@ -2,6 +2,7 @@ import type { OnboardingStateType } from "../../state";
 import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
 import { handleReadinessCheck } from "./readiness-check";
 import { handleSafetyAcknowledgment } from "./safety-acknowledgment";
+import { handleDOBClarification } from "./dob-clarification";
 import { isPredefinedOption } from "./option-detection";
 import { handleCustomResponse } from "./custom-response";
 import { handlePredefinedOptionStorage } from "./option-storage";
@@ -9,7 +10,7 @@ import { handleEmptyResponse } from "./empty-response";
 
 // Process response node: Handle user input and update state accordingly
 export async function processResponseNode(
-  state: OnboardingStateType
+  state: OnboardingStateType,
 ): Promise<Partial<OnboardingStateType>> {
   const lastMessage = state.messages[state.messages.length - 1];
   const userInput =
@@ -33,12 +34,17 @@ export async function processResponseNode(
     "\n  User input:",
     userInput,
     "\n  Current responses:",
-    state.responses
+    state.responses,
   );
 
   // Handle safety acknowledgment (moved to separate module)
   const safetyResult = handleSafetyAcknowledgment(state, userInput);
   if (safetyResult) return safetyResult;
+
+  // GLOBAL DOB CLARIFICATION: Handle format/year clarification before any question-specific processing
+  // This ensures DOB modifications work correctly regardless of current question
+  const dobClarificationResult = await handleDOBClarification(state, userInput);
+  if (dobClarificationResult) return dobClarificationResult;
 
   // Check if this is a predefined option first (to avoid unnecessary LLM calls)
   const isPredefined =
@@ -48,7 +54,7 @@ export async function processResponseNode(
     "  Is predefined option:",
     isPredefined,
     "\n  Question options:",
-    question?.options
+    question?.options,
   );
 
   // Handle readiness check ONLY for custom responses (not predefined options)
@@ -64,7 +70,7 @@ export async function processResponseNode(
       question,
       userInput,
       state.step,
-      state
+      state,
     );
     if (customResult) {
       console.log("  ✅ Custom response returned:", customResult.responses);
@@ -79,12 +85,12 @@ export async function processResponseNode(
       question,
       userInput,
       state.step,
-      state
+      state,
     );
     if (optionStorageResult) {
       console.log(
         "  ✅ Option storage returned:",
-        optionStorageResult.responses
+        optionStorageResult.responses,
       );
       return optionStorageResult;
     }

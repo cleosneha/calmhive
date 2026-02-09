@@ -16,7 +16,7 @@ export const handleGoalSpecificInfoResponse: QuestionHandler = (
   userInput,
   validationResult,
   state,
-  step
+  step,
 ) => {
   if (!state.currentGoalSpecificQuestion) return null;
 
@@ -30,12 +30,24 @@ export const handleGoalSpecificInfoResponse: QuestionHandler = (
 
   const nextStepValue = getNextStep(followUp, step);
   const nextQuestion = ONBOARDING_QUESTIONS[nextStepValue];
-  const message = buildMessage(validationResult, followUp.text, nextQuestion);
+
+  // For goal-specific info, use simple hardcoded followUp.text (no LLM followUpText)
+  // This ensures clean transition to next question without extra AI-generated questions
+  const simpleValidationResult = {
+    ...validationResult,
+    followUpText: undefined, // Remove LLM-generated follow-up
+  };
+
+  const message = buildMessage(
+    simpleValidationResult,
+    followUp.text,
+    nextQuestion,
+  );
 
   return buildStateUpdate(
     { [question.key]: JSON.stringify(goalSpecificData) },
     [new AIMessage(message)],
     nextStepValue,
-    { currentGoalOptions: [], currentGoalSpecificQuestion: undefined }
+    { currentGoalOptions: [], currentGoalSpecificQuestion: undefined },
   );
 };

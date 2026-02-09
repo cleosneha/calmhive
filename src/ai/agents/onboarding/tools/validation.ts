@@ -22,9 +22,6 @@ export interface ValidationResult {
   goalOptions?: string[]; // Answer options for goal-specific question
   // New: readiness detection carried from LLM for the greeting question
   readiness?: "yes" | "no";
-  // DOB validation flags
-  needsFormatClarification?: boolean;
-  needsFullYear?: boolean;
 }
 
 /**

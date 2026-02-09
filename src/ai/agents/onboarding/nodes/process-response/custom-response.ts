@@ -39,6 +39,8 @@ export async function handleCustomResponse(
     return {
       messages: [new AIMessage(HARD_CODED_MESSAGES.LLM_ERROR)],
       step,
+      currentGoalOptions: [],
+      currentGoalSpecificQuestion: "",
     };
   }
 
@@ -73,31 +75,18 @@ export async function handleCustomResponse(
       messages: [new AIMessage(HARD_CODED_MESSAGES.SAFETY_LONG)],
       step,
       waitingForSafetyAck: true,
+      currentGoalOptions: [],
+      currentGoalSpecificQuestion: "",
     };
   }
 
   // PRIORITY 4: Handle irrelevant response
   if (!validationResult.isRelevant) {
-    // If it's a DOB format clarification or full year request, let the handler deal with it
-    if (
-      validationResult.needsFormatClarification ||
-      validationResult.needsFullYear
-    ) {
-      const handlerResult = await executeQuestionHandler(
-        question,
-        userInput,
-        validationResult,
-        state,
-        step,
-      );
-      if (handlerResult) {
-        return handlerResult;
-      }
-    }
-
     return {
       messages: [new AIMessage(validationResult.errorMessage || "")],
       step,
+      currentGoalOptions: [],
+      currentGoalSpecificQuestion: "",
     };
   }
 
@@ -155,6 +144,8 @@ function handleSkipRequest(
     return {
       messages: [new AIMessage(HARD_CODED_MESSAGES.SKIP_PROMPT)],
       step,
+      currentGoalOptions: [],
+      currentGoalSpecificQuestion: "",
     };
   }
 

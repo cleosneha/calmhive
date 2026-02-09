@@ -127,14 +127,16 @@ export async function completeOnboarding() {
   // Parse date of birth from DD/MM/YYYY format
   const dateOfBirthString = String(responses.dateOfBirth || "");
 
-  // Parse DD/MM/YYYY to Date
+  // Parse DD/MM/YYYY to Date using UTC to avoid timezone conversion issues
   const dobParts = dateOfBirthString.split("/");
   const parsedDOB =
     dobParts.length === 3
       ? new Date(
-          parseInt(dobParts[2], 10),
-          parseInt(dobParts[1], 10) - 1,
-          parseInt(dobParts[0], 10),
+          Date.UTC(
+            parseInt(dobParts[2], 10),
+            parseInt(dobParts[1], 10) - 1,
+            parseInt(dobParts[0], 10),
+          ),
         )
       : null;
 

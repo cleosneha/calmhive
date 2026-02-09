@@ -21,6 +21,7 @@ export async function processOnboardingMessage(userMessage: string): Promise<
       selectedDays: string[];
       isMultiSelectMode: boolean;
       waitingForDateFormat: boolean;
+      waitingForFullYear: boolean;
     }
   | ApiError
 > {
@@ -59,6 +60,7 @@ export async function processOnboardingMessage(userMessage: string): Promise<
       selectedDays: result.selectedDays || [],
       isMultiSelectMode: result.isMultiSelectMode || false,
       waitingForDateFormat: result.waitingForDateFormat || false,
+      waitingForFullYear: result.waitingForFullYear || false,
     };
   } catch (error) {
     console.error("❌ Error in onboarding message processing:", error);

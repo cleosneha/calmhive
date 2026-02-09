@@ -57,7 +57,10 @@ export async function updateStreak(
 
     let newStreak = user.streak;
     let newMaxStreak = user.maxStreak;
+    const previousMaxStreak = newMaxStreak; // Store original maxStreak to restore if needed
+    const previousStreak = newStreak; // Store original streak to detect if it decreases
     const lastUpdate = user.lastStreakUpdate;
+    let daysDifference = -1; // Track days difference for maxStreak restore logic
 
     // Check if this is a new day
     if (!lastUpdate) {
@@ -70,7 +73,7 @@ export async function updateStreak(
     } else {
       // Convert lastUpdate to UTC start of day for comparison
       const lastUpdateStart = getStartOfDayUTC(lastUpdate);
-      const daysDifference = differenceInDays(todayStartUTC, lastUpdateStart);
+      daysDifference = differenceInDays(todayStartUTC, lastUpdateStart);
 
       if (daysDifference === 0) {
         // Same day - check if all tasks are pending
@@ -114,6 +117,18 @@ export async function updateStreak(
     // Update max streak if current streak exceeds it
     if (newStreak > newMaxStreak) {
       newMaxStreak = newStreak;
+    }
+
+    // IMPORTANT: Restore maxStreak if all tasks are marked pending on same day and streak is decreasing
+    // This prevents artificial peak streaks when user completes and then reverses tasks on the same day
+    if (
+      daysDifference === 0 &&
+      newStreak < previousStreak &&
+      newMaxStreak > previousMaxStreak
+    ) {
+      // Streak decreased on same day and maxStreak was just increased this action
+      // Restore maxStreak to its previous value
+      newMaxStreak = previousMaxStreak;
     }
 
     // Update user's streak data

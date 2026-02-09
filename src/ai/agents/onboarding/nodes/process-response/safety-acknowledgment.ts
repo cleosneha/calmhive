@@ -8,7 +8,7 @@ import { ONBOARDING_QUESTIONS } from "@/ai/agents/onboarding/questions";
  */
 export function handleSafetyAcknowledgment(
   state: OnboardingStateType,
-  userInput: string
+  userInput: string,
 ): Partial<OnboardingStateType> | null {
   const isAcknowledgingSafety =
     state.waitingForSafetyAck && userInput.toLowerCase().includes("continue");
@@ -27,11 +27,15 @@ export function handleSafetyAcknowledgment(
     return {
       waitingForSafetyAck: false,
       messages: [new AIMessage(questionText)],
+      currentGoalOptions: [],
+      currentGoalSpecificQuestion: "",
     };
   }
 
   return {
     waitingForSafetyAck: false,
     messages: [],
+    currentGoalOptions: [],
+    currentGoalSpecificQuestion: "",
   };
 }

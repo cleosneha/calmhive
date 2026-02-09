@@ -65,6 +65,15 @@ export const OnboardingState = Annotation.Root({
     reducer: (_, value) => value,
     default: () => "",
   }),
+  // DOB full year clarification
+  waitingForFullYear: Annotation<boolean>({
+    reducer: (_, value) => value,
+    default: () => false,
+  }),
+  partialDateInput: Annotation<string>({
+    reducer: (_, value) => value,
+    default: () => "",
+  }),
 });
 
 export type OnboardingStateType = typeof OnboardingState.State;

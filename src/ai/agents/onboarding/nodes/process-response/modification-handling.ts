@@ -32,6 +32,17 @@ export async function handleModificationRequest(
     return null;
   }
 
+  // CRITICAL: If user is trying to "modify" the current question's field,
+  // this is NOT a modification - it's just an answer to the current question
+  // Return null so it gets processed as a regular answer (and checked for relevance/safety)
+  if (validationResult.modifiedField === question.key) {
+    console.log(
+      "  ⚠️ [Modification Check] Rejected: Cannot modify current question field",
+      validationResult.modifiedField,
+    );
+    return null;
+  }
+
   // Find the question being modified
   const modifiedQuestion = ONBOARDING_QUESTIONS.find(
     (q) => q.key === validationResult.modifiedField,
@@ -53,6 +64,8 @@ export async function handleModificationRequest(
     return {
       messages: [new AIMessage(HARD_CODED_MESSAGES.SAFETY_UPDATE)],
       step, // Stay on current step
+      currentGoalOptions: [],
+      currentGoalSpecificQuestion: "",
     };
   }
 
@@ -61,6 +74,8 @@ export async function handleModificationRequest(
     return {
       messages: [new AIMessage(HARD_CODED_MESSAGES.MODIFICATION_INVALID)],
       step,
+      currentGoalOptions: [],
+      currentGoalSpecificQuestion: "",
     };
   }
 
@@ -82,44 +97,52 @@ export async function handleModificationRequest(
     }
   }
 
-  // For dateOfBirth modifications, validate DD/MM/YYYY format
+  // For dateOfBirth modifications, use LLM validation to check for ambiguity
   if (normalizedField === "dateOfBirth") {
-    const { formatDateToDDMMYYYY } = await import("../../utils/dob-validator");
+    const { validateDOBWithLLM } = await import("./handlers/dob-handler");
 
-    // Validate DD/MM/YYYY format
-    const datePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
-    const match = validationResult.modifiedValue.match(datePattern);
+    console.log(
+      "[Modification] Validating DOB modification with LLM:",
+      validationResult.modifiedValue,
+    );
 
-    if (!match) {
-      return {
-        messages: [
-          new AIMessage(
-            "Please provide date of birth in DD/MM/YYYY format (e.g., 15/03/1990)",
-          ),
-        ],
-        step,
-      };
-    }
+    const dobValidation = await validateDOBWithLLM(
+      validationResult.modifiedValue,
+      step,
+    );
 
-    const day = parseInt(match[1], 10);
-    const month = parseInt(match[2], 10);
-    const year = parseInt(match[3], 10);
-
-    // Basic validation
-    if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900) {
+    if (!dobValidation) {
       return {
         messages: [new AIMessage(HARD_CODED_MESSAGES.DOB_INVALID)],
         step,
+        currentGoalOptions: [],
+        currentGoalSpecificQuestion: "",
       };
     }
 
-    try {
-      const dateObj = new Date(year, month - 1, day);
-      processedValue = formatDateToDDMMYYYY(dateObj);
-    } catch {
+    // If validation returned a state update (ambiguity or error), return it
+    // Ensure goal options are cleared
+    if (dobValidation && "messages" in dobValidation) {
+      return {
+        ...dobValidation,
+        currentGoalOptions: [],
+        currentGoalSpecificQuestion: "",
+      };
+    }
+
+    // If validation succeeded, extract the DOB string
+    if (
+      dobValidation &&
+      "dobString" in dobValidation &&
+      dobValidation.dobString
+    ) {
+      processedValue = dobValidation.dobString;
+    } else {
       return {
         messages: [new AIMessage(HARD_CODED_MESSAGES.DOB_INVALID)],
         step,
+        currentGoalOptions: [],
+        currentGoalSpecificQuestion: "",
       };
     }
   }

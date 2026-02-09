@@ -22,6 +22,7 @@ export async function startOnboardingSession(): Promise<
       selectedDays: string[];
       isMultiSelectMode: boolean;
       waitingForDateFormat: boolean;
+      waitingForFullYear: boolean;
     }
   | ApiError
 > {
@@ -59,6 +60,7 @@ export async function startOnboardingSession(): Promise<
       selectedDays: result.selectedDays || [],
       isMultiSelectMode: result.isMultiSelectMode || false,
       waitingForDateFormat: result.waitingForDateFormat || false,
+      waitingForFullYear: result.waitingForFullYear || false,
     };
   } catch (error) {
     console.error("❌ Error starting onboarding session:", error);

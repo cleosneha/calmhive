@@ -19,6 +19,7 @@ interface OnboardingSessionState {
   selectedDays: string[];
   isMultiSelectMode: boolean;
   waitingForDateFormat: boolean;
+  waitingForFullYear: boolean;
 }
 
 interface ErrorResponse {
@@ -48,6 +49,7 @@ export function useOnboardingSession() {
     selectedDays: [],
     isMultiSelectMode: false,
     waitingForDateFormat: false,
+    waitingForFullYear: false,
   });
 
   // Initialize onboarding session
@@ -79,6 +81,7 @@ export function useOnboardingSession() {
             : [],
           isMultiSelectMode: !!result.isMultiSelectMode,
           waitingForDateFormat: !!result.waitingForDateFormat,
+          waitingForFullYear: !!result.waitingForFullYear,
         }));
       } catch (error) {
         console.error("Failed to start onboarding:", error);
@@ -156,6 +159,7 @@ export function useOnboardingSession() {
             : [],
           isMultiSelectMode: !!result.isMultiSelectMode,
           waitingForDateFormat: !!result.waitingForDateFormat,
+          waitingForFullYear: !!result.waitingForFullYear,
           loading: false,
         }));
       } catch (error: unknown) {
@@ -206,6 +210,7 @@ export function useOnboardingSession() {
                 : [],
               isMultiSelectMode: !!result.isMultiSelectMode,
               waitingForDateFormat: !!result.waitingForDateFormat,
+              waitingForFullYear: !!result.waitingForFullYear,
               loading: false,
             }));
             return;

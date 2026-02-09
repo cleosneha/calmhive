@@ -1,5 +1,10 @@
 import { AIMessage } from "@langchain/core/messages";
-import { formatDateToDDMMYYYY } from "@/ai/agents/onboarding/utils/dob-validator";
+import {
+  formatDateToDDMMYYYY,
+  validateAndCreateDate,
+  calculateAge,
+  mapAgeToRange,
+} from "@/ai/agents/onboarding/utils/dob-validator";
 import { HARD_CODED_MESSAGES } from "../../../utils/hardcoded-messages";
 import type { QuestionHandler } from "./utils";
 import type { OnboardingStateType } from "../../../state";
@@ -12,316 +17,101 @@ import {
 import { performLLMValidation } from "@/ai/agents/onboarding/utils/llm-validator";
 
 /**
- * Calculate age from date of birth
+ * Type for successful DOB validation result
  */
-function calculateAge(dateOfBirth: Date): number {
-  const today = new Date();
-  let age = today.getUTCFullYear() - dateOfBirth.getUTCFullYear();
-  const monthDiff = today.getUTCMonth() - dateOfBirth.getUTCMonth();
-
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && today.getUTCDate() < dateOfBirth.getUTCDate())
-  ) {
-    age--;
-  }
-
-  return age;
-}
+type DOBValidationSuccess = {
+  dobString: string;
+  validDate: Date;
+};
 
 /**
- * Map age to age range
+ * Validate DOB input using LLM - Reusable for both initial entry and modifications
+ * Returns state update for ambiguity, validation errors, or success with parsed date
+ * @param skipModificationCheck - Skip checking for field modifications (used when validating reconstructed dates)
  */
-function mapAgeToRange(age: number): string {
-  if (age < 18) return "Under 18";
-  if (age >= 18 && age <= 24) return "18-24";
-  if (age >= 25 && age <= 34) return "25-34";
-  if (age >= 35 && age <= 44) return "35-44";
-  if (age >= 45 && age <= 54) return "45-54";
-  if (age >= 55) return "55+";
-
-  return "Unknown";
-}
-
-/**
- * Validate date components and create Date object
- */
-function validateAndCreateDate(
-  day: number,
-  month: number,
-  year: number,
-): { valid: boolean; date?: Date; error?: string } {
-  const currentYear = new Date().getUTCFullYear();
-
-  // Validate ranges
-  if (day < 1 || day > 31) {
-    return { valid: false, error: "Day must be between 1 and 31." };
-  }
-
-  if (month < 1 || month > 12) {
-    return { valid: false, error: "Month must be between 1 and 12." };
-  }
-
-  if (year < 1900 || year > currentYear) {
-    return {
-      valid: false,
-      error: `Year must be between 1900 and ${currentYear}.`,
-    };
-  }
-
-  // Check day validity for month (including leap year)
-  const daysInMonth = new Date(year, month, 0).getDate();
-  if (day > daysInMonth) {
-    const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-    return {
-      valid: false,
-      error: `${monthNames[month - 1]} ${year} has only ${daysInMonth} days.`,
-    };
-  }
-
-  const dateOfBirth = new Date(Date.UTC(year, month - 1, day));
-
-  // Check if future date
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
-
-  if (dateOfBirth > today) {
-    return {
-      valid: false,
-      error: "Date of birth cannot be in the future.",
-    };
-  }
-
-  // Calculate and validate age
-  const age = calculateAge(dateOfBirth);
-
-  if (age < 4) {
-    return {
-      valid: false,
-      error: "You must be at least 4 years old to use CalmHive.",
-    };
-  }
-
-  if (age > 110) {
-    return {
-      valid: false,
-      error:
-        "Please enter a valid date of birth. The age seems unusually high.",
-    };
-  }
-
-  return { valid: true, date: dateOfBirth };
-}
-
-/**
- * Handle date of birth response with single LLM validation
- */
-export const handleDateOfBirthResponse: QuestionHandler = async (
-  question,
-  userInput,
-  validationResult,
-  state: OnboardingStateType,
-  step,
-) => {
-  console.log("[DOB Handler] Starting with input:", userInput);
-  console.log(
-    "[DOB Handler] State waiting for format:",
-    state.waitingForDateFormat,
-  );
-
-  // Check if we're waiting for format clarification
-  if (state.waitingForDateFormat && state.tentativeDateInput) {
-    console.log("[DOB Handler] Processing format clarification");
-
-    try {
-      const result = await performLLMValidation(
-        userInput,
-        state.tentativeDateInput,
-        "",
-        "date_format_clarification",
-      );
-
-      console.log("[DOB Handler] Format clarification result:", result);
-
-      // Check if modifying another field
-      if (
-        result.modificationRequired &&
-        result.modifiedField &&
-        result.modifiedValue
-      ) {
-        console.log("[DOB Handler] User modifying:", result.modifiedField);
-        return buildStateUpdate(
-          {
-            [result.modifiedField]: result.modifiedValue,
-          },
-          [
-            new AIMessage(
-              `Got it! I've updated your ${result.modifiedField}. Now, back to your date of birth - please clarify: is "${state.tentativeDateInput}" in DD/MM/YYYY format or MM/DD/YYYY format?`,
-            ),
-          ],
-          step,
-          {
-            waitingForDateFormat: true,
-            tentativeDateInput: state.tentativeDateInput,
-          },
-        );
-      }
-
-      // If no clarification provided
-      if (!result.clarification || !result.dateFormat) {
-        return buildStateUpdate(
-          {},
-          [
-            new AIMessage(
-              `I need you to specify the date format clearly. Is "${state.tentativeDateInput}" in:\n• DD/MM/YYYY (Day/Month/Year), or\n• MM/DD/YYYY (Month/Day/Year)?`,
-            ),
-          ],
-          step,
-          {
-            waitingForDateFormat: true,
-            tentativeDateInput: state.tentativeDateInput,
-          },
-        );
-      }
-
-      // Parse the original date with specified format
-      const datePattern = /(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/;
-      const match = state.tentativeDateInput.match(datePattern);
-
-      if (!match) {
-        return buildStateUpdate(
-          {},
-          [
-            new AIMessage(
-              "Sorry, I lost track of your date. Could you enter it again?",
-            ),
-          ],
-          step,
-          {
-            waitingForDateFormat: false,
-            tentativeDateInput: "",
-          },
-        );
-      }
-
-      const part1 = parseInt(match[1], 10);
-      const part2 = parseInt(match[2], 10);
-      const part3 = parseInt(match[3], 10);
-
-      let day: number, month: number, year: number;
-
-      if (result.dateFormat === "DD/MM/YYYY") {
-        day = part1;
-        month = part2;
-        year = part3;
-      } else {
-        month = part1;
-        day = part2;
-        year = part3;
-      }
-
-      // Validate and create date
-      const validation = validateAndCreateDate(day, month, year);
-
-      if (!validation.valid) {
-        return buildStateUpdate(
-          {},
-          [new AIMessage(validation.error || HARD_CODED_MESSAGES.DOB_INVALID)],
-          step,
-          {
-            waitingForDateFormat: false,
-            tentativeDateInput: "",
-          },
-        );
-      }
-
-      const age = calculateAge(validation.date!);
-      const ageRange = mapAgeToRange(age);
-      const followUp = getFollowUp(question, ageRange);
-      const nextStepValue = getNextStep(followUp, step);
-      const message = buildMessage(validationResult, followUp?.text);
-      const dobString = formatDateToDDMMYYYY(validation.date!);
-
-      console.log("[DOB Handler] Format clarified, storing DOB:", dobString);
-
-      return buildStateUpdate(
-        {
-          [question.key]: dobString,
-        },
-        [new AIMessage(message)],
-        nextStepValue,
-        {
-          waitingForDateFormat: false,
-          tentativeDateInput: "",
-        },
-      );
-    } catch (error) {
-      console.error("[DOB Handler] LLM error during clarification:", error);
-      return buildStateUpdate(
-        {},
-        [
-          new AIMessage(
-            "Sorry, I had trouble processing that. Please clarify: DD/MM/YYYY or MM/DD/YYYY?",
-          ),
-        ],
-        step,
-        {
-          waitingForDateFormat: true,
-          tentativeDateInput: state.tentativeDateInput,
-        },
-      );
-    }
-  }
-
-  // Normal DOB validation using LLM
-  console.log("[DOB Handler] Validating DOB with LLM");
-
+export async function validateDOBWithLLM(
+  userInput: string,
+  currentStep: number,
+  skipModificationCheck: boolean = false,
+): Promise<Partial<OnboardingStateType> | DOBValidationSuccess | null> {
   try {
     const result = await performLLMValidation(
       userInput,
-      question.text,
+      "What is your date of birth?",
       "",
       "date_of_birth",
     );
 
-    console.log("[DOB Handler] DOB validation result:", result);
+    console.log("[DOB Validation] LLM result:", result);
 
-    // Check if modifying another field
+    // PRIORITY 1: Check for safety issues FIRST
+    if (result.hasSafetyIssue) {
+      console.log("[DOB Validation] Safety issue detected");
+      return buildStateUpdate(
+        {},
+        [new AIMessage(HARD_CODED_MESSAGES.SAFETY_LONG)],
+        currentStep,
+        {
+          waitingForSafetyAck: true,
+          currentGoalOptions: [],
+          currentGoalSpecificQuestion: "",
+        },
+      );
+    }
+
+    // PRIORITY 2: Check relevance (only if not modifying and not a valid date)
     if (
+      !skipModificationCheck &&
+      !result.isRelevant &&
+      !result.modificationRequired &&
+      result.dobStatus === "INVALID"
+    ) {
+      console.log("[DOB Validation] Irrelevant response");
+      return buildStateUpdate(
+        {},
+        [
+          new AIMessage(
+            "That doesn't seem related to your date of birth. Could you please provide your birth date? For example: 15/03/1990",
+          ),
+        ],
+        currentStep,
+        {
+          currentGoalOptions: [],
+          currentGoalSpecificQuestion: "",
+        },
+      );
+    }
+
+    // PRIORITY 3: Check if modifying another field (skip if this is a reconstructed date validation)
+    // Also ignore "YEAR" as it's likely a false positive from date parsing
+    if (
+      !skipModificationCheck &&
       result.modificationRequired &&
       result.modifiedField &&
+      result.modifiedField !== "dateOfBirth" &&
+      result.modifiedField.toLowerCase() !== "year" &&
       result.modifiedValue
     ) {
-      console.log("[DOB Handler] User modifying:", result.modifiedField);
+      console.log(
+        "[DOB Validation] User modifying other field:",
+        result.modifiedField,
+      );
       return buildStateUpdate(
         {
           [result.modifiedField]: result.modifiedValue,
         },
         [
           new AIMessage(
-            `Got it! I've updated your ${result.modifiedField}. Now, could you please share your date of birth?`,
+            `Got it! I've updated your ${result.modifiedField}. Now, could you please confirm your date of birth?`,
           ),
         ],
-        step,
+        currentStep,
       );
     }
 
-    // Handle different statuses
+    // Handle ambiguity
     if (result.dobStatus === "AMBIGUOUS") {
-      console.log("[DOB Handler] Ambiguous format detected");
+      console.log("[DOB Validation] Ambiguous format detected");
       return buildStateUpdate(
         {},
         [
@@ -329,29 +119,37 @@ export const handleDateOfBirthResponse: QuestionHandler = async (
             `I see a date, but the format is a bit ambiguous. Could you clarify:\n\nIs this in DD/MM/YYYY format or MM/DD/YYYY format?\n\nFor example:\n• DD/MM/YYYY (Day/Month/Year)\n• MM/DD/YYYY (Month/Day/Year)`,
           ),
         ],
-        step,
+        currentStep,
         {
           waitingForDateFormat: true,
           tentativeDateInput: userInput,
+          currentGoalOptions: [],
+          currentGoalSpecificQuestion: "",
         },
       );
     }
 
     if (result.dobStatus === "NEEDS_FULL_YEAR") {
-      console.log("[DOB Handler] Needs full year");
+      console.log("[DOB Validation] Needs full year");
       return buildStateUpdate(
         {},
         [
           new AIMessage(
-            "Could you please enter the full 4-digit year? For example, 1990 instead of 90.",
+            "Could you please provide the full 4-digit year? For example, 2004 instead of 04.",
           ),
         ],
-        step,
+        currentStep,
+        {
+          waitingForFullYear: true,
+          partialDateInput: userInput,
+          currentGoalOptions: [],
+          currentGoalSpecificQuestion: "",
+        },
       );
     }
 
     if (result.dobStatus === "INVALID") {
-      console.log("[DOB Handler] Invalid date:", result.dobError);
+      console.log("[DOB Validation] Invalid date:", result.dobError);
       return buildStateUpdate(
         {},
         [
@@ -360,11 +158,15 @@ export const handleDateOfBirthResponse: QuestionHandler = async (
               "I couldn't understand that date format. Could you try again? For example: 15/03/1990 or 21st October 2023",
           ),
         ],
-        step,
+        currentStep,
+        {
+          currentGoalOptions: [],
+          currentGoalSpecificQuestion: "",
+        },
       );
     }
 
-    // Status is VALID - validate the parsed date
+    // Status is VALID - but perform fallback ambiguity check for numeric dates
     if (!result.day || !result.month || !result.year) {
       return buildStateUpdate(
         {},
@@ -373,7 +175,42 @@ export const handleDateOfBirthResponse: QuestionHandler = async (
             "I couldn't parse that date. Please try a format like 15/03/1990 or 21st October 2023",
           ),
         ],
-        step,
+        currentStep,
+        {
+          currentGoalOptions: [],
+          currentGoalSpecificQuestion: "",
+        },
+      );
+    }
+
+    // Fallback ambiguity check: if input is numeric format and both parts ≤12, force clarification
+    // This ensures ambiguity is always detected even if LLM misses it
+    const numericPattern = /^\s*(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})\s*$/;
+    const numericMatch = userInput.match(numericPattern);
+    if (
+      !skipModificationCheck &&
+      numericMatch &&
+      parseInt(numericMatch[1], 10) <= 12 &&
+      parseInt(numericMatch[2], 10) <= 12
+    ) {
+      console.log(
+        "[DOB Validation] Fallback ambiguity check triggered for:",
+        userInput,
+      );
+      return buildStateUpdate(
+        {},
+        [
+          new AIMessage(
+            `I see a date, but the format is a bit ambiguous. Could you clarify:\n\nIs this in DD/MM/YYYY format or MM/DD/YYYY format?\n\nFor example:\n• DD/MM/YYYY (Day/Month/Year)\n• MM/DD/YYYY (Month/Day/Year)`,
+          ),
+        ],
+        currentStep,
+        {
+          waitingForDateFormat: true,
+          tentativeDateInput: userInput,
+          currentGoalOptions: [],
+          currentGoalSpecificQuestion: "",
+        },
       );
     }
 
@@ -384,31 +221,27 @@ export const handleDateOfBirthResponse: QuestionHandler = async (
     );
 
     if (!validation.valid) {
-      console.log("[DOB Handler] Date validation failed:", validation.error);
+      console.log("[DOB Validation] Date validation failed:", validation.error);
       return buildStateUpdate(
         {},
         [new AIMessage(validation.error || HARD_CODED_MESSAGES.DOB_INVALID)],
-        step,
+        currentStep,
+        {
+          currentGoalOptions: [],
+          currentGoalSpecificQuestion: "",
+        },
       );
     }
 
-    // Success - calculate age and store
-    const age = calculateAge(validation.date!);
-    const ageRange = mapAgeToRange(age);
-    const followUp = getFollowUp(question, ageRange);
-    const nextStepValue = getNextStep(followUp, step);
-    const message = buildMessage(validationResult, followUp?.text);
+    // Success - return the formatted DOB string and date object for age calculation
     const dobString = formatDateToDDMMYYYY(validation.date!);
-
-    console.log("[DOB Handler] Valid DOB, storing:", dobString);
-
-    return buildStateUpdate(
-      { [question.key]: dobString },
-      [new AIMessage(message)],
-      nextStepValue,
-    );
+    console.log("[DOB Validation] Valid DOB:", dobString);
+    return {
+      dobString,
+      validDate: validation.date!,
+    };
   } catch (error) {
-    console.error("[DOB Handler] LLM error:", error);
+    console.error("[DOB Validation] LLM error:", error);
     return buildStateUpdate(
       {},
       [
@@ -416,7 +249,72 @@ export const handleDateOfBirthResponse: QuestionHandler = async (
           "Sorry, I had trouble processing that. Could you try entering your date of birth again?",
         ),
       ],
-      step,
+      currentStep,
+      {
+        currentGoalOptions: [],
+        currentGoalSpecificQuestion: "",
+      },
     );
   }
+}
+
+/**
+ * Handle date of birth response with single LLM validation
+ * Note: Format/year clarification is handled globally by dob-clarification.ts in process-response.ts
+ * This handler only processes initial DOB input
+ */
+export const handleDateOfBirthResponse: QuestionHandler = async (
+  question,
+  userInput,
+  validationResult,
+  _state: OnboardingStateType,
+  step,
+) => {
+  console.log("[DOB Handler] Starting with input:", userInput);
+
+  // Use the shared validation function for initial DOB entry
+  console.log("[DOB Handler] Validating DOB with LLM");
+
+  const dobValidation = await validateDOBWithLLM(userInput, step);
+
+  // If validation returned error or ambiguity state, return it
+  if (dobValidation && "messages" in dobValidation) {
+    return dobValidation;
+  }
+
+  // If validation succeeded, store DOB and proceed
+  if (
+    dobValidation &&
+    "dobString" in dobValidation &&
+    dobValidation.dobString
+  ) {
+    const age = calculateAge(dobValidation.validDate);
+    const ageRange = mapAgeToRange(age);
+    const followUp = getFollowUp(question, ageRange);
+    const nextStepValue = getNextStep(followUp, step);
+    const message = buildMessage(validationResult, followUp?.text);
+
+    console.log("[DOB Handler] Valid DOB, storing:", dobValidation.dobString);
+
+    return buildStateUpdate(
+      { [question.key]: dobValidation.dobString },
+      [new AIMessage(message)],
+      nextStepValue,
+    );
+  }
+
+  // Fallback error
+  return buildStateUpdate(
+    {},
+    [
+      new AIMessage(
+        "Sorry, I had trouble processing that. Could you try entering your date of birth again?",
+      ),
+    ],
+    step,
+    {
+      currentGoalOptions: [],
+      currentGoalSpecificQuestion: "",
+    },
+  );
 };

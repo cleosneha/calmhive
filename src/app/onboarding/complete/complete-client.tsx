@@ -182,7 +182,9 @@ export default function OnboardingCompleteClient({ responses }: Props) {
             const fullAnswer = answer;
             // Use shortened question text for dateOfBirth on completion page
             const displayQuestion =
-              key === "dateOfBirth" ? "What is your age?" : question.text;
+              key === "dateOfBirth"
+                ? "What is your date of birth?"
+                : question.text;
 
             return (
               <Card

@@ -24,6 +24,8 @@ export default function OnboardingChatClient() {
     firstName,
     selectedDays,
     isMultiSelectMode,
+    waitingForDateFormat,
+    waitingForFullYear,
     handleSend,
     handleInputKeyDown,
     setInput,
@@ -93,6 +95,9 @@ export default function OnboardingChatClient() {
   // Show proceed to T&C button when complete
   const showProceedButton = isComplete;
 
+  // Hide suggestions during DOB format/year clarification
+  const isDOBClarificationActive = waitingForDateFormat || waitingForFullYear;
+
   // Show suggestions if current question has options and not loading
   const showSuggestions = !!(
     currentQuestion &&
@@ -100,6 +105,7 @@ export default function OnboardingChatClient() {
     !showProceedButton &&
     !loading &&
     !isMultiSelectMode &&
+    !isDOBClarificationActive &&
     (currentQuestion.options.length > 0 ||
       (currentQuestion.key === "goalSpecificInfo" &&
         currentGoalOptions.length > 0))

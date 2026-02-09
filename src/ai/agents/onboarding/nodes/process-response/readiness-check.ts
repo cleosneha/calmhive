@@ -9,7 +9,7 @@ import { HARD_CODED_MESSAGES } from "../../utils/hardcoded-messages";
  */
 export async function handleReadinessCheck(
   state: OnboardingStateType,
-  userInput: string
+  userInput: string,
 ): Promise<Partial<OnboardingStateType> | null> {
   if (state.step !== 0) return null;
 
@@ -18,7 +18,7 @@ export async function handleReadinessCheck(
     const validationResult = await validateUserResponse(
       userInput,
       ONBOARDING_QUESTIONS[0].text,
-      ONBOARDING_QUESTIONS[1]?.text || ""
+      ONBOARDING_QUESTIONS[1]?.text || "",
     );
 
     // PRIORITY 1: Check for safety issues FIRST
@@ -27,6 +27,8 @@ export async function handleReadinessCheck(
         messages: [new AIMessage(HARD_CODED_MESSAGES.SAFETY_LONG)],
         step: 0,
         waitingForSafetyAck: true,
+        currentGoalOptions: [],
+        currentGoalSpecificQuestion: "",
       };
     }
 
@@ -39,6 +41,8 @@ export async function handleReadinessCheck(
       return {
         step: 0,
         messages: [new AIMessage(HARD_CODED_MESSAGES.READINESS_NOT_READY)],
+        currentGoalOptions: [],
+        currentGoalSpecificQuestion: "",
       };
     }
 
@@ -48,10 +52,12 @@ export async function handleReadinessCheck(
         messages: [
           new AIMessage(
             validationResult.errorMessage ||
-              "Could you clarify a bit so I can help best?"
+              "Could you clarify a bit so I can help best?",
           ),
         ],
         step: 0,
+        currentGoalOptions: [],
+        currentGoalSpecificQuestion: "",
       };
     }
 

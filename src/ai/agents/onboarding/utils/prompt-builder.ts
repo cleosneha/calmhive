@@ -22,7 +22,7 @@ Output:
 MODIFICATION_REQUIRED: [yes/no]
 MODIFIED_FIELD: [readiness/dateOfBirth/activities/timeAvailability/energeticTime/daysOff/anythingElse or "none"]
 MODIFIED_VALUE: [new value or "none"]
-RELEVANCE: [yes/no] - no if off-topic/spam AND not a modification
+RELEVANCE: [yes/no] - no if off-topic/spam/not-related to improving wellness AND not a modification
 SAFETY: [safe/concern]
 EXPECTATION_MISMATCH: [yes/no]
 MISMATCH_MESSAGE: [error msg or "none"]
@@ -32,10 +32,11 @@ GOAL_OPTIONS: [3 options only if RELEVANCE=yes and MODIFICATION_REQUIRED=no]
 FOLLOW_UP: [Brief warm acknowledgment of their goal, , might contain a small fact(only if RELEVANCE=yes and MODIFICATION_REQUIRED=no and EXPECTATION_MISMATCH=no)]
 
 Rules:
-- MODIFICATION_REQUIRED=yes if correcting/changing ANY previous field (e.g., "my date of birth is 15/03/1990", "I said morning not evening", "activities are reading", "no daysOff")
+- CHECK MODIFICATION FIRST before relevance. MODIFICATION_REQUIRED=yes if correcting/changing ANY previous field (e.g., "my date of birth is 15/03/1990", "sorry, my DOB is 04/07/2004", "I said morning not evening", "activities are reading", "no daysOff")
+- If response contains a date or mentions "DOB", "date of birth", "born": MODIFICATION_REQUIRED=yes, MODIFIED_FIELD=dateOfBirth, MODIFIED_VALUE=the date
 - MODIFIED_FIELD: identify field being modified OR "none"
 - MODIFIED_VALUE: [new value or "none"]
-- RELEVANCE=yes if user describes valid wellness goal for CalmHive and no only if off-topic AND not modifying a field
+- RELEVANCE: if MODIFICATION_REQUIRED=yes, set RELEVANCE=yes. Otherwise yes if valid wellness goal, no only if off-topic/spam AND not modifying
 - SAFETY=concern only for crisis
 - FOLLOW_UP: only if genuinely answering goals question
 - GOAL_SPECIFIC_QUESTION: [Generate a specific question about their goal, e.g., for "reduce overthinking" ask "What situations trigger your overthinking?"]
@@ -53,7 +54,7 @@ Output:
 MODIFICATION_REQUIRED: [yes/no]
 MODIFIED_FIELD: [goals/readiness/dateOfBirth/activities/timeAvailability/energeticTime/daysOff or "none"]
 MODIFIED_VALUE: [new value or "none"]
-RELEVANCE: [yes/no]
+RELEVANCE: [yes/no] yes if user describes valid wellness goal for CalmHive and no only if off-topic/spam/not-related to improving wellness AND not modifying a field
 SAFETY: [safe/concern]
 EXPECTATION_MISMATCH: [yes/no]
 MISMATCH_MESSAGE: [error msg or "none"]
@@ -63,12 +64,13 @@ GOAL_SPECIFIC_QUESTION: [Only if MODIFIED_FIELD=goals: generate a specific follo
 GOAL_OPTIONS: [Only if MODIFIED_FIELD=goals: 3 concrete options]
 
 Rules:
-- This question requests MORE DETAILS about the user's existing goal, but the user MAY also request modifications to any previous field
-- MODIFICATION_REQUIRED=yes if user explicitly asks to change any previous field (e.g., "change my main goal", "my date of birth is 15/03/1990", "I said evening not morning", "activities are hiking")
+- CHECK MODIFICATION FIRST before relevance. This question requests MORE DETAILS about the user's existing goal, but the user MAY also request modifications to any previous field
+- MODIFICATION_REQUIRED=yes if user explicitly asks to change any previous field (e.g., "change my main goal", "my date of birth is 15/03/1990", "sorry, my DOB is 04/07/2004", "I said evening not morning", "activities are hiking")
+- If response contains a date or mentions "DOB", "date of birth", "born": MODIFICATION_REQUIRED=yes, MODIFIED_FIELD=dateOfBirth, MODIFIED_VALUE=the date
 - MODIFIED_FIELD: identify which field (use "goals" if changing main goal) or "none"
 - When MODIFIED_FIELD=goals: generate GOAL_SPECIFIC_QUESTION and GOAL_OPTIONS and treat as a new goal flow
 - If user simply provides details (e.g., "exam pressure", "work stress"), treat as answering current question (MODIFICATION_REQUIRED=no)
-- RELEVANCE=yes if answering the goal-specific question or modifying
+- RELEVANCE: if MODIFICATION_REQUIRED=yes, set RELEVANCE=yes. Otherwise yes if answering question or modifying
 - SAFETY=concern only for crisis
 - FOLLOW_UP: acknowledge only if genuinely answering (not modifying)
 - EXPECTATION_MISMATCH: yes if negative/dismissive`;
@@ -76,39 +78,45 @@ Rules:
     case "date_of_birth":
       return `Parse date of birth: "${userResponse}"
 
-Output (one per line, exact format):
+Output:
 STATUS: [VALID|AMBIGUOUS|NEEDS_FULL_YEAR|INVALID]
 DAY: [1-31 or none]
 MONTH: [1-12 or none]
 YEAR: [full year or none]
 ERROR: [message or none]
-MODIFICATION_REQUIRED: [yes|no]
+SAFETY: [safe/concern]
+RELEVANCE: [yes/no]
+MODIFICATION_REQUIRED: [yes/no]
 MODIFIED_FIELD: [field or none]
 MODIFIED_VALUE: [value or none]
 
 Rules:
-- Numeric date ambiguous if BOTH first≤12 AND second≤12 (e.g., 08/07/2004 is ambiguous)
-- Parse any format: text (21 October 2004), numeric (21/10/2004), natural (October 21)
+- Ambiguous if both parts ≤12 (e.g., 08/07/2004)
 - 2-digit year → NEEDS_FULL_YEAR
+- Parse any format: text/numeric/natural
 - Day 1-31, month 1-12, year 1900-${new Date().getFullYear()}
-- Check day valid for month (Feb=28/29)
-- Detect modifications like "my goal is X"`;
+- SAFETY=concern only for crisis
+- RELEVANCE=no if spam/off-topic AND not modifying
+- Detect field modifications`;
 
     case "date_format_clarification":
       return `Date "${currentQuestion}" is ambiguous. User said: "${userResponse}"
 
-Output (one per line, exact format):
+Output:
 CLARIFICATION: [yes|no]
 FORMAT: [DD/MM/YYYY|MM/DD/YYYY|none]
+SAFETY: [safe/concern]
+RELEVANCE: [yes/no]
 MODIFICATION_REQUIRED: [yes|no]
 MODIFIED_FIELD: [field or none]
 MODIFIED_VALUE: [value or none]
 
 Rules:
-- CLARIFICATION=yes if specifying format (dd/mm, day/month, first one, etc)
-- "first one"=DD/MM/YYYY, "second one"=MM/DD/YYYY
-- Otherwise CLARIFICATION=no
-- Detect other field modifications`;
+- CLARIFICATION=yes if user specifies format
+- Format mapping: "first/1st/first one/dd/mm" → DD/MM/YYYY (Day/Month/Year). "second/2nd/second one/mm/dd" → MM/DD/YYYY (Month/Day/Year)
+- SAFETY=concern only for crisis
+- RELEVANCE=no if spam/off-topic AND not modifying
+- Detect field modifications`;
 
     default:
       return `Analyze if user is modifying a previous answer OR answering the current question.
@@ -133,11 +141,12 @@ GOAL_SPECIFIC_QUESTION: [Only if MODIFIED_FIELD=goals: generate question about n
 GOAL_OPTIONS: [Only if MODIFIED_FIELD=goals: 3 options]
 
 Rules:
-- MODIFICATION_REQUIRED=yes if user corrects/changes ANY previous field
+- CHECK MODIFICATION FIRST before relevance. MODIFICATION_REQUIRED=yes if user corrects/changes ANY previous field
+- If response contains a date or mentions "DOB", "date of birth", "born": MODIFICATION_REQUIRED=yes, MODIFIED_FIELD=dateOfBirth, MODIFIED_VALUE=the date
 - MODIFIED_FIELD: identify field OR "none". If user says "my main goal", "my goal", or "what I want to achieve", set to "goals" NOT current question field
 - MODIFIED_VALUE: [new value or "none"]
 - When MODIFIED_FIELD=goals: generate GOAL_SPECIFIC_QUESTION and GOAL_OPTIONS for new goal
-- RELEVANCE=yes if answers question, no if off-topic AND not modifying
+- RELEVANCE: if MODIFICATION_REQUIRED=yes, set RELEVANCE=yes. Otherwise yes if answers question, no if off-topic AND not modifying
 - SAFETY=concern only for crisis
 - EXPECTATION_MISMATCH=yes if negative/dismissive
 - FOLLOW_UP: warm acknowledgment only when truly answering
