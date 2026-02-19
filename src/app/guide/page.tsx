@@ -3,12 +3,9 @@ import { Metadata } from "next";
 import HeaderLoggedOut from "@/components/shared/header/header-logged-out";
 import Footer from "@/components/shared/footer/footer";
 import GuideContent from "./guide-content";
+import { pageMetadata } from "@/seo";
 
-export const metadata: Metadata = {
-  title: "Guide | CalmHive",
-  description:
-    "Complete guide to using CalmHive - from basic setup to advanced features. Learn how to create plans, track progress, and build gentle habits.",
-};
+export const metadata: Metadata = pageMetadata.guide;
 
 export default function GuidePage() {
   return (

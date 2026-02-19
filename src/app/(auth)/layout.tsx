@@ -1,6 +1,10 @@
 import type { AuthLayoutProps } from "@/types";
 import { getAuthState } from "@/actions/auth";
 import { redirect } from "next/navigation";
+import { Metadata } from "next";
+import { pageMetadata } from "@/seo";
+
+export const metadata: Metadata = pageMetadata.login;
 
 export default async function AuthLayout({ children }: AuthLayoutProps) {
   const { isLoggedIn, isVerified, isOnboarded } = await getAuthState();

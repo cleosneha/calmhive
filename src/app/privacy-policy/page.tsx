@@ -1,7 +1,9 @@
-"use client";
-
+import { Metadata } from "next";
 import Link from "next/link";
 import { FaArrowLeft } from "react-icons/fa";
+import { pageMetadata } from "@/seo";
+
+export const metadata: Metadata = pageMetadata.privacyPolicy;
 
 export default function PrivacyPolicyPage() {
   return (

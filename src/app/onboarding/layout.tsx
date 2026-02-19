@@ -1,5 +1,9 @@
 import type { OnboardingLayoutProps } from "@/types";
 import { requireVerifiedEmail } from "@/actions/auth";
+import { Metadata } from "next";
+import { pageMetadata } from "@/seo";
+
+export const metadata: Metadata = pageMetadata.onboarding;
 
 export default async function OnboardingLayout({
   children,
