@@ -3,11 +3,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { pageMetadata } from "@/seo";
-import {
-  generateWebsiteSchema,
-  generateOrganizationSchema,
-  generateSoftwareAppSchema,
-} from "@/seo/jsonld";
+import { JsonLdScript } from "@/components/seo/JsonLdScript";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -22,29 +18,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const websiteSchema = generateWebsiteSchema();
-  const organizationSchema = generateOrganizationSchema();
-  const softwareAppSchema = generateSoftwareAppSchema();
-
   return (
     <html lang="en">
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationSchema),
-          }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(softwareAppSchema),
-          }}
-        />
+        <JsonLdScript />
       </head>
       <body className={`${poppins.variable} antialiased`}>
         <Toaster />
