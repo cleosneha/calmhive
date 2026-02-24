@@ -4,7 +4,7 @@ export const siteConfig = {
   description:
     "A gentle, AI-powered space for planning, journaling, and reflection. No pressure, no judgment—just calm progress.",
   url: "https://calmhive.vercel.app",
-  ogImage: "/og-image.png",
+  ogImage: "/og-calmhive.png",
   logo: "/calmhive.png",
   keywords: [
     "mental wellness",
