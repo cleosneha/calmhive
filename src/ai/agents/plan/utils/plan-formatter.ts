@@ -29,6 +29,13 @@ export function parseAIResponse(response: string): PlanTask[] {
       cleaned = cleaned.replace(/```\n?/g, "");
     }
 
+    // Fix unescaped newlines within JSON string values
+    // This handles cases where LLM returns JSON with literal newlines in string values
+    cleaned = cleaned.replace(/"([^"]*?)"/g, (match) => {
+      // Replace literal newlines and tabs within quoted strings with escaped versions
+      return match.replace(/(\r?\n)/g, "\\n").replace(/\t/g, "\\t");
+    });
+
     // Parse JSON
     const parsed = JSON.parse(cleaned);
 
@@ -63,7 +70,7 @@ export function parseAIResponse(response: string): PlanTask[] {
     throw new Error(
       `Failed to parse plan from AI response: ${
         error instanceof Error ? error.message : "Unknown error"
-      }`
+      }`,
     );
   }
 }
@@ -100,7 +107,7 @@ export function formatPlanForDisplay(tasks: PlanTask[]): string {
           (task) =>
             `  ${task.timeRange} - ${task.activity}${
               task.notes ? ` (${task.notes})` : ""
-            }`
+            }`,
         )
         .join("\n");
       return `**${day}:**\n${taskList}`;
