@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth";
+import db from "@/lib/db";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import type { BetterAuthSession } from "@/types/auth";
@@ -105,7 +106,21 @@ export async function requireOnboarding() {
   }
 
   if (!isOnboarded) {
-    redirect("/onboarding");
+    // Fallback to DB check to avoid stale session values right after onboarding completion.
+    const onboarding = await db.onboarding.findUnique({
+      where: { userId: user.id },
+      select: { termsAccepted: true },
+    });
+
+    if (!onboarding?.termsAccepted) {
+      redirect("/onboarding");
+    }
+
+    // Keep user flag consistent for subsequent checks.
+    await db.user.update({
+      where: { id: user.id },
+      data: { onboarded: true },
+    });
   }
 
   return user;
