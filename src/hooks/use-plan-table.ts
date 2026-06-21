@@ -40,15 +40,18 @@ export function usePlanTable(plan: Plan, onRefresh?: () => Promise<void>) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isRemovingHoliday, setIsRemovingHoliday] = useState(false);
 
-  const dayOrder = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
+  const dayOrder = useMemo(
+    () => [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ],
+    [],
+  );
 
   const statusClasses: Record<string, string> = {
     done: "text-emerald-700 bg-emerald-50",
