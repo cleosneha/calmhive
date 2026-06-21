@@ -146,7 +146,7 @@ export async function fetchUserProfile(): Promise<UserProfileData | null> {
       const calculatedRange = extractTimeRangeFromTasks(plan.tasks);
       energeticTimeString = calculatedRange || "";
     }
-    console.log("Energetic Time String:", energeticTimeString);
+    // console.log("Energetic Time String:", energeticTimeString);
     return {
       id: userWithOnboarding.id,
       email: userWithOnboarding.email,

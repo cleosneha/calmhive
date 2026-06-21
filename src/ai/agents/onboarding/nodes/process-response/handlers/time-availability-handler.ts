@@ -15,26 +15,13 @@ export const handleTimeAvailabilityResponse: QuestionHandler = (
   _state,
   step
 ) => {
-  console.log(
-    "⏱️ [time-availability-handler] Called with input:",
-    userInput,
-    "| validationResult:",
-    {
-      modificationRequired: validationResult.modificationRequired,
-      modifiedField: validationResult.modifiedField,
-    }
-  );
+  // console.log( "⏱️ [time-availability-handler] Called with input:", userInput, "| validationResult:", { modificationRequired: validationResult.modificationRequired, modifiedField: validationResult.modifiedField, } );
 
   const timeValidation = validateTimeResponse(userInput);
   const parsed = parseAndMapTime(userInput);
   const totalMins = parsed.mins ?? 0;
 
-  console.log(
-    "⏱️ [time-availability-handler] Parsed time:",
-    totalMins,
-    "mins | Range:",
-    parsed.mappedRange || timeValidation.mappedRange
-  );
+  // console.log( "⏱️ [time-availability-handler] Parsed time:", totalMins, "mins | Range:", parsed.mappedRange || timeValidation.mappedRange );
 
   // Get the follow-up for this time range
   let timeFollowUp = undefined;
@@ -62,12 +49,7 @@ export const handleTimeAvailabilityResponse: QuestionHandler = (
 
     if (bestKey) {
       timeFollowUp = question.followUps[bestKey];
-      console.log(
-        "⏱️ [time-availability-handler] using closest followUp key:",
-        bestKey,
-        "for mins:",
-        parsed.mins
-      );
+      // console.log( "⏱️ [time-availability-handler] using closest followUp key:", bestKey, "for mins:", parsed.mins );
     }
   }
 
@@ -87,7 +69,7 @@ export const handleTimeAvailabilityResponse: QuestionHandler = (
     timeFollowUp.text,
     nextQuestion
   );
-  console.log("⏱️ [time-availability-handler] Returning message:", message);
+  // console.log("⏱️ [time-availability-handler] Returning message:", message);
 
   return buildStateUpdate(
     {

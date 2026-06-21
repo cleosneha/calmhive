@@ -25,14 +25,7 @@ export default function EntrySection({
   const [entry, setEntry] = useState<Entry | null>(initialEntry);
   const router = useRouter();
 
-  console.log(
-    "EntrySection userId:",
-    userId,
-    "entryId:",
-    entryId,
-    "mode:",
-    mode,
-  );
+  // console.log( "EntrySection userId:", userId, "entryId:", entryId, "mode:", mode);
 
   const handleEdit = () => {
     router.push(`/user/journal/entry-section/${entryId}?mode=edit`);

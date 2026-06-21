@@ -586,10 +586,10 @@ export default function TermsOfServicePage() {
                 <p className="text-gray-700">
                   <span className="font-semibold text-gray-900">Email:</span>{" "}
                   <a
-                    href="mailto:celersneha@gmail.com"
+                    href="mailto:cleosneha@gmail.com"
                     className="text-[var(--ch-sage-dark)] hover:underline"
                   >
-                    celersneha@gmail.com
+                    cleosneha@gmail.com
                   </a>
                 </p>
               </div>

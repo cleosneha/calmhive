@@ -47,7 +47,7 @@ export function usePlanChatbotSession() {
 
       // Check if result is an error response
       if (isErrorResponse(result)) {
-        console.error("Failed to initialize plan chat:", result.error);
+        // console.error("Failed to initialize plan chat:", result.error);
         setState((prev) => ({
           ...prev,
           messages: [

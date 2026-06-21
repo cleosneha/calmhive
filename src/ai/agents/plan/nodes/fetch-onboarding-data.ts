@@ -45,7 +45,7 @@ export async function fetchOnboardingDataNode(
       additionalNotes: onboarding.additionalNotes || undefined,
     };
 
-    console.log("✅ Fetched onboarding data for user:", userId);
+    // console.log("✅ Fetched onboarding data for user:", userId);
 
     return {
       onboardingData,

@@ -12,7 +12,7 @@ export async function sendMail(formData: {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "celersneha@gmail.com",
+      user: "cleosneha@gmail.com",
       pass: process.env.GMAIL_APP_PASSWORD,
     },
   });
@@ -20,7 +20,7 @@ export async function sendMail(formData: {
   try {
     await transporter.sendMail({
       from: formData.email,
-      to: "celersneha@gmail.com",
+      to: "cleosneha@gmail.com",
       subject: `[Calmhive] ${formData.subject}`,
       text: `Name: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`,
     });

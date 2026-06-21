@@ -11,11 +11,11 @@ export async function validateDayOperation(
   needsClarification: boolean;
   response: Partial<PlanChatbotStateType>;
 }> {
-  console.log(`  📅 DAY OPERATION: ${analysis.editType}`);
+  // console.log(`  📅 DAY OPERATION: ${analysis.editType}`);
   const result = await processDayOperation(state.userId, analysis);
 
   if (!result.shouldConfirm) {
-    console.log("  ⚠️ Day operation needs handling");
+    // console.log("  ⚠️ Day operation needs handling");
 
     // Type assertion for the false branch
     const errorResult = result as {
@@ -28,7 +28,7 @@ export async function validateDayOperation(
 
     // Check if we need clarification
     if (errorResult.needsClarification) {
-      console.log("  🔄 Setting awaiting clarification state");
+      // console.log("  🔄 Setting awaiting clarification state");
       return {
         isValid: false,
         needsClarification: true,
@@ -60,7 +60,7 @@ export async function validateDayOperation(
     };
   }
 
-  console.log("  ✅ Day operation validated, showing confirmation");
+  // console.log("  ✅ Day operation validated, showing confirmation");
   return {
     isValid: true,
     needsClarification: false,

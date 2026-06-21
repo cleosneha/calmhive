@@ -16,22 +16,12 @@ export function logEmailSuccess(
   subject: string,
   messageId?: string
 ) {
-  console.log(`✅ Email sent successfully`, {
-    to,
-    subject,
-    messageId,
-    timestamp: new Date().toISOString(),
-  });
+  // console.log(`✅ Email sent successfully`, { to, subject, messageId, timestamp: new Date().toISOString(), });
 }
 
 /**
  * Log email send error
  */
 export function logEmailError(to: string, subject: string, error: unknown) {
-  console.error(`❌ Failed to send email`, {
-    to,
-    subject,
-    error: error instanceof Error ? error.message : String(error),
-    timestamp: new Date().toISOString(),
-  });
+  // console.error(`❌ Failed to send email`, { to, subject, error: error instanceof Error ? error.message : String(error), timestamp: new Date().toISOString(), });
 }

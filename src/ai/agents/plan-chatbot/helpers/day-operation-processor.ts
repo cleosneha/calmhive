@@ -37,12 +37,12 @@ export async function processAddDaysOff(
       errorMessage: string;
     }
 > {
-  console.log("  ➕ [add_days_off] Processing add days off request");
+  // console.log("  ➕ [add_days_off] Processing add days off request");
   const daysToAdd = extractedEdit!.daysToAdd || [];
-  console.log("  📅 [add_days_off] daysToAdd:", daysToAdd);
+  // console.log("  📅 [add_days_off] daysToAdd:", daysToAdd);
 
   if (daysToAdd.length === 0) {
-    console.log("  ⚠️ [add_days_off] No days specified");
+    // console.log("  ⚠️ [add_days_off] No days specified");
     return {
       shouldConfirm: false,
       errorMessage:
@@ -50,17 +50,17 @@ export async function processAddDaysOff(
     };
   }
 
-  console.log("  ✅ [add_days_off] Days specified, validating");
+  // console.log("  ✅ [add_days_off] Days specified, validating");
   const validation = await validateAddDaysOff(userId, daysToAdd);
   if (!validation.isValid) {
-    console.log("  ❌ [add_days_off] Validation failed:", validation.errors);
+    // console.log("  ❌ [add_days_off] Validation failed:", validation.errors);
     return {
       shouldConfirm: false,
       errorMessage: validation.errors.join(" "),
     };
   }
 
-  console.log("  ✅ [add_days_off] Validation passed");
+  // console.log("  ✅ [add_days_off] Validation passed");
   return {
     shouldConfirm: true,
     pendingEdit: {
@@ -113,13 +113,13 @@ export async function processRemoveDays(
       clarificationContext?: Record<string, unknown>;
     }
 > {
-  console.log("  🗑️ [remove_days] Processing remove request");
+  // console.log("  🗑️ [remove_days] Processing remove request");
   const daysToRemove = extractedEdit!.daysToRemove || [];
-  console.log("  📅 [remove_days] daysToRemove:", daysToRemove);
+  // console.log("  📅 [remove_days] daysToRemove:", daysToRemove);
 
   // Handle case where no days need to be removed (plan already matches requested days)
   if (daysToRemove.length === 1 && daysToRemove[0] === "none") {
-    console.log("  ✅ [remove_days] No days to remove - plan already matches");
+    // console.log("  ✅ [remove_days] No days to remove - plan already matches");
     return {
       shouldConfirm: false,
       errorMessage: "Your plan is already set to the specified days.",
@@ -128,9 +128,7 @@ export async function processRemoveDays(
 
   // If days not specified, ask user
   if (daysToRemove.length === 0) {
-    console.log(
-      "  ⚠️ [remove_days] Days not specified, requesting clarification",
-    );
+    // console.log( "  ⚠️ [remove_days] Days not specified, requesting clarification");
     return {
       shouldConfirm: false,
       errorMessage:
@@ -141,10 +139,10 @@ export async function processRemoveDays(
     };
   }
 
-  console.log("  ✅ [remove_days] Days specified, validating");
+  // console.log("  ✅ [remove_days] Days specified, validating");
   const validation = await validateRemoveDays(userId, daysToRemove);
   if (!validation.isValid) {
-    console.log("  ❌ [remove_days] Validation failed:", validation.errors);
+    // console.log("  ❌ [remove_days] Validation failed:", validation.errors);
     let errorMsg = validation.errors.join(" ");
 
     // If some days don't exist but others do, provide helpful message
@@ -161,7 +159,7 @@ export async function processRemoveDays(
     };
   }
 
-  console.log("  ✅ [remove_days] Validation passed");
+  // console.log("  ✅ [remove_days] Validation passed");
   let confirmMessage = `⚠️ **Confirmation Required**\n\nYou want to remove **${validation.normalizedDays!.join(", ")}** from your plan. All tasks on these days will be permanently deleted.\n\n`;
 
   if (validation.missingDays && validation.missingDays.length > 0) {
@@ -220,7 +218,7 @@ export async function processCopyDay(
       errorMessage: string;
     }
 > {
-  console.log("  📋 [copy_day] Processing copy day request");
+  // console.log("  📋 [copy_day] Processing copy day request");
   const sourceDay = extractedEdit!.sourceDay;
   let targetDays: string | string[] = extractedEdit!.targetDay || "";
 
@@ -229,15 +227,10 @@ export async function processCopyDay(
     targetDays = extractedEdit!.targetDays;
   }
 
-  console.log(
-    "  📅 [copy_day] sourceDay:",
-    sourceDay,
-    "targetDays:",
-    targetDays,
-  );
+  // console.log( "  📅 [copy_day] sourceDay:", sourceDay, "targetDays:", targetDays);
 
   if (!sourceDay || !targetDays) {
-    console.log("  ⚠️ [copy_day] Missing source or target day(s)");
+    // console.log("  ⚠️ [copy_day] Missing source or target day(s)");
     return {
       shouldConfirm: false,
       errorMessage:
@@ -248,10 +241,10 @@ export async function processCopyDay(
     };
   }
 
-  console.log("  ✅ [copy_day] Days specified, validating");
+  // console.log("  ✅ [copy_day] Days specified, validating");
   const validation = await validateCopyDay(userId, sourceDay, targetDays);
   if (!validation.isValid) {
-    console.log("  ❌ [copy_day] Validation failed:", validation.errors);
+    // console.log("  ❌ [copy_day] Validation failed:", validation.errors);
     return {
       shouldConfirm: false,
       errorMessage: validation.errors.join(" "),
@@ -260,12 +253,7 @@ export async function processCopyDay(
 
   const [normalizedSource, ...normalizedTargets] = validation.normalizedDays!;
   const existingTargets = validation.existingDays || [];
-  console.log(
-    "  ✅ [copy_day] Validation passed, targets:",
-    normalizedTargets,
-    "existing:",
-    existingTargets,
-  );
+  // console.log( "  ✅ [copy_day] Validation passed, targets:", normalizedTargets, "existing:", existingTargets);
 
   const targetList = normalizedTargets.join(", ");
   let confirmMessage = `⚠️ **Confirmation Required**\n\nYou want to copy **${normalizedSource}'s** plan to **${targetList}**.`;
@@ -419,35 +407,25 @@ export async function processSwapDays(
       clarificationContext?: Record<string, unknown>;
     }
 > {
-  console.log("  🔄 [swap_days] Processing swap request");
+  // console.log("  🔄 [swap_days] Processing swap request");
   let day1 = extractedEdit!.day1 || extractedEdit!.sourceDay;
   let day2 = extractedEdit!.day2 || extractedEdit!.targetDay;
 
-  console.log("  📅 [swap_days] day1:", day1, "day2:", day2);
+  // console.log("  📅 [swap_days] day1:", day1, "day2:", day2);
 
   // Fallback: check if days were extracted in other fields
   if (!day1 && !day2 && extractedEdit!.daysToAdd) {
-    console.log(
-      "  🔧 [swap_days] Fallback: checking daysToAdd:",
-      extractedEdit!.daysToAdd,
-    );
+    // console.log( "  🔧 [swap_days] Fallback: checking daysToAdd:", extractedEdit!.daysToAdd);
     const days = extractedEdit!.daysToAdd;
     if (days.length === 2) {
       day1 = days[0];
       day2 = days[1];
-      console.log(
-        "  ✅ [swap_days] Extracted from fallback - day1:",
-        day1,
-        "day2:",
-        day2,
-      );
+      // console.log( "  ✅ [swap_days] Extracted from fallback - day1:", day1, "day2:", day2);
     }
   }
 
   if (!day1 || !day2) {
-    console.log(
-      "  ⚠️ [swap_days] Days not specified, requesting clarification",
-    );
+    // console.log( "  ⚠️ [swap_days] Days not specified, requesting clarification");
     return {
       shouldConfirm: false,
       errorMessage:
@@ -458,10 +436,10 @@ export async function processSwapDays(
     };
   }
 
-  console.log("  ✅ [swap_days] Days specified, validating:", day1, day2);
+  // console.log("  ✅ [swap_days] Days specified, validating:", day1, day2);
   const validation = await validateSwapDays(userId, day1, day2);
   if (!validation.isValid) {
-    console.log("  ❌ [swap_days] Validation failed:", validation.errors);
+    // console.log("  ❌ [swap_days] Validation failed:", validation.errors);
     return {
       shouldConfirm: false,
       errorMessage: validation.errors.join(" "),
@@ -469,11 +447,7 @@ export async function processSwapDays(
   }
 
   const [normalizedDay1, normalizedDay2] = validation.normalizedDays!;
-  console.log(
-    "  ✅ [swap_days] Validation passed:",
-    normalizedDay1,
-    normalizedDay2,
-  );
+  // console.log( "  ✅ [swap_days] Validation passed:", normalizedDay1, normalizedDay2);
 
   return {
     shouldConfirm: true,
@@ -538,8 +512,8 @@ export async function processDayOperation(
   const editType = analysis.editType!;
   const extractedEdit = analysis.extractedEdit!;
 
-  console.log("  🔍 [processDayOperation] Type:", editType);
-  console.log("  📦 [processDayOperation] Extracted edit:", extractedEdit);
+  // console.log("  🔍 [processDayOperation] Type:", editType);
+  // console.log("  📦 [processDayOperation] Extracted edit:", extractedEdit);
 
   // Route to appropriate handler based on operation type
   switch (editType) {
@@ -559,10 +533,7 @@ export async function processDayOperation(
       return await processSwapDays(userId, extractedEdit);
 
     default:
-      console.log(
-        "  ❌ [processDayOperation] Unknown/unsupported operation:",
-        editType,
-      );
+      // console.log( "  ❌ [processDayOperation] Unknown/unsupported operation:", editType);
       return {
         shouldConfirm: false,
         errorMessage:

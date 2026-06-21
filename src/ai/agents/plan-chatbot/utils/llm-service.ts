@@ -6,7 +6,7 @@ import { geminiModel, mistralModel } from "@/ai/config/llm";
  */
 export async function invokeLLM(prompt: string): Promise<string> {
   try {
-    console.log("🤖 Trying Gemini model...");
+    // console.log("🤖 Trying Gemini model...");
     const response = await geminiModel.invoke(prompt);
     return response.content.toString();
   } catch (geminiError) {

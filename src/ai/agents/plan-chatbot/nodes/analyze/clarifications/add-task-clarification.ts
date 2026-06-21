@@ -6,7 +6,7 @@ export async function handleAddTaskClarification(
   state: PlanChatbotStateType,
   userMessage: string,
 ): Promise<Partial<PlanChatbotStateType>> {
-  console.log("  📝 ADD TASK CLARIFICATION");
+  // console.log("  📝 ADD TASK CLARIFICATION");
 
   if (!state.awaitingClarification?.context) {
     return {
@@ -24,16 +24,12 @@ export async function handleAddTaskClarification(
   const originalDay = context.day as string;
   const originalNotes = context.notes as string;
 
-  console.log("  📋 Original context:", {
-    originalActivity,
-    originalDay,
-    originalNotes,
-  });
-  console.log("  💬 User clarification:", userMessage);
+  // console.log("  📋 Original context:", { originalActivity, originalDay, originalNotes, });
+  // console.log("  💬 User clarification:", userMessage);
 
   // Parse time from user message
   const timeRange = extractTimeFromMessage(userMessage);
-  console.log("  ⏰ Extracted time range:", timeRange);
+  // console.log("  ⏰ Extracted time range:", timeRange);
 
   if (!timeRange) {
     return {
@@ -58,7 +54,7 @@ export async function handleAddTaskClarification(
     notes: originalNotes,
   };
 
-  console.log("  ✅ Complete edit:", completeEdit);
+  // console.log("  ✅ Complete edit:", completeEdit);
 
   // Create a mock analysis result for validation
   const mockAnalysis = {

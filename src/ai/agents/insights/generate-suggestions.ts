@@ -168,10 +168,7 @@ Provide:
       const parsed = JSON.parse(jsonContent) as AIInsightsResponse;
       return parsed;
     } catch (parseError) {
-      console.error(
-        "[INSIGHTS] Failed to parse LLM JSON response:",
-        parseError,
-      );
+      console.error( "[INSIGHTS] Failed to parse LLM JSON response:", parseError);
       // Return fallback structure
       return {
         weeklyFeedback:

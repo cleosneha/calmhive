@@ -134,10 +134,7 @@ export async function removeTask(
     );
 
     if (!embedResult.success) {
-      console.warn(
-        "⚠️ Failed to update plan embedding after task deletion:",
-        embedResult.error
-      );
+      // console.warn( "⚠️ Failed to update plan embedding after task deletion:", embedResult.error );
       // Don't fail the operation if embedding fails, as the DB is already updated
     }
 

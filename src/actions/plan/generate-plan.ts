@@ -66,7 +66,7 @@ export async function generatePlan(): Promise<
 
     // 5. Check for errors
     if (result.error) {
-      console.error("❌ Plan generation failed:", result.error);
+      // console.error("❌ Plan generation failed:", result.error);
       return {
         status: "error",
         error: result.error,
@@ -123,7 +123,7 @@ export async function generatePlan(): Promise<
     );
 
     if (!embedResult.success) {
-      console.warn("⚠️ Failed to embed plan:", embedResult.error);
+      // console.warn("⚠️ Failed to embed plan:", embedResult.error);
       // Don't fail the entire operation if embedding fails
     }
 

@@ -69,12 +69,7 @@ export const handleEnergeticTimeResponse: QuestionHandler = (
 ) => {
   const parsed = parseEnergeticTime(userInput);
 
-  console.log(
-    "⚡ [energetic-time-handler] User input:",
-    userInput,
-    "| Detected period:",
-    parsed.period
-  );
+  // console.log( "⚡ [energetic-time-handler] User input:", userInput, "| Detected period:", parsed.period );
 
   // Map the detected period to the predefined option for follow-up selection
   const periodToOption: { [key: string]: string } = {
@@ -89,12 +84,7 @@ export const handleEnergeticTimeResponse: QuestionHandler = (
   // Get the follow-up text based on the detected period (using predefined option)
   if (optionForFollowUp && question.followUps?.[optionForFollowUp]) {
     timeFollowUp = question.followUps[optionForFollowUp];
-    console.log(
-      "⚡ [energetic-time-handler] Using follow-up for period:",
-      parsed.period,
-      "->",
-      optionForFollowUp
-    );
+    // console.log( "⚡ [energetic-time-handler] Using follow-up for period:", parsed.period, "->", optionForFollowUp );
   } else if (question.followUps?.default) {
     // Fallback to default follow-up for custom periods
     timeFollowUp = question.followUps.default;
@@ -112,7 +102,7 @@ export const handleEnergeticTimeResponse: QuestionHandler = (
     nextQuestion
   );
 
-  console.log("⚡ [energetic-time-handler] Returning message:", message);
+  // console.log("⚡ [energetic-time-handler] Returning message:", message);
 
   return buildStateUpdate(
     {

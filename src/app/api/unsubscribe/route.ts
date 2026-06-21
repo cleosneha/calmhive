@@ -27,9 +27,7 @@ export async function GET(request: NextRequest) {
       select: { id: true, email: true, stopEmail: true },
     });
 
-    console.log(
-      `[UNSUBSCRIBE] User ${updatedUser.email} unsubscribed from weekly emails`,
-    );
+    // console.log( `[UNSUBSCRIBE] User ${updatedUser.email} unsubscribed from weekly emails`);
 
     // Return a success page
     return new Response(

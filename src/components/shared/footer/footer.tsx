@@ -15,10 +15,10 @@ const QUICK_LINKS = [
 ];
 
 const SOCIAL_LINKS = [
-  { href: "https://github.com/celersneha", label: "GitHub", icon: FaGithub },
-  { href: "https://x.com/celersneha", label: "X", icon: SiX },
+  { href: "https://github.com/cleosneha", label: "GitHub", icon: FaGithub },
+  { href: "https://x.com/cleosneha", label: "X", icon: SiX },
   {
-    href: "https://linkedin.com/in/celersneha",
+    href: "https://linkedin.com/in/cleosneha",
     label: "LinkedIn",
     icon: FaLinkedin,
   },
@@ -83,12 +83,12 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="mailto:celersneha@gmail.com"
+                  href="mailto:cleosneha@gmail.com"
                   className="flex items-center gap-2 text-gray-700 hover:text-gray-900 hover:underline"
                   aria-label="Email CalmHive"
                 >
                   <FaMailBulk className="w-4 h-4 text-[var(--ch-sage-light)]" />
-                  <span>celersneha@gmail.com</span>
+                  <span>cleosneha@gmail.com</span>
                 </a>
               </li>
             </ul>

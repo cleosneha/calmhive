@@ -7,7 +7,7 @@ import type { PlanChatbotStateType } from "../state";
 export async function handleDayOperationNode(): Promise<
   Partial<PlanChatbotStateType>
 > {
-  console.log("\n📅 [handleDayOperationNode] START");
+  // console.log("\n📅 [handleDayOperationNode] START");
 
   // This node can be used for future enhancements
   // Currently, all day operations are handled in analyze node

@@ -73,7 +73,7 @@ export async function applyPlanSuggestions(
 
     // 6. Check for errors
     if (result.error) {
-      console.error("❌ Plan regeneration failed:", result.error);
+      // console.error("❌ Plan regeneration failed:", result.error);
       return {
         status: "error",
         error: result.error,
@@ -129,7 +129,7 @@ export async function applyPlanSuggestions(
     );
 
     if (!embedResult.success) {
-      console.warn("⚠️ Failed to embed plan:", embedResult.error);
+      // console.warn("⚠️ Failed to embed plan:", embedResult.error);
     }
 
     // 10. Clean up checkpoints

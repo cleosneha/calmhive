@@ -60,7 +60,7 @@ export default function LockedChatsPage() {
           JSON.stringify(verificationData),
         );
       } else {
-        console.error("Failed to fetch locked entries:", result.message);
+        // console.error("Failed to fetch locked entries:", result.message);
       }
     } catch (error) {
       console.error("Error fetching locked entries:", error);

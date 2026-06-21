@@ -117,7 +117,7 @@ export function doTimeRangesOverlap(range1: string, range2: string): boolean {
     const parsed2 = parseTimeRange(range2);
 
     if (!parsed1 || !parsed2) {
-      console.error("[doTimeRangesOverlap] Invalid time format");
+      // console.error("[doTimeRangesOverlap] Invalid time format");
       return false;
     }
 

@@ -127,7 +127,7 @@ async function calculateUserInsights(
     };
 
     if (!validateInsightData(insightData)) {
-      console.error(`[INSIGHTS] Invalid data for user ${userId}:`, insightData);
+      // console.error(`[INSIGHTS] Invalid data for user ${userId}:`, insightData);
       return null;
     }
 
@@ -238,9 +238,7 @@ export async function generateWeeklyInsights() {
   try {
     const { weekStart, weekEnd } = getWeekBounds();
 
-    console.log(
-      `[INSIGHTS] Generating insights for week: ${weekStart.toISOString()} to ${weekEnd.toISOString()}`,
-    );
+    // console.log( `[INSIGHTS] Generating insights for week: ${weekStart.toISOString()} to ${weekEnd.toISOString()}`);
 
     // Fetch all users with plans
     const users = await fetchUsersWithPlans();
@@ -273,7 +271,7 @@ export async function generateWeeklyInsights() {
       await upsertInsight(user.id, weekStart, weekEnd, insightData);
 
       created++;
-      console.log(`[INSIGHTS] Created insight for user: ${user.id}`);
+      // console.log(`[INSIGHTS] Created insight for user: ${user.id}`);
     }
 
     return {

@@ -36,10 +36,7 @@ export async function handleModificationRequest(
   // this is NOT a modification - it's just an answer to the current question
   // Return null so it gets processed as a regular answer (and checked for relevance/safety)
   if (validationResult.modifiedField === question.key) {
-    console.log(
-      "  ⚠️ [Modification Check] Rejected: Cannot modify current question field",
-      validationResult.modifiedField,
-    );
+    // console.log( "  ⚠️ [Modification Check] Rejected: Cannot modify current question field", validationResult.modifiedField);
     return null;
   }
 
@@ -101,10 +98,7 @@ export async function handleModificationRequest(
   if (normalizedField === "dateOfBirth") {
     const { validateDOBWithLLM } = await import("./handlers/dob-handler");
 
-    console.log(
-      "[Modification] Validating DOB modification with LLM:",
-      validationResult.modifiedValue,
-    );
+    // console.log( "[Modification] Validating DOB modification with LLM:", validationResult.modifiedValue);
 
     const dobValidation = await validateDOBWithLLM(
       validationResult.modifiedValue,

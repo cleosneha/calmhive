@@ -29,14 +29,12 @@ function routeAfterValidation(state: PlanStateType): string {
 
   // If validation failed and we haven't exceeded retry limit, retry generation
   if (state.retryCount < MAX_RETRIES) {
-    console.log(
-      `♻️ Validation failed. Retrying generation (${state.retryCount + 1}/${MAX_RETRIES})`,
-    );
+    // console.log( `♻️ Validation failed. Retrying generation (${state.retryCount + 1}/${MAX_RETRIES})`);
     return "retry_generate";
   }
 
   // Max retries exceeded, end with failure
-  console.log(`❌ Max retries (${MAX_RETRIES}) exceeded. Ending workflow.`);
+  // console.log(`❌ Max retries (${MAX_RETRIES}) exceeded. Ending workflow.`);
   return END;
 }
 

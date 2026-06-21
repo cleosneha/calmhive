@@ -33,7 +33,7 @@ export async function validateAddTask(
 
   // Check for vague time range first
   if (timeRange === "vague" || !timeRange) {
-    console.log("  ⚠️ ADD_TASK - vague or missing time range");
+    // console.log("  ⚠️ ADD_TASK - vague or missing time range");
     return {
       isValid: false,
       needsClarification: true,
@@ -62,7 +62,7 @@ export async function validateAddTask(
 
   // Check if all required fields are present
   if (!day || !activity) {
-    console.log("  ❌ ADD_TASK - missing required fields");
+    // console.log("  ❌ ADD_TASK - missing required fields");
     const missingFields = [];
     if (!day) missingFields.push("day");
     if (!activity) missingFields.push("activity title");
@@ -91,7 +91,7 @@ export async function validateAddTask(
   );
 
   if (!validation.isValid) {
-    console.log("  ❌ ADD_TASK - validation failed:", validation.errors);
+    // console.log("  ❌ ADD_TASK - validation failed:", validation.errors);
     return {
       isValid: false,
       needsClarification: false,
@@ -124,7 +124,7 @@ export async function validateAddTask(
     );
 
     if (similarCheck.hasSimilar && similarCheck.similarActivities) {
-      console.log("  ℹ️ SIMILAR ACTIVITY FOUND - rejecting addition");
+      // console.log("  ℹ️ SIMILAR ACTIVITY FOUND - rejecting addition");
       const similarList = similarCheck.similarActivities
         .map((a) => `• **${a.activity}** at ${a.timeRange}`)
         .join("\n");
@@ -158,7 +158,7 @@ export async function validateAddTask(
     );
 
     if (conflictCheck.hasConflict) {
-      console.log("  ⚠️ TIME CONFLICT DETECTED - overlapping times");
+      // console.log("  ⚠️ TIME CONFLICT DETECTED - overlapping times");
       return {
         isValid: false,
         needsClarification: false,

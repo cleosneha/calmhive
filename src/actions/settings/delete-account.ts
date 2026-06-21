@@ -20,10 +20,7 @@ export async function deleteUserAccount() {
         await import("@/actions/plan/process-embedding");
       const deleteResult = await deletePlanEmbedding(userId);
       if (!deleteResult.success) {
-        console.warn(
-          "⚠️ Failed to delete plan embeddings:",
-          deleteResult.error,
-        );
+        // console.warn( "⚠️ Failed to delete plan embeddings:", deleteResult.error);
       }
     } catch (error) {
       console.warn("⚠️ Error deleting plan embeddings:", error);

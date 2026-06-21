@@ -21,7 +21,7 @@ export async function sendContactEmail(
 
     const mailOptions = {
       from: process.env.GMAIL_USER,
-      to: "celersneha@gmail.com",
+      to: "cleosneha@gmail.com",
       subject: `CalmHive Contact Form - Message from ${validatedData.name}`,
       html: htmlContent,
     };
@@ -29,7 +29,7 @@ export async function sendContactEmail(
     const info = await transporter.sendMail(mailOptions);
 
     logEmailSuccess(
-      "celersneha@gmail.com",
+      "cleosneha@gmail.com",
       `Contact Form - ${validatedData.name}`,
       info.messageId,
     );
@@ -42,7 +42,7 @@ export async function sendContactEmail(
     console.error("Contact form submission error:", error);
 
     if (error instanceof Error) {
-      logEmailError("celersneha@gmail.com", "Contact Form Submission", error);
+      logEmailError("cleosneha@gmail.com", "Contact Form Submission", error);
     }
 
     return {

@@ -20,9 +20,7 @@ const vectorStore = isProd
       );
 
       if (!indexExists) {
-        console.warn(
-          `⚠️ Pinecone index '${indexName}' does not exist. Vector store operations may fail.`,
-        );
+        // console.warn( `⚠️ Pinecone index '${indexName}' does not exist. Vector store operations may fail.`);
         // Return null or throw error - retrieval should handle this gracefully
         return null;
       }
@@ -43,9 +41,7 @@ const vectorStore = isProd
           collectionName: "calmhive",
         });
       } catch (error) {
-        console.warn(
-          "⚠️ Qdrant collection 'calmhive' does not exist. Vector store operations may fail.",
-        );
+        console.warn( "⚠️ Qdrant collection 'calmhive' does not exist. Vector store operations may fail.");
         // Return null - retrieval should handle this gracefully
         return null;
       }

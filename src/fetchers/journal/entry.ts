@@ -27,7 +27,7 @@ export async function getJournalEntry(
     if (isNaN(id)) {
       return { success: false, message: "Invalid entry ID", data: null };
     }
-    console.log("Fetching journal entry", { id, userId });
+    // console.log("Fetching journal entry", { id, userId });
 
     const entry = await prisma.journalEntry.findUnique({
       where: { id, userId },
@@ -43,10 +43,10 @@ export async function getJournalEntry(
       },
     });
 
-    console.log("Fetching journal entry", { id, userId });
-    console.log("Entry found:", entry);
+    // console.log("Fetching journal entry", { id, userId });
+    // console.log("Entry found:", entry);
 
-    console.log("Fetched journal entry", entry);
+    // console.log("Fetched journal entry", entry);
 
     if (!entry) {
       return { success: false, message: "Entry not found", data: null };

@@ -114,7 +114,7 @@ export async function validatePlanNode(
       warnings,
     };
 
-    console.log("🔍 Validation result:", validation);
+    // console.log("🔍 Validation result:", validation);
 
     // If valid, mark as complete
     if (validation.isValid) {
@@ -130,7 +130,7 @@ export async function validatePlanNode(
         onboardingData.daysOff,
       );
 
-      console.log("📊 Hours Summary:", hoursSummary);
+      // console.log("📊 Hours Summary:", hoursSummary);
 
       return {
         validation,

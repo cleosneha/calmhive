@@ -26,10 +26,7 @@ export async function initQdrantCollection() {
         },
       });
     } else {
-      console.log(
-        "✅ Qdrant collection already exists:",
-        QDRANT_COLLECTION_NAME
-      );
+      // console.log( "✅ Qdrant collection already exists:", QDRANT_COLLECTION_NAME );
     }
   } catch (error) {
     console.error("Failed to initialize Qdrant collection:", error);

@@ -9,23 +9,18 @@ import { AIMessage } from "@langchain/core/messages";
 export async function respondNode(
   state: PlanChatbotStateType,
 ): Promise<Partial<PlanChatbotStateType>> {
-  console.log("  📤 [respondNode] START");
-  console.log(
-    "    responseHandled:",
-    state.responseHandled,
-    "| cachedAnswer:",
-    state.cachedAnswer ? "Yes" : "No",
-  );
+  // console.log("  📤 [respondNode] START");
+  // console.log( "    responseHandled:", state.responseHandled, "| cachedAnswer:", state.cachedAnswer ? "Yes" : "No");
 
   // Skip if response was already handled (safety/irrelevant detected in analyze)
   if (state.responseHandled) {
-    console.log("    ⏭️ Response already handled - skipping");
+    // console.log("    ⏭️ Response already handled - skipping");
     return {};
   }
 
   // Use cached answer from analyze node
   if (state.cachedAnswer) {
-    console.log("    💬 Returning cached answer");
+    // console.log("    💬 Returning cached answer");
     return {
       messages: [new AIMessage(state.cachedAnswer)],
       cachedAnswer: undefined, // Clear cache
@@ -33,6 +28,6 @@ export async function respondNode(
   }
 
   // Should not reach here in normal flow
-  console.log("    ⚠️ No cached answer - this should not happen");
+  // console.log("    ⚠️ No cached answer - this should not happen");
   return {};
 }

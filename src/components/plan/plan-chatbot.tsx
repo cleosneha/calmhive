@@ -69,10 +69,8 @@ export default function PlanChatbot({
               lastMessage.content.includes("!")));
 
         if (isSuccessMessage && lastSuccessMessageId !== messageId) {
-          console.log(
-            "[PlanChatbot] Detected successful plan update, triggering refresh",
-          );
-          console.log("[PlanChatbot] Message content:", lastMessage.content);
+          // console.log( "[PlanChatbot] Detected successful plan update, triggering refresh");
+          // console.log("[PlanChatbot] Message content:", lastMessage.content);
           // Use a microtask to avoid cascading renders
           Promise.resolve().then(() => {
             setLastSuccessMessageId(messageId);

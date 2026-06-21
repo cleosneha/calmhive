@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const cronSecret = process.env.CRON_SECRET;
 
     if (!cronSecret) {
-      console.error("[CRON] CRON_SECRET not configured in environment");
+      // console.error("[CRON] CRON_SECRET not configured in environment");
       return NextResponse.json(
         { success: false, message: "Server configuration error" },
         { status: 500 },
@@ -37,32 +37,32 @@ export async function GET(request: NextRequest) {
 
     // Verify the request is from Vercel Cron with proper secret
     if (authHeader !== `Bearer ${cronSecret}`) {
-      console.error("[CRON] Unauthorized cron request attempt");
+      // console.error("[CRON] Unauthorized cron request attempt");
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
         { status: 401 },
       );
     }
 
-    console.log("[CRON] Weekly insights generation started");
+    // console.log("[CRON] Weekly insights generation started");
 
     // Generate insights for all users with plans
     const result = await generateWeeklyInsights();
 
     if (!result.success) {
-      console.error("[CRON] Insights generation failed:", result.message);
+      // console.error("[CRON] Insights generation failed:", result.message);
       return NextResponse.json(
         { success: false, message: result.message },
         { status: 500 },
       );
     }
 
-    console.log("[CRON] Insights generated successfully:", result.data);
+    // console.log("[CRON] Insights generated successfully:", result.data);
 
     // Reset all task statuses to pending for the new week
     if (result.data && result.data.created > 0) {
       await resetTaskStatusesForNewWeek();
-      console.log("[CRON] Task statuses reset to pending for new week");
+      // console.log("[CRON] Task statuses reset to pending for new week");
     }
 
     // Send notification emails to users with insights (always send weekly notification)
@@ -102,7 +102,7 @@ async function resetTaskStatusesForNewWeek(): Promise<void> {
       },
     });
 
-    console.log(`[CRON] Resetting task statuses for ${plans.length} plans`);
+    // console.log(`[CRON] Resetting task statuses for ${plans.length} plans`);
 
     let totalTasksReset = 0;
 
@@ -121,7 +121,7 @@ async function resetTaskStatusesForNewWeek(): Promise<void> {
       totalTasksReset += result.count;
     }
 
-    console.log(`[CRON] Reset ${totalTasksReset} tasks to pending status`);
+    // console.log(`[CRON] Reset ${totalTasksReset} tasks to pending status`);
   } catch (error) {
     console.error("[CRON] Error resetting task statuses:", error);
   }
@@ -143,7 +143,7 @@ async function aggregateMonthlyDataForAllUsers(): Promise<void> {
       },
     });
 
-    console.log(`[CRON] Aggregating monthly data for ${users.length} users`);
+    // console.log(`[CRON] Aggregating monthly data for ${users.length} users`);
 
     const { year } = getCurrentMonthYear();
 
@@ -151,18 +151,13 @@ async function aggregateMonthlyDataForAllUsers(): Promise<void> {
       try {
         // Aggregate data for current year (includes current month)
         await aggregateYearData(user.id, year);
-        console.log(
-          `[CRON] Monthly data aggregated for user ${user.id} for year ${year}`,
-        );
+        // console.log( `[CRON] Monthly data aggregated for user ${user.id} for year ${year}`);
       } catch (error) {
-        console.error(
-          `[CRON] Error aggregating data for user ${user.id}:`,
-          error,
-        );
+        console.error( `[CRON] Error aggregating data for user ${user.id}:`, error);
       }
     }
 
-    console.log("[CRON] Monthly data aggregation complete");
+    // console.log("[CRON] Monthly data aggregation complete");
   } catch (error) {
     console.error("[CRON] Error in monthly data aggregation:", error);
   }
@@ -185,9 +180,7 @@ async function sendWeeklyInsightsEmails(): Promise<void> {
       },
     });
 
-    console.log(
-      `[CRON] Sending weekly insights emails to ${users.length} users`,
-    );
+    // console.log( `[CRON] Sending weekly insights emails to ${users.length} users`);
 
     let successCount = 0;
     let failureCount = 0;
@@ -204,18 +197,14 @@ async function sendWeeklyInsightsEmails(): Promise<void> {
         successCount++;
       } else {
         failureCount++;
-        console.error(
-          `[CRON] Failed to send email to ${user.email}: ${result.error}`,
-        );
+        // console.error( `[CRON] Failed to send email to ${user.email}: ${result.error}`);
       }
 
       // Add small delay between emails to avoid rate limiting
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
-    console.log(
-      `[CRON] Email sending complete: ${successCount} sent, ${failureCount} failed`,
-    );
+    // console.log( `[CRON] Email sending complete: ${successCount} sent, ${failureCount} failed`);
   } catch (error) {
     console.error("[CRON] Error sending weekly insights emails:", error);
   }

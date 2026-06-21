@@ -34,9 +34,7 @@ export async function processUserMessage(
         });
       conversationContext =
         "Conversation history:\n" + historyLines.join("\n") + "\n\n";
-      console.log(
-        `  📋 Including ${historyLines.length} previous messages for context`,
-      );
+      // console.log( `  📋 Including ${historyLines.length} previous messages for context`);
     }
 
     const prompt = buildProcessMessagePrompt(
@@ -45,13 +43,13 @@ export async function processUserMessage(
       conversationContext || undefined,
     );
 
-    console.log("  🤖 Invoking LLM...");
+    // console.log("  🤖 Invoking LLM...");
     const content = await invokeLLM(prompt);
 
     // Parse structured output (key: value format)
     const lines = content.split("\n").filter((line) => line.trim());
     const parsed: Record<string, string> = {};
-    console.log("  📄 LLM Response:\n", content);
+    // console.log("  📄 LLM Response:\n", content);
     for (const line of lines) {
       // Updated regex to include digits for DAY1, DAY2, etc.
       const match = line.match(/^([A-Z0-9_]+):\s*(.+)$/);
@@ -130,12 +128,12 @@ export async function processUserMessage(
         const notesCombined = noteLines.join("\n").trim();
         if (notesCombined && notesCombined.toLowerCase() !== "none") {
           extractedEdit.notes = notesCombined;
-          console.log("  📝 Notes extracted:", extractedEdit.notes);
+          // console.log("  📝 Notes extracted:", extractedEdit.notes);
         } else {
-          console.log("  ⚠️ NOTES not found or set to 'none'");
+          // console.log("  ⚠️ NOTES not found or set to 'none'");
         }
       } else {
-        console.log("  ⚠️ NOTES not found or set to 'none'");
+        // console.log("  ⚠️ NOTES not found or set to 'none'");
       }
 
       if (parsed.DAYS_OFF && parsed.DAYS_OFF !== "none") {
@@ -177,7 +175,7 @@ export async function processUserMessage(
       }
 
       analysis.extractedEdit = extractedEdit;
-      console.log("  ✏️ Edit extracted:", extractedEdit);
+      // console.log("  ✏️ Edit extracted:", extractedEdit);
 
       // Detect multiple operations if multiple operation fields are filled
       const operationCount = [
@@ -189,10 +187,7 @@ export async function processUserMessage(
       ].reduce((sum, count) => sum + count, 0);
 
       if (operationCount > 1) {
-        console.log(
-          "  ⚠️ MULTIPLE OPERATIONS DETECTED - operationCount:",
-          operationCount,
-        );
+        // console.log( "  ⚠️ MULTIPLE OPERATIONS DETECTED - operationCount:", operationCount);
         analysis.editType = "other";
         analysis.extractedEdit = undefined;
       }

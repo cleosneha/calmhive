@@ -30,12 +30,7 @@ export function handlePredefinedOptionStorage(
   // Special handling for timeAvailability - parse time to minutes
   if (question.key === "timeAvailability") {
     const parsed = parseAndMapTime(userInput);
-    console.log(
-      "⏱️ [option-storage] Time parsing - Input:",
-      userInput,
-      "| Parsed:",
-      parsed
-    );
+    // console.log( "⏱️ [option-storage] Time parsing - Input:", userInput, "| Parsed:", parsed );
 
     newResponses = {
       [question.key]: parsed.mins !== null ? parsed.mins.toString() : userInput,

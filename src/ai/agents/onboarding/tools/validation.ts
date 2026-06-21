@@ -42,7 +42,7 @@ export async function validateUserResponse(
   try {
     const { isDateOfBirthQuestion } = await import("../utils/dob-validator");
     if (isDateOfBirthQuestion(currentQuestionText)) {
-      console.log("[Validation] DOB question detected - passing to handler");
+      // console.log("[Validation] DOB question detected - passing to handler");
       // Return valid so it passes to DOB handler
       return {
         isValid: true,
@@ -63,11 +63,11 @@ export async function validateUserResponse(
       nextQuestionText,
     );
 
-    console.log("\n✅ [Validation Logic Check]");
-    console.log("isRelevant:", llmResult.isRelevant);
-    console.log("hasSafetyIssue:", llmResult.hasSafetyIssue);
-    console.log("hasExpectationMismatch:", llmResult.hasExpectationMismatch);
-    console.log("---\n");
+    // console.log("\n✅ [Validation Logic Check]");
+    // console.log("isRelevant:", llmResult.isRelevant);
+    // console.log("hasSafetyIssue:", llmResult.hasSafetyIssue);
+    // console.log("hasExpectationMismatch:", llmResult.hasExpectationMismatch);
+    // console.log("---\n");
 
     // PRIORITY 0: Check modification FIRST - user wants to update a previous answer
     if (
@@ -101,7 +101,7 @@ export async function validateUserResponse(
 
     // PRIORITY 3: Check relevance
     if (!llmResult.isRelevant) {
-      console.log("🚫 [IRRELEVANT] Response marked as not relevant by LLM");
+      // console.log("🚫 [IRRELEVANT] Response marked as not relevant by LLM");
       return {
         isValid: false,
         isRelevant: false,

@@ -29,7 +29,7 @@ export async function validateRemoveTask(
 
   // Check if activity is provided
   if (!oldActivity) {
-    console.log("  ❌ REMOVE_TASK - missing activity name");
+    // console.log("  ❌ REMOVE_TASK - missing activity name");
     return {
       isValid: false,
       needsClarification: false,
@@ -54,7 +54,7 @@ export async function validateRemoveTask(
   );
 
   if (!validation.isValid) {
-    console.log("  ❌ REMOVE_TASK - validation failed:", validation.error);
+    // console.log("  ❌ REMOVE_TASK - validation failed:", validation.error);
     return {
       isValid: false,
       needsClarification: false,

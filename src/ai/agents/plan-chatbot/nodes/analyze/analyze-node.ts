@@ -19,24 +19,20 @@ import {
 export async function analyzeNode(
   state: PlanChatbotStateType,
 ): Promise<Partial<PlanChatbotStateType>> {
-  console.log("\n🔍 [analyzeNode] START");
-  console.log("  📋 Current State:", {
-    mode: state.mode,
-    waitingForConfirmation: state.waitingForConfirmation,
-    awaitingClarification: state.awaitingClarification,
-  });
+  // console.log("\n🔍 [analyzeNode] START");
+  // console.log("  📋 Current State:", { mode: state.mode, waitingForConfirmation: state.waitingForConfirmation, awaitingClarification: state.awaitingClarification, });
 
   // Get last user message
   const lastMessage = state.messages[state.messages.length - 1];
   if (!lastMessage || lastMessage._getType() !== "human") {
-    console.log("  ⚠️ No human message found");
+    // console.log("  ⚠️ No human message found");
     return {};
   }
 
   const userMessage =
     lastMessage instanceof HumanMessage ? lastMessage.content.toString() : "";
 
-  console.log("  💬 User message:", userMessage);
+  // console.log("  💬 User message:", userMessage);
 
   // PRIORITY 0: Detect jailbreak/prompt injection attempts
   const jailbreakPatterns = [
@@ -53,9 +49,7 @@ export async function analyzeNode(
   ];
 
   if (jailbreakPatterns.some((pattern) => pattern.test(userMessage))) {
-    console.log(
-      "  🚨 JAILBREAK ATTEMPT DETECTED - returning irrelevance message",
-    );
+    // console.log( "  🚨 JAILBREAK ATTEMPT DETECTED - returning irrelevance message");
     return {
       messages: [new AIMessage(HARD_CODED_MESSAGES.IRRELEVANT)],
       responseHandled: true,
@@ -64,19 +58,14 @@ export async function analyzeNode(
 
   // PRIORITY 1: Handle clarification responses for multi-step operations
   if (state.awaitingClarification) {
-    console.log(
-      "  🔄 CLARIFICATION MODE - Processing user response for:",
-      state.awaitingClarification.operation,
-    );
+    // console.log( "  🔄 CLARIFICATION MODE - Processing user response for:", state.awaitingClarification.operation);
     return await handleClarificationResponse(state, userMessage);
   }
 
   // Check for undo request - updates are irreversible
   const undoKeywords = ["undo", "revert", "go back", "reverse"];
   if (undoKeywords.some((kw) => userMessage.toLowerCase().includes(kw))) {
-    console.log(
-      "  🔄 Undo request detected - informing user it's irreversible",
-    );
+    // console.log( "  🔄 Undo request detected - informing user it's irreversible");
     return {
       messages: [
         new AIMessage(
@@ -95,16 +84,11 @@ export async function analyzeNode(
     state.messages, // Pass conversation history for context
   );
 
-  console.log("  📊 Analysis complete:", {
-    isSafe: analysis.isSafe,
-    isRelevant: analysis.isRelevant,
-    isEditRequest: analysis.isEditRequest,
-    editType: analysis.editType,
-  });
+  // console.log("  📊 Analysis complete:", { isSafe: analysis.isSafe, isRelevant: analysis.isRelevant, isEditRequest: analysis.isEditRequest, editType: analysis.editType, });
 
   // PRIORITY 2: Handle quota exceeded
   if (analysis.quotaExceeded) {
-    console.log("  ⚠️ QUOTA EXCEEDED - returning quota message");
+    // console.log("  ⚠️ QUOTA EXCEEDED - returning quota message");
     return {
       messages: [new AIMessage(HARD_CODED_MESSAGES.QUOTA_EXCEEDED)],
       responseHandled: true,
@@ -113,7 +97,7 @@ export async function analyzeNode(
 
   // PRIORITY 3: Handle safety issues
   if (!analysis.isSafe) {
-    console.log("  ⚠️ SAFETY CONCERN - returning safety message");
+    // console.log("  ⚠️ SAFETY CONCERN - returning safety message");
     return {
       messages: [new AIMessage(HARD_CODED_MESSAGES.SAFETY)],
       responseHandled: true, // Prevent respond node from executing
@@ -122,7 +106,7 @@ export async function analyzeNode(
 
   // PRIORITY 4: Handle irrelevant messages
   if (!analysis.isRelevant) {
-    console.log("  ⚠️ IRRELEVANT - returning irrelevance message");
+    // console.log("  ⚠️ IRRELEVANT - returning irrelevance message");
     return {
       messages: [new AIMessage(HARD_CODED_MESSAGES.IRRELEVANT)],
       responseHandled: true, // Prevent respond node from executing
@@ -131,14 +115,14 @@ export async function analyzeNode(
 
   // PRIORITY 5: Handle edit requests with confirmation
   if (analysis.isEditRequest) {
-    console.log("  ✏️ EDIT REQUEST - preparing confirmation");
+    // console.log("  ✏️ EDIT REQUEST - preparing confirmation");
 
     // Check if edit is doable by chatbot
     const doabilityCheck = determineIfDoable(
       analysis.editType,
       analysis.extractedEdit?.modifyType,
     );
-    console.log("  🔍 Doability check:", doabilityCheck);
+    // console.log("  🔍 Doability check:", doabilityCheck);
 
     if (!doabilityCheck.isDoable) {
       return {
@@ -155,7 +139,7 @@ export async function analyzeNode(
 
     // Check for unsupported edit types or multiple operations FIRST
     if (analysis.editType === "other" || !analysis.editType) {
-      console.log("  ❌ UNSUPPORTED EDIT TYPE OR MULTIPLE OPERATIONS");
+      // console.log("  ❌ UNSUPPORTED EDIT TYPE OR MULTIPLE OPERATIONS");
 
       return {
         mode: "query",
@@ -177,7 +161,7 @@ export async function analyzeNode(
 
     // Now check if extractedEdit exists for valid edit types
     if (!analysis.extractedEdit) {
-      console.log("  ❌ No extractedEdit found");
+      // console.log("  ❌ No extractedEdit found");
       return {
         mode: "query",
         messages: [
@@ -218,7 +202,7 @@ export async function analyzeNode(
   }
 
   // PRIORITY 4: Handle queries - pass answer to respond node
-  console.log("  💬 QUERY - passing to respond node");
+  // console.log("  💬 QUERY - passing to respond node");
   return {
     mode: "query",
     cachedAnswer: answer,

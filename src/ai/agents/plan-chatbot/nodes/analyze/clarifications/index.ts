@@ -10,10 +10,7 @@ export async function handleClarificationResponse(
   state: PlanChatbotStateType,
   userMessage: string,
 ): Promise<Partial<PlanChatbotStateType>> {
-  console.log(
-    "  🔄 Handling clarification response for:",
-    state.awaitingClarification,
-  );
+  // console.log( "  🔄 Handling clarification response for:", state.awaitingClarification);
 
   if (!state.awaitingClarification) {
     return {

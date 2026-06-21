@@ -212,7 +212,7 @@ export default function PlanTable({ plan, onEdit, onRefresh }: Props) {
                           }
                           onTaskSaved={onRefresh}
                           onTaskSave={async (updatedTask) => {
-                            console.log("Task saved:", updatedTask);
+                            // console.log("Task saved:", updatedTask);
                           }}
                         >
                           <p className="font-medium text-[var(--ch-sage-dark)] text-sm cursor-pointer hover:text-[var(--ch-sage-dark)]/80 transition-colors">

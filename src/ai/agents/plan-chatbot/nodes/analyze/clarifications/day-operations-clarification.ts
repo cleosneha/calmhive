@@ -6,7 +6,7 @@ export async function handleDayOperationsClarification(
   state: PlanChatbotStateType,
   userMessage: string,
 ): Promise<Partial<PlanChatbotStateType>> {
-  console.log("  📅 DAY OPERATIONS CLARIFICATION");
+  // console.log("  📅 DAY OPERATIONS CLARIFICATION");
 
   if (!state.awaitingClarification?.context) {
     return {
@@ -22,8 +22,8 @@ export async function handleDayOperationsClarification(
   const operation = state.awaitingClarification.operation;
   const context = state.awaitingClarification.context;
 
-  console.log("  📋 Operation:", operation);
-  console.log("  💬 User clarification:", userMessage);
+  // console.log("  📋 Operation:", operation);
+  // console.log("  💬 User clarification:", userMessage);
 
   // Handle "cancel" or similar
   if (
@@ -39,7 +39,7 @@ export async function handleDayOperationsClarification(
 
   // Extract days from user message
   const days = extractDaysFromMessage(userMessage);
-  console.log("  📅 Extracted days:", days);
+  // console.log("  📅 Extracted days:", days);
 
   if (days.length === 0) {
     return {
@@ -134,7 +134,7 @@ export async function handleDayOperationsClarification(
       };
   }
 
-  console.log("  ✅ Complete edit:", completeEdit);
+  // console.log("  ✅ Complete edit:", completeEdit);
 
   // Create a mock analysis result for validation
   const mockAnalysis = {

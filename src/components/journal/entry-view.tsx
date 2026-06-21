@@ -25,7 +25,7 @@ interface EntryViewProps {
 }
 
 export default function EntryView({ entry, onEdit }: EntryViewProps) {
-  console.log("EntryView rendering entry:", entry);
+  // console.log("EntryView rendering entry:", entry);
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat("en-US", {
       year: "numeric",

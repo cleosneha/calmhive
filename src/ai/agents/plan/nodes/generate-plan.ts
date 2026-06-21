@@ -21,9 +21,7 @@ export async function generatePlanNode(
       };
     }
 
-    console.log(
-      `🤖 Generating plan for user: ${onboardingData.userId} (Attempt ${retryCount + 1})`,
-    );
+    // console.log( `🤖 Generating plan for user: ${onboardingData.userId} (Attempt ${retryCount + 1})`);
 
     // Build prompt (with optional plan suggestions and validation errors for retry)
     const prompt = buildPlanGenerationPrompt(
@@ -37,7 +35,7 @@ export async function generatePlanNode(
     let usedModel = "Gemini";
 
     try {
-      console.log("🤖 Trying Gemini model...");
+      // console.log("🤖 Trying Gemini model...");
       response = await geminiModel.invoke(prompt);
     } catch (geminiError) {
       console.warn("⚠️ Gemini failed, trying Mistral...", geminiError);
@@ -56,18 +54,18 @@ export async function generatePlanNode(
       }
     }
 
-    console.log(`✅ Used ${usedModel} model for generation`);
+    // console.log(`✅ Used ${usedModel} model for generation`);
     const content =
       typeof response.content === "string"
         ? response.content
         : JSON.stringify(response.content);
 
-    console.log("📝 Raw LLM response:", content);
+    // console.log("📝 Raw LLM response:", content);
 
     // Parse response
     const tasks = parseAIResponse(content);
 
-    console.log(`✅ Generated ${tasks.length} tasks`);
+    // console.log(`✅ Generated ${tasks.length} tasks`);
 
     return {
       generatedTasks: tasks,

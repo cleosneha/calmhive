@@ -22,7 +22,7 @@ export function getDurationFromTimeRange(timeRange: string): number {
     if (time12HourPattern.test(timeRange)) {
       const match = time12HourPattern.exec(timeRange);
       if (!match) {
-        console.warn(`Invalid 12-hour time range format: ${timeRange}`);
+        // console.warn(`Invalid 12-hour time range format: ${timeRange}`);
         return 0;
       }
 
@@ -40,13 +40,13 @@ export function getDurationFromTimeRange(timeRange: string): number {
     } else if (time24HourPattern.test(timeRange)) {
       const match = time24HourPattern.exec(timeRange);
       if (!match) {
-        console.warn(`Invalid 24-hour time range format: ${timeRange}`);
+        // console.warn(`Invalid 24-hour time range format: ${timeRange}`);
         return 0;
       }
 
       [, startHour, startMin, endHour, endMin] = match.map(Number);
     } else {
-      console.warn(`Unsupported time range format: ${timeRange}`);
+      // console.warn(`Unsupported time range format: ${timeRange}`);
       return 0;
     }
 
@@ -61,7 +61,7 @@ export function getDurationFromTimeRange(timeRange: string): number {
       endMin < 0 ||
       endMin > 59
     ) {
-      console.warn(`Invalid time range values: ${timeRange}`);
+      // console.warn(`Invalid time range values: ${timeRange}`);
       return 0;
     }
 
@@ -69,7 +69,7 @@ export function getDurationFromTimeRange(timeRange: string): number {
     const endTotalMin = endHour * 60 + endMin;
 
     if (endTotalMin <= startTotalMin) {
-      console.warn(`End time must be after start time: ${timeRange}`);
+      // console.warn(`End time must be after start time: ${timeRange}`);
       return 0;
     }
 

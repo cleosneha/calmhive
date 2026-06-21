@@ -24,7 +24,7 @@ export default async function EntrySectionPage({
   const mode =
     (await searchParams).mode || (entryId === "new" ? "new" : "show");
 
-  console.log("Page userId:", user.id, "entryId:", entryId, "mode:", mode);
+  // console.log("Page userId:", user.id, "entryId:", entryId, "mode:", mode);
 
   let entry = null;
   if (mode !== "new") {

@@ -288,7 +288,7 @@ export async function saveTaskEdit(
                 .namespace("plans")
                 .deleteMany(vectorIdsToDelete);
             } else {
-              console.log("ℹ️ No existing documents found to delete");
+              // console.log("ℹ️ No existing documents found to delete");
             }
           } catch (queryError) {
             console.warn("⚠️ Query for existing vectors failed:", queryError);
@@ -301,7 +301,7 @@ export async function saveTaskEdit(
             const vector = await embeddingModel.embedQuery(updatedContent);
 
             if (!vector || (Array.isArray(vector) && vector.length === 0)) {
-              console.error("❌ Embedding generation returned empty vector!");
+              // console.error("❌ Embedding generation returned empty vector!");
               throw new Error("Empty embedding vector generated");
             }
 
@@ -327,13 +327,7 @@ export async function saveTaskEdit(
               topK: 1,
               includeMetadata: true,
             });
-            console.log(
-              "✅ Verification: Found documents:",
-              verifyResults.matches.length,
-              verifyResults.matches.length > 0
-                ? `ID: ${verifyResults.matches[0].id}`
-                : "",
-            );
+            // console.log( "✅ Verification: Found documents:", verifyResults.matches.length, verifyResults.matches.length > 0 ? `ID: ${verifyResults.matches[0].id}` : "");
           } catch (upsertError) {
             console.error("❌ Upsert operation failed:", upsertError);
             throw upsertError;
@@ -342,7 +336,7 @@ export async function saveTaskEdit(
           // Qdrant: Use stable UUID and upsert
           const store = await vectorStore;
           if (!store) {
-            console.warn("⚠️ Vector store not available, skipping embedding");
+            // console.warn("⚠️ Vector store not available, skipping embedding");
             return {
               success: true,
               message:
@@ -366,13 +360,10 @@ export async function saveTaskEdit(
             { ids: [pointId] },
           );
 
-          console.log(
-            "✅ Plan document upserted in Qdrant for userId:",
-            user.id,
-          );
+          // console.log( "✅ Plan document upserted in Qdrant for userId:", user.id);
         }
       } else {
-        console.warn("⚠️ No tasks found to embed");
+        // console.warn("⚠️ No tasks found to embed");
       }
     } catch (vectorError) {
       // Log vector store error but don't fail the entire operation

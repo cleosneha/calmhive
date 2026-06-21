@@ -61,7 +61,7 @@ export function useOnboardingSession() {
         // Check if result is an error response
         if (isErrorResponse(result)) {
           toast.error(result.error);
-          console.error("Failed to start onboarding:", result.error);
+          // console.error("Failed to start onboarding:", result.error);
           return;
         }
 

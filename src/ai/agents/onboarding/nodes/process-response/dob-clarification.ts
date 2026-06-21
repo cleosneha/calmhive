@@ -39,7 +39,7 @@ async function handleFullYearClarification(
   state: OnboardingStateType,
   userInput: string,
 ): Promise<Partial<OnboardingStateType>> {
-  console.log("[DOB Clarification] Processing full year clarification");
+  // console.log("[DOB Clarification] Processing full year clarification");
 
   // Extract 4-digit year from user input
   const yearMatch = userInput.match(/\b(19\d{2}|20\d{2})\b/);
@@ -82,7 +82,7 @@ async function handleFullYearClarification(
 
   // Reconstruct: part1 + separator + part2 + separator + full year
   const fullDate = `${match[1]}${match[2]}${match[3]}${match[2]}${fullYear}`;
-  console.log("[DOB Clarification] Reconstructed date:", fullDate);
+  // console.log("[DOB Clarification] Reconstructed date:", fullDate);
 
   // Check for ambiguity in the reconstructed date
   const part1 = parseInt(match[1], 10);
@@ -126,7 +126,7 @@ async function handleFormatClarification(
   state: OnboardingStateType,
   userInput: string,
 ): Promise<Partial<OnboardingStateType>> {
-  console.log("[DOB Clarification] Processing format clarification");
+  // console.log("[DOB Clarification] Processing format clarification");
 
   const result = await performLLMValidation(
     userInput,
@@ -135,7 +135,7 @@ async function handleFormatClarification(
     "date_format_clarification",
   );
 
-  console.log("[DOB Clarification] Format result:", result);
+  // console.log("[DOB Clarification] Format result:", result);
 
   // PRIORITY 1: Check for safety issues
   if (result.hasSafetyIssue) {
@@ -251,12 +251,7 @@ function finalizeAndStoreDOB(
   const age = calculateAge(validation.date!);
   const ageRange = mapAgeToRange(age);
 
-  console.log(
-    "[DOB Clarification] Valid DOB:",
-    dobString,
-    "Age range:",
-    ageRange,
-  );
+  // console.log( "[DOB Clarification] Valid DOB:", dobString, "Age range:", ageRange);
 
   // Get DOB question to find follow-up based on age range
   const dobQuestion = ONBOARDING_QUESTIONS.find((q) => q.key === "dateOfBirth");

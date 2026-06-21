@@ -10,7 +10,7 @@ export async function validateDeletePlan(
   needsClarification: boolean;
   response: Partial<PlanChatbotStateType>;
 }> {
-  console.log("  🗑️ DELETE PLAN REQUEST");
+  // console.log("  🗑️ DELETE PLAN REQUEST");
 
   return {
     isValid: true,

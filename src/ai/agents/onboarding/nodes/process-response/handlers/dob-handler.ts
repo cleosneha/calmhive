@@ -42,11 +42,11 @@ export async function validateDOBWithLLM(
       "date_of_birth",
     );
 
-    console.log("[DOB Validation] LLM result:", result);
+    // console.log("[DOB Validation] LLM result:", result);
 
     // PRIORITY 1: Check for safety issues FIRST
     if (result.hasSafetyIssue) {
-      console.log("[DOB Validation] Safety issue detected");
+      // console.log("[DOB Validation] Safety issue detected");
       return buildStateUpdate(
         {},
         [new AIMessage(HARD_CODED_MESSAGES.SAFETY_LONG)],
@@ -66,7 +66,7 @@ export async function validateDOBWithLLM(
       !result.modificationRequired &&
       result.dobStatus === "INVALID"
     ) {
-      console.log("[DOB Validation] Irrelevant response");
+      // console.log("[DOB Validation] Irrelevant response");
       return buildStateUpdate(
         {},
         [
@@ -92,10 +92,7 @@ export async function validateDOBWithLLM(
       result.modifiedField.toLowerCase() !== "year" &&
       result.modifiedValue
     ) {
-      console.log(
-        "[DOB Validation] User modifying other field:",
-        result.modifiedField,
-      );
+      // console.log( "[DOB Validation] User modifying other field:", result.modifiedField);
       return buildStateUpdate(
         {
           [result.modifiedField]: result.modifiedValue,
@@ -111,7 +108,7 @@ export async function validateDOBWithLLM(
 
     // Handle ambiguity
     if (result.dobStatus === "AMBIGUOUS") {
-      console.log("[DOB Validation] Ambiguous format detected");
+      // console.log("[DOB Validation] Ambiguous format detected");
       return buildStateUpdate(
         {},
         [
@@ -130,7 +127,7 @@ export async function validateDOBWithLLM(
     }
 
     if (result.dobStatus === "NEEDS_FULL_YEAR") {
-      console.log("[DOB Validation] Needs full year");
+      // console.log("[DOB Validation] Needs full year");
       return buildStateUpdate(
         {},
         [
@@ -149,7 +146,7 @@ export async function validateDOBWithLLM(
     }
 
     if (result.dobStatus === "INVALID") {
-      console.log("[DOB Validation] Invalid date:", result.dobError);
+      // console.log("[DOB Validation] Invalid date:", result.dobError);
       return buildStateUpdate(
         {},
         [
@@ -193,10 +190,7 @@ export async function validateDOBWithLLM(
       parseInt(numericMatch[1], 10) <= 12 &&
       parseInt(numericMatch[2], 10) <= 12
     ) {
-      console.log(
-        "[DOB Validation] Fallback ambiguity check triggered for:",
-        userInput,
-      );
+      // console.log( "[DOB Validation] Fallback ambiguity check triggered for:", userInput);
       return buildStateUpdate(
         {},
         [
@@ -221,7 +215,7 @@ export async function validateDOBWithLLM(
     );
 
     if (!validation.valid) {
-      console.log("[DOB Validation] Date validation failed:", validation.error);
+      // console.log("[DOB Validation] Date validation failed:", validation.error);
       return buildStateUpdate(
         {},
         [new AIMessage(validation.error || HARD_CODED_MESSAGES.DOB_INVALID)],
@@ -235,7 +229,7 @@ export async function validateDOBWithLLM(
 
     // Success - return the formatted DOB string and date object for age calculation
     const dobString = formatDateToDDMMYYYY(validation.date!);
-    console.log("[DOB Validation] Valid DOB:", dobString);
+    // console.log("[DOB Validation] Valid DOB:", dobString);
     return {
       dobString,
       validDate: validation.date!,
@@ -270,10 +264,10 @@ export const handleDateOfBirthResponse: QuestionHandler = async (
   _state: OnboardingStateType,
   step,
 ) => {
-  console.log("[DOB Handler] Starting with input:", userInput);
+  // console.log("[DOB Handler] Starting with input:", userInput);
 
   // Use the shared validation function for initial DOB entry
-  console.log("[DOB Handler] Validating DOB with LLM");
+  // console.log("[DOB Handler] Validating DOB with LLM");
 
   const dobValidation = await validateDOBWithLLM(userInput, step);
 
@@ -294,7 +288,7 @@ export const handleDateOfBirthResponse: QuestionHandler = async (
     const nextStepValue = getNextStep(followUp, step);
     const message = buildMessage(validationResult, followUp?.text);
 
-    console.log("[DOB Handler] Valid DOB, storing:", dobValidation.dobString);
+    // console.log("[DOB Handler] Valid DOB, storing:", dobValidation.dobString);
 
     return buildStateUpdate(
       { [question.key]: dobValidation.dobString },

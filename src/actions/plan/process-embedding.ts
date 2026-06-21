@@ -55,7 +55,7 @@ export async function embedPlan(
       );
 
       if (!indexExists) {
-        console.log(`📝 Creating Pinecone index: ${indexName}`);
+        // console.log(`📝 Creating Pinecone index: ${indexName}`);
         await pinecone.createIndex({
           name: indexName,
           dimension: 768, // Dimension for text-embedding-3-small
@@ -69,7 +69,7 @@ export async function embedPlan(
         });
 
         // Wait for index to be ready
-        console.log("⏳ Waiting for index to be ready...");
+        // console.log("⏳ Waiting for index to be ready...");
         await new Promise((resolve) => setTimeout(resolve, 10000));
       }
 

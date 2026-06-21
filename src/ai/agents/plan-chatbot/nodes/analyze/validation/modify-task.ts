@@ -29,7 +29,7 @@ export async function validateModifyTask(
 
   // Check if oldActivity is provided
   if (!oldActivity) {
-    console.log("  ❌ MODIFY_TASK - missing old activity name");
+    // console.log("  ❌ MODIFY_TASK - missing old activity name");
     return {
       isValid: false,
       needsClarification: false,
@@ -50,9 +50,7 @@ export async function validateModifyTask(
     oldActivity.toLowerCase() === "all" &&
     analysis.extractedEdit!.modifyType === "status"
   ) {
-    console.log(
-      `  ✏️ BULK STATUS CHANGE - marking all activities on ${day} as ${analysis.extractedEdit!.status}`,
-    );
+    // console.log( `  ✏️ BULK STATUS CHANGE - marking all activities on ${day} as ${analysis.extractedEdit!.status}`);
 
     return {
       isValid: true,
@@ -96,7 +94,7 @@ export async function validateModifyTask(
   );
 
   if (!validation.task) {
-    console.log("  ❌ MODIFY_TASK - validation failed:", validation.error);
+    // console.log("  ❌ MODIFY_TASK - validation failed:", validation.error);
     return {
       isValid: false,
       needsClarification: false,

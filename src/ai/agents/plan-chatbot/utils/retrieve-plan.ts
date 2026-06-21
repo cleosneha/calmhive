@@ -11,7 +11,7 @@ export async function retrievePlanFromEmbeddings(
     const store = await vectorStore;
 
     if (!store) {
-      console.warn(`Vector store not available for user ${userId}`);
+      // console.warn(`Vector store not available for user ${userId}`);
       return null;
     }
 
@@ -22,7 +22,7 @@ export async function retrievePlanFromEmbeddings(
     );
 
     if (results.length === 0) {
-      console.warn(`No plan embedding found for user ${userId}`);
+      // console.warn(`No plan embedding found for user ${userId}`);
       return null;
     }
 
@@ -31,13 +31,8 @@ export async function retrievePlanFromEmbeddings(
     let userPlan = results.find((doc) => doc.metadata?.userId === userId);
 
     if (!userPlan) {
-      console.warn(
-        `No exact userId match found for ${userId}, using first result`,
-      );
-      console.log(
-        `Available metadata:`,
-        results.map((r) => r.metadata),
-      );
+      // console.warn( `No exact userId match found for ${userId}, using first result`);
+      // console.log( `Available metadata:`, results.map((r) => r.metadata));
       // Use the first result if no exact match found (it should be the most relevant)
       userPlan = results[0];
     }

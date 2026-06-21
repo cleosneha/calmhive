@@ -21,7 +21,7 @@ const memorySaver = new MemorySaver();
 function routeEntry(state: PlanChatbotStateType): string {
   // If no messages or only greeting, start with greet
   if (!state.messages || state.messages.length === 0) {
-    console.log("[routeEntry] → greet (no messages)");
+    // console.log("[routeEntry] → greet (no messages)");
     return "greet";
   }
 
@@ -33,25 +33,25 @@ function routeEntry(state: PlanChatbotStateType): string {
         ? lastMessage.content.toLowerCase().trim()
         : "";
     if (content.startsWith("action:")) {
-      console.log("[routeEntry] → confirm (action detected:", content, ")");
+      // console.log("[routeEntry] → confirm (action detected:", content, ")");
       return "confirm"; // Route action responses directly to confirm node
     }
   }
 
   // If waiting for confirmation, go to confirm node
   if (state.waitingForConfirmation) {
-    console.log("[routeEntry] → confirm (waiting for confirmation)");
+    // console.log("[routeEntry] → confirm (waiting for confirmation)");
     return "confirm";
   }
 
   // If in edit mode (after confirmation), execute the edit
   if (state.mode === "edit" && state.pendingEdit) {
-    console.log("[routeEntry] → execute_edit (edit mode + pending edit)");
+    // console.log("[routeEntry] → execute_edit (edit mode + pending edit)");
     return "execute_edit";
   }
 
   // Otherwise, analyze the message
-  console.log("[routeEntry] → analyze (default)");
+  // console.log("[routeEntry] → analyze (default)");
   return "analyze";
 }
 
@@ -71,21 +71,18 @@ function routeAfterAnalysis(state: PlanChatbotStateType): string {
  * Router: After confirmation handling
  */
 function routeAfterConfirm(state: PlanChatbotStateType): string {
-  console.log("[routeAfterConfirm] Mode:", state.mode);
-  console.log("[routeAfterConfirm] Has pending edit:", !!state.pendingEdit);
-  console.log(
-    "[routeAfterConfirm] Waiting for confirmation:",
-    state.waitingForConfirmation
-  );
+  // console.log("[routeAfterConfirm] Mode:", state.mode);
+  // console.log("[routeAfterConfirm] Has pending edit:", !!state.pendingEdit);
+  // console.log( "[routeAfterConfirm] Waiting for confirmation:", state.waitingForConfirmation );
 
   // If user confirmed, execute edit
   if (state.mode === "edit" && state.pendingEdit) {
-    console.log("[routeAfterConfirm] → execute_edit");
+    // console.log("[routeAfterConfirm] → execute_edit");
     return "execute_edit";
   }
 
   // If user rejected or no pending edit, respond
-  console.log("[routeAfterConfirm] → respond");
+  // console.log("[routeAfterConfirm] → respond");
   return "respond";
 }
 

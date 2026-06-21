@@ -32,16 +32,14 @@ export async function processPlanChatMessage(
     // Use the provided thread ID (which includes timestamp for session isolation)
     // Validate it belongs to this user for security
     if (!threadId.startsWith(`plan-chat-${user.id}`)) {
-      console.error(
-        "[processPlanChatMessage] Thread ID mismatch - possible security issue",
-      );
+      // console.error( "[processPlanChatMessage] Thread ID mismatch - possible security issue");
       return {
         success: false,
         error: "Invalid session",
       };
     }
 
-    console.log("[processPlanChatMessage] Using thread ID:", threadId);
+    // console.log("[processPlanChatMessage] Using thread ID:", threadId);
 
     // Compile graph
     const graph = compilePlanChatbotGraph();
@@ -53,30 +51,18 @@ export async function processPlanChatMessage(
 
     const currentState = await graph.getState(config);
 
-    console.log("[processPlanChatMessage] Current state loaded:");
-    console.log("  - userId:", currentState.values.userId);
-    console.log(
-      "  - waitingForConfirmation:",
-      currentState.values.waitingForConfirmation,
-    );
-    console.log(
-      "  - pendingEdit:",
-      currentState.values.pendingEdit ? "EXISTS" : "NULL",
-    );
-    console.log("  - mode:", currentState.values.mode);
-    console.log(
-      "  - messages count:",
-      currentState.values.messages?.length || 0,
-    );
+    // console.log("[processPlanChatMessage] Current state loaded:");
+    // console.log("  - userId:", currentState.values.userId);
+    // console.log( "  - waitingForConfirmation:", currentState.values.waitingForConfirmation);
+    // console.log( "  - pendingEdit:", currentState.values.pendingEdit ? "EXISTS" : "NULL");
+    // console.log("  - mode:", currentState.values.mode);
+    // console.log( "  - messages count:", currentState.values.messages?.length || 0);
 
     // Only initialize userId/userName on first message
     // For subsequent messages, the checkpointer will load previous state automatically
     const shouldInitialize = !currentState.values.userId;
 
-    console.log(
-      "[processPlanChatMessage] Should initialize:",
-      shouldInitialize,
-    );
+    // console.log( "[processPlanChatMessage] Should initialize:", shouldInitialize);
 
     // Track initial message count to return only new messages
     const initialMessageCount = currentState.values.messages?.length || 0;
@@ -172,10 +158,7 @@ export async function initializePlanChatSession(): Promise<PlanChatResponse> {
     const timestamp = Date.now();
     const userSpecificThreadId = `plan-chat-${user.id}-${timestamp}`;
 
-    console.log(
-      "[initializePlanChatSession] Starting fresh session:",
-      userSpecificThreadId,
-    );
+    // console.log( "[initializePlanChatSession] Starting fresh session:", userSpecificThreadId);
 
     // Compile graph
     const graph = compilePlanChatbotGraph();

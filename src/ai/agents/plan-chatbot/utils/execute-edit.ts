@@ -80,9 +80,7 @@ export async function executePlanEdit(
 
         // If overwrite is requested, remove the conflicting task first
         if (shouldOverwrite && conflictingActivity && conflictingTime) {
-          console.log(
-            "[executePlanEdit] Overwrite requested - removing conflicting task",
-          );
+          // console.log( "[executePlanEdit] Overwrite requested - removing conflicting task");
 
           // Find and remove the conflicting task
           const normalizedConflictingTime = normalizeTimeRange(conflictingTime);
@@ -95,10 +93,7 @@ export async function executePlanEdit(
           );
 
           if (conflictingTask) {
-            console.log(
-              "[executePlanEdit] Found conflicting task:",
-              conflictingTask.id,
-            );
+            // console.log( "[executePlanEdit] Found conflicting task:", conflictingTask.id);
             const removeResult = await removeTask({
               taskId: conflictingTask.id,
             });
@@ -109,9 +104,7 @@ export async function executePlanEdit(
                 error: `Failed to remove conflicting task: ${removeResult.message}`,
               };
             }
-            console.log(
-              "[executePlanEdit] Conflicting task removed successfully",
-            );
+            // console.log( "[executePlanEdit] Conflicting task removed successfully");
           }
         }
 
@@ -196,16 +189,7 @@ export async function executePlanEdit(
           status?: "pending" | "done" | "partial";
         };
 
-        console.log("[modify_task] Data received:", {
-          taskId,
-          day,
-          timeRange,
-          activity,
-          oldActivity,
-          notes,
-          modifyType,
-          status,
-        });
+        // console.log("[modify_task] Data received:", { taskId, day, timeRange, activity, oldActivity, notes, modifyType, status, });
 
         let task;
 
@@ -232,22 +216,9 @@ export async function executePlanEdit(
             };
           }
 
-          console.log("[modify_task] Searching for task with:", {
-            oldActivity,
-            day,
-            timeRange,
-          });
+          // console.log("[modify_task] Searching for task with:", { oldActivity, day, timeRange, });
 
-          console.log(
-            "[modify_task] All tasks in plan:",
-            plan.tasks.map((t) => ({
-              id: t.id,
-              day: t.day,
-              timeRange: t.timeRange,
-              activity: t.activity,
-              normalizedTimeRange: normalizeTimeRange(t.timeRange),
-            })),
-          );
+          // console.log( "[modify_task] All tasks in plan:", plan.tasks.map((t) => ({ id: t.id, day: t.day, timeRange: t.timeRange, activity: t.activity, normalizedTimeRange: normalizeTimeRange(t.timeRange), })));
 
           // Find matching task in user's plan
           const normalizedTimeRange = normalizeTimeRange(timeRange);
@@ -258,16 +229,7 @@ export async function executePlanEdit(
               t.activity.toLowerCase().includes(oldActivity.toLowerCase()),
           );
 
-          console.log(
-            "[modify_task] Found tasks:",
-            tasks.length,
-            tasks.map((t) => ({
-              id: t.id,
-              activity: t.activity,
-              timeRange: t.timeRange,
-              day: t.day,
-            })),
-          );
+          // console.log( "[modify_task] Found tasks:", tasks.length, tasks.map((t) => ({ id: t.id, activity: t.activity, timeRange: t.timeRange, day: t.day, })));
 
           if (tasks.length === 0) {
             return {
@@ -286,7 +248,7 @@ export async function executePlanEdit(
           task = tasks[0];
         }
 
-        console.log("[modify_task] Task to update:", task);
+        // console.log("[modify_task] Task to update:", task);
 
         // Store previous task data for undo
         const previousData = {
@@ -329,14 +291,14 @@ export async function executePlanEdit(
           ...(modifyType === "status" && status && { status }),
         };
 
-        console.log("[modify_task] Update data:", updateData);
+        // console.log("[modify_task] Update data:", updateData);
 
         const updated = await prisma.task.update({
           where: { id: task.id },
           data: updateData,
         });
 
-        console.log("[modify_task] Updated task:", updated);
+        // console.log("[modify_task] Updated task:", updated);
 
         result = {
           success: true,
@@ -359,9 +321,7 @@ export async function executePlanEdit(
           };
         }
 
-        console.log(
-          `[modify_task_bulk] Updating all tasks on ${day} to status: ${status}`,
-        );
+        // console.log( `[modify_task_bulk] Updating all tasks on ${day} to status: ${status}`);
 
         // Find all tasks on the specified day
         const tasksToUpdate = plan.tasks.filter(
@@ -392,9 +352,7 @@ export async function executePlanEdit(
 
         const updatedTasks = await Promise.all(updatePromises);
 
-        console.log(
-          `[modify_task_bulk] Updated ${updatedTasks.length} tasks on ${day} to status: ${status}`,
-        );
+        // console.log( `[modify_task_bulk] Updated ${updatedTasks.length} tasks on ${day} to status: ${status}`);
 
         const activityNames = updatedTasks
           .map((t) => `**${t.activity}**`)
@@ -496,14 +454,14 @@ export async function executePlanEdit(
       }
 
       case "delete_plan": {
-        console.log("  🗑️ Executing delete_plan for userId:", userId);
+        // console.log("  🗑️ Executing delete_plan for userId:", userId);
 
         // Delete all vector embeddings for this plan
         try {
           const { deletePlanEmbedding } =
             await import("@/actions/plan/process-embedding");
           await deletePlanEmbedding(userId);
-          console.log("  ✅ Deleted plan embeddings from vector store");
+          // console.log("  ✅ Deleted plan embeddings from vector store");
         } catch (error) {
           console.error("  ❌ Failed to delete plan embeddings:", error);
           // Continue with deletion even if embedding deletion fails
@@ -513,13 +471,13 @@ export async function executePlanEdit(
         await prisma.task.deleteMany({
           where: { planId: plan.id },
         });
-        console.log("  ✅ Deleted all tasks");
+        // console.log("  ✅ Deleted all tasks");
 
         // Delete the plan
         await prisma.plan.delete({
           where: { id: plan.id },
         });
-        console.log("  ✅ Deleted plan");
+        // console.log("  ✅ Deleted plan");
 
         return {
           success: true,

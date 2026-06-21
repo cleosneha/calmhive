@@ -27,7 +27,7 @@ export async function executeEditNode(
     );
 
     if (!result.success) {
-      console.error("Plan edit execution failed:", result.error);
+      // console.error("Plan edit execution failed:", result.error);
       return {
         mode: "query",
         waitingForConfirmation: false,

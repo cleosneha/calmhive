@@ -50,17 +50,9 @@ export async function handleCustomResponse(
     question,
     step,
   );
-  console.log(
-    "  🔧 [Modification Check]",
-    "modificationRequired:",
-    validationResult.modificationRequired,
-    "| modifiedField:",
-    validationResult.modifiedField,
-    "| modifiedValue:",
-    validationResult.modifiedValue,
-  );
+  // console.log( "  🔧 [Modification Check]", "modificationRequired:", validationResult.modificationRequired, "| modifiedField:", validationResult.modifiedField, "| modifiedValue:", validationResult.modifiedValue);
   if (modificationResult) {
-    console.log("  ✅ Modification handled, returning result");
+    // console.log("  ✅ Modification handled, returning result");
     return modificationResult;
   }
 

@@ -646,7 +646,7 @@ export default function PrivacyPolicyPage() {
               <p className="text-gray-700 text-sm pt-3">
                 To exercise these rights, contact{" "}
                 <span className="font-semibold text-gray-900">
-                  celersneha@gmail.com
+                  cleosneha@gmail.com
                 </span>
               </p>
             </div>
@@ -671,7 +671,7 @@ export default function PrivacyPolicyPage() {
                 promptly delete their account and data. Parents concerned about
                 their child&#39;s data should contact{" "}
                 <span className="font-semibold text-gray-900">
-                  celersneha@gmail.com
+                  cleosneha@gmail.com
                 </span>
                 .
               </p>
@@ -754,10 +754,10 @@ export default function PrivacyPolicyPage() {
                 <p className="text-gray-700">
                   <span className="font-semibold text-gray-900"> Email:</span>{" "}
                   <a
-                    href="mailto:celersneha@gmail.com"
+                    href="mailto:cleosneha@gmail.com"
                     className="text-[var(--ch-sage-dark)] hover:underline"
                   >
-                    celersneha@gmail.com
+                    cleosneha@gmail.com
                   </a>
                 </p>
               </div>
