@@ -108,6 +108,8 @@ export function usePlanTable(plan: Plan, onRefresh?: () => Promise<void>) {
 
       toast.success("Status updated successfully");
 
+      window.dispatchEvent(new Event("calmhive:activity-updated"));
+
       if (onRefresh) {
         await onRefresh();
       }

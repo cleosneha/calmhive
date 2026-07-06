@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { MetricsCard } from "@/components/insights/metrics-card";
 import { CompletionTrendGraph } from "@/components/insights/completion-trend-graph";
 import { TimeSpentGraph } from "@/components/insights/time-spent-graph";
 import { HolidaysGraph } from "@/components/insights/holidays-graph";
-import { ProfileCard } from "@/components/insights/profile-card";
+import { MonthlyActivityHeatmap } from "@/components/insights/monthly-activity-heatmap";
 import { AIFeedback } from "@/components/insights/ai-feedback";
 import { InsightsHeader } from "@/components/insights/insights-header";
 import { PlanSuggestionsCard } from "@/components/insights/plan-suggestions-card";
 import { InsightsFilter } from "@/components/insights/insights-filter";
+import { getActivityGraphData } from "@/actions/insights/monthly-activity";
+
 import type { FilterChangeParams } from "@/types/insights-filter";
+import type { DayActivity } from "@/types/activity";
 import {
   FiCheckCircle,
   FiBook,
@@ -18,6 +21,7 @@ import {
   FiClock,
   FiAlertCircle,
 } from "react-icons/fi";
+import { ProfileCard } from "@/components/insights/profile-card";
 
 interface DashboardData {
   currentWeek: {
@@ -44,7 +48,7 @@ interface DashboardData {
   };
   profile: {
     name: string | null;
-    email: string;
+    email: string | null;
     streak: number;
     maxStreak: number;
   } | null;
@@ -73,6 +77,39 @@ export default function InsightsClient({
     setFilterParams(params);
   }, []);
 
+  const [activityData, setActivityData] = useState<DayActivity[]>([]);
+  const [isLoadingActivity, setIsLoadingActivity] = useState(true);
+
+  const loadActivityData = useCallback(async () => {
+    setIsLoadingActivity(true);
+    try {
+      const data = await getActivityGraphData(userId, 12);
+      setActivityData(data);
+    } catch {
+      setActivityData([]);
+    } finally {
+      setIsLoadingActivity(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    loadActivityData();
+  }, [loadActivityData]);
+
+  useEffect(() => {
+    const handleActivityUpdate = () => {
+      loadActivityData();
+    };
+
+    window.addEventListener("calmhive:activity-updated", handleActivityUpdate);
+    return () => {
+      window.removeEventListener(
+        "calmhive:activity-updated",
+        handleActivityUpdate,
+      );
+    };
+  }, [loadActivityData]);
+
   // Format completion rate
   const completionPercentage = currentWeek
     ? Math.round((currentWeek.completedTasks / currentWeek.totalTasks) * 100) ||
@@ -90,25 +127,20 @@ export default function InsightsClient({
         {/* Header */}
         <InsightsHeader />
 
-        {/* Top Section: AI Feedback + Profile Card */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-8">
-          {/* Left: AI Feedback */}
-          <div className="lg:col-span-2">
-            <AIFeedback
-              suggestion={currentWeek?.suggestions}
-              weekData={currentWeek}
-            />
-          </div>
+        {/* AI Feedback */}
+        <div className="mb-8">
+          <AIFeedback
+            suggestion={currentWeek?.suggestions}
+            weekData={currentWeek}
+          />
+        </div>
 
-          {/* Right: Profile Card */}
-          <div className="lg:col-span-2">
-            <ProfileCard
-              userName={profile?.name || "User"}
-              userEmail={profile?.email || ""}
-              currentStreak={profile?.streak || 0}
-              maxStreak={profile?.maxStreak || 0}
-            />
-          </div>
+        {/* Monthly Activity Heatmap */}
+        <div className="mb-8">
+          <MonthlyActivityHeatmap
+            activityData={activityData}
+            isLoading={isLoadingActivity}
+          />
         </div>
 
         {/* New Plan Suggestions Section */}
@@ -232,6 +264,17 @@ export default function InsightsClient({
               holidays: d.holidays,
             }))}
             totalHolidaysThisWeek={holidaysThisWeek}
+          />
+        </div>
+
+        {/* Profile Card */}
+        <div className="mt-8">
+          <ProfileCard
+            userName={profile?.name ?? undefined}
+            userEmail={profile?.email ?? undefined}
+            currentStreak={profile?.streak ?? 0}
+            maxStreak={profile?.maxStreak ?? 0}
+            isLoading={!profile}
           />
         </div>
 

@@ -2,6 +2,7 @@
 
 import { getCurrentUser } from "@/actions/auth";
 import prisma from "@/lib/db";
+import { revalidatePath } from "next/cache";
 import { updateStreak } from "./update-streak";
 import { updateUserStreak } from "./streak-helper";
 
@@ -121,6 +122,9 @@ export async function updateTaskStatus(
       console.error("Error updating streak:", streakError);
       // Don't fail the whole operation if streak update fails
     }
+
+    revalidatePath("/user/insights");
+    revalidatePath("/user/plan");
 
     return {
       success: true,

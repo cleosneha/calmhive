@@ -59,6 +59,9 @@ export type {
   JournalEntryWithUser,
 } from "./journal";
 
+// Activity Types
+export type { DayActivity } from "./activity";
+
 // Onboarding Types
 export type {
   OnboardingQuestion,

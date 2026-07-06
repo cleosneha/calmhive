@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FiUser } from "react-icons/fi";
-import { useSession } from "@/hooks/useSession";
 
 interface ProfileCardProps {
   userName?: string;
@@ -14,34 +12,11 @@ interface ProfileCardProps {
   isLoading?: boolean;
 }
 
-function getInitials(name?: string | null) {
-  if (!name) return "?";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
-}
-
 export function ProfileCard({
-  userName,
-  userEmail,
   currentStreak = 0,
   maxStreak = 0,
   isLoading = false,
 }: ProfileCardProps) {
-  const [isHydrated, setIsHydrated] = useState(false);
-  const { data } = useSession();
-  const user = data?.user;
-  const avatar = user?.image;
-  const initials = getInitials(userName || user?.name || user?.email || "");
-
-  useEffect(() => {
-    // Mark as hydrated after component mounts on client
-    const timer = setTimeout(() => setIsHydrated(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
-
   if (isLoading) {
     return (
       <Card className="bg-white border-slate-200 h-full">
@@ -68,38 +43,10 @@ export function ProfileCard({
             <FiUser className="w-5 h-5" />
             Your Profile
           </CardTitle>
-
-          {/* Avatar on the right side */}
-          {isHydrated && avatar ? (
-            <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
-              <Image
-                src={avatar}
-                alt={`${userName || user?.name || "User"} avatar`}
-                width={48}
-                height={48}
-                className="object-cover w-full h-full"
-              />
-            </div>
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-[var(--ch-sage-dark)] text-white flex items-center justify-center font-bold">
-              {initials}
-            </div>
-          )}
         </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* User Info */}
-        <div className="border-b border-slate-200 pb-3">
-          <p className="text-sm font-semibold text-slate-600 mb-1">Name</p>
-          <p className="text-base font-medium text-slate-900">
-            {userName || user?.name || "User"}
-          </p>
-          <p className="text-xs text-slate-500 mt-0.5">
-            {userEmail || user?.email}
-          </p>
-        </div>
-
         {/* Streak Section */}
         <div className="space-y-2">
           {/* Streak Display - Different layouts for mobile and desktop */}
