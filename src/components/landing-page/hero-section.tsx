@@ -4,7 +4,11 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export default function HeroSection() {
+interface HeroSectionProps {
+  isLoggedIn: boolean;
+}
+
+export default function HeroSection({ isLoggedIn }: HeroSectionProps) {
   return (
     <section className="relative w-full min-h-screen flex flex-col overflow-hidden bg-white -mt-[76px] pt-[76px]">
       {/* Background Image */}
@@ -40,9 +44,15 @@ export default function HeroSection() {
             A quiet space for your mind.
           </p>
 
-          <Button asChild variant="lowOpacityWhite">
-            <Link href="/register">Start your Journey</Link>
-          </Button>
+          {isLoggedIn ? (
+            <Button asChild variant="lowOpacityWhite">
+              <Link href="/user">Go to Dashboard</Link>
+            </Button>
+          ) : (
+            <Button asChild variant="lowOpacityWhite">
+              <Link href="/register">Start your Journey</Link>
+            </Button>
+          )}
         </div>
       </div>
     </section>

@@ -13,16 +13,43 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
+interface HeaderLoggedOutProps {
+  isLoggedIn: boolean;
+  user?: {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  } | null;
+}
+
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/guide", label: "Guide" },
   { href: "/contact", label: "Contact" },
 ];
 
-export default function HeaderLoggedOut() {
+function getInitials(name?: string | null, email?: string | null) {
+  if (name) {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  }
+  if (email) {
+    return email[0].toUpperCase();
+  }
+  return "?";
+}
+
+export default function HeaderLoggedOut({
+  isLoggedIn,
+  user,
+}: HeaderLoggedOutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const isLandingPage = pathname === "/";
+  const initials = getInitials(user?.name, user?.email);
 
   return (
     <header
@@ -107,38 +134,69 @@ export default function HeaderLoggedOut() {
                   ))}
                 </nav>
 
-                {/* Get Started Button at Bottom */}
+                {/* Bottom: Get Started or User Initials */}
                 <div className="p-4 border-t border-gray-200">
-                  <Button
-                    asChild
-                    className="w-full bg-[var(--ch-sage-dark)] hover:bg-[var(--ch-sage-light)] text-white font-semibold py-3 rounded-2xl"
-                  >
-                    <Link
-                      href="/login"
-                      onClick={() => setMobileMenuOpen(false)}
+                  {isLoggedIn ? (
+                    <div className="flex justify-center">
+                      <Link
+                        href="/user"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="bg-white text-[var(--ch-sage-dark)] w-10 h-10 flex items-center justify-center rounded-full text-base font-bold select-none focus:outline-none focus:ring-2 focus:ring-[var(--ch-sage-dark)] border border-[var(--ch-sage-dark)]"
+                          aria-label="User menu"
+                        >
+                          {initials}
+                        </Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <Button
+                      asChild
+                      className="w-full bg-[var(--ch-sage-dark)] hover:bg-[var(--ch-sage-light)] text-white font-semibold py-3 rounded-2xl"
                     >
-                      GET STARTED
-                    </Link>
-                  </Button>
+                      <Link
+                        href="/login"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        GET STARTED
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               </div>
             </SheetContent>
           </Sheet>
         </div>
 
-        {/* Right: Get Started Button - Hidden on mobile */}
+        {/* Right: Get Started Button or User Initials - Hidden on mobile */}
         <div className="hidden md:flex items-center gap-2">
-          <Button
-            asChild
-            variant="white"
-            className={`font-semibold px-4 py-2 rounded-2xl transition-shadow ${
-              isLandingPage
-                ? "bg-[var(--ch-sage-dark)] shadow-[inset_0_2px_8px_rgba(0,0,0,0.18)] hover:shadow-[inset_0_3px_10px_rgba(0,0,0,0.22)] hover:bg-[var(--ch-sage-light)] text-white"
-                : "bg-[var(--ch-sage-dark)] hover:bg-[var(--ch-sage-light)] text-white shadow-sm"
-            }`}
-          >
-            <Link href="/login">GET STARTED</Link>
-          </Button>
+          {isLoggedIn ? (
+            <Link href="/user">
+              <Button
+                variant="secondary"
+                size="icon"
+                className="bg-[var(--ch-taupe)]/80 text-[var(--ch-sage-dark)] w-10 h-10 flex items-center justify-center rounded-full text-base font-bold select-none "
+                aria-label="User menu"
+              >
+                {initials}
+              </Button>
+            </Link>
+          ) : (
+            <Button
+              asChild
+              variant="white"
+              className={`font-semibold px-4 py-2 rounded-2xl transition-shadow ${
+                isLandingPage
+                  ? "bg-[var(--ch-sage-dark)] shadow-[inset_0_2px_8px_rgba(0,0,0,0.18)] hover:shadow-[inset_0_3px_10px_rgba(0,0,0,0.22)] hover:bg-[var(--ch-sage-light)] text-white"
+                  : "bg-[var(--ch-sage-dark)] hover:bg-[var(--ch-sage-light)] text-white shadow-sm"
+              }`}
+            >
+              <Link href="/login">GET STARTED</Link>
+            </Button>
+          )}
         </div>
       </nav>
     </header>

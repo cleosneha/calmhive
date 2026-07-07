@@ -1,5 +1,6 @@
 import React from "react";
 import { Metadata } from "next";
+import { getAuthState } from "@/actions/auth";
 import HeaderLoggedOut from "@/components/shared/header/header-logged-out";
 import Footer from "@/components/shared/footer/footer";
 import GuideContent from "./guide-content";
@@ -7,10 +8,12 @@ import { pageMetadata } from "@/seo";
 
 export const metadata: Metadata = pageMetadata.guide;
 
-export default function GuidePage() {
+export default async function GuidePage() {
+  const { isLoggedIn, user } = await getAuthState();
+
   return (
     <div className="min-h-screen flex flex-col bg-[var(--ch-offwhite)]">
-      <HeaderLoggedOut />
+      <HeaderLoggedOut isLoggedIn={isLoggedIn} user={user} />
       <main className="flex-1">
         <GuideContent />
       </main>
