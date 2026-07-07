@@ -43,17 +43,21 @@ export function calculateTaskStatistics(tasks: Task[]): TaskStatistics {
 }
 
 /**
- * Calculate average time spent per task in hours
+ * Calculate average time spent per completed task in hours
+ * Only includes tasks with "done" status — pending/partial tasks are excluded
+ * since no actual time was spent on them.
  */
 export function calculateAverageTimeSpent(tasks: Task[]): number {
-  if (tasks.length === 0) return 0;
+  const doneTasks = tasks.filter((task) => task.status === "done");
 
-  const totalMinutes = tasks.reduce(
+  if (doneTasks.length === 0) return 0;
+
+  const totalMinutes = doneTasks.reduce(
     (sum, task) => sum + parseTimeRangeDuration(task.timeRange),
     0,
   );
 
-  return totalMinutes / tasks.length / 60; // Convert to hours
+  return totalMinutes / doneTasks.length / 60; // Convert to hours
 }
 
 /**
