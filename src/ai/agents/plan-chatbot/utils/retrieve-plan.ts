@@ -44,7 +44,7 @@ export async function retrievePlanFromEmbeddings(
       return null;
     }
 
-    return formatPlanForEmbedding(plan.tasks, plan.daysOff);
+    return await formatPlanForEmbedding(plan.tasks, plan.daysOff);
   } catch (error) {
     console.error("DB fallback retrieval failed:", error);
     return null;

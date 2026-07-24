@@ -195,7 +195,7 @@ export async function deletePlanEmbedding(
  * Format plan tasks for embedding
  * Handles both DB tasks (with IDs) and LLM tasks (without IDs)
  */
-export function formatPlanForEmbedding(
+export async function formatPlanForEmbedding(
   tasks: PlanTask[] | Task[],
   daysOff: string[],
 ): string {
