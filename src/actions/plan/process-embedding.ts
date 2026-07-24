@@ -30,7 +30,7 @@ export async function embedPlan(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Format plan data for embedding
-    const planText = formatPlanForEmbedding(tasks, daysOff);
+    const planText = await formatPlanForEmbedding(tasks, daysOff);
 
     const metadata = {
       userId,
@@ -198,7 +198,7 @@ export async function deletePlanEmbedding(
 export async function formatPlanForEmbedding(
   tasks: PlanTask[] | Task[],
   daysOff: string[],
-): string {
+): Promise<string> {
   const tasksByDay: Record<string, (PlanTask | Task)[]> = {};
 
   tasks.forEach((task) => {
