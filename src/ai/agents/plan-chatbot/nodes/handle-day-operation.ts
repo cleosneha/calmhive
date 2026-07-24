@@ -53,14 +53,7 @@ export function isDayOperationSupported(
     if (pattern.test(userMessage)) {
       return {
         supported: false,
-        message:
-          "This type of day operation is not currently supported. You can:\n\n" +
-          "• Add days off\n" +
-          "• Remove existing days\n" +
-          "• Copy one day's plan to another\n" +
-          "• Rename a day\n" +
-          "• Swap two days\n\n" +
-          "For other changes, please edit your plan manually.",
+        message: "This type of day operation is not currently supported. ",
       };
     }
   }
