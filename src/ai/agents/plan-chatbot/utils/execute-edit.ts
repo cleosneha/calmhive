@@ -1,5 +1,4 @@
 import prisma from "@/lib/db";
-import { embedPlan } from "@/actions/plan/process-embedding";
 import {
   calculateHoursSummaryFromTasks,
   getDurationFromTimeRange,
@@ -492,25 +491,6 @@ export async function executePlanEdit(
 
       default:
         return { success: false, error: "Unknown edit type" };
-    }
-
-    // Update embeddings after successful edit
-    if (result.success) {
-      // Fetch fresh tasks after the edit
-      const updatedPlan = await prisma.plan.findUnique({
-        where: { id: plan.id },
-        include: { tasks: true },
-      });
-
-      if (updatedPlan) {
-        // Update vector store with new plan data
-        await embedPlan(
-          userId,
-          plan.id,
-          updatedPlan.tasks,
-          updatedPlan.daysOff,
-        );
-      }
     }
 
     return result;

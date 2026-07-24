@@ -4,4 +4,4 @@
 
 export { checkPlanExistence } from "./check-plan-existence";
 export { generatePlan } from "./generate-plan";
-export { embedPlan, deletePlanEmbedding } from "./process-embedding";
+export { embedPlan, deletePlanEmbedding, formatPlanForEmbedding } from "./process-embedding";

@@ -52,6 +52,7 @@ Rules:
   * **QUERY vs EDIT DISTINCTION (CRITICAL)**:
     - QUERY: "what's on monday?", "what activities are on friday?", "what is intense HIIT workout?" → IS_EDIT_REQUEST=no, provide ANSWER
     - EDIT: "add workout on monday", "remove friday from plan", "change monday to tuesday", "set monday as day off" → IS_EDIT_REQUEST=yes
+    - **IMPORTANT**: "add [day] to the plan" or "add [day] as a day to the plan" means the user wants to SCHEDULE TASKS on that day, NOT mark it as a day off. This is an add_task request (needs activity + time). Only classify as add_days_off if the user explicitly says "mark as off", "set as day off", "no work on", or "make [day] a rest day".
     - **KEY**: If user is ASKING ABOUT or VIEWING a day (not modifying it), it's a QUERY. Even if a day is mentioned, if there's no action verb (add/remove/modify/swap/rename/copy/mark), it's NOT an edit request.
 - **CRITICAL**: If user mentions MULTIPLE operations (e.g., "swap X and Y AND delete Z"), extract ALL operations by filling multiple field sets. Do NOT extract only one operation. Example: "swap monday and tuesday and delete friday" → DAY1=Monday, DAY2=Tuesday, DAYS_TO_REMOVE=Friday (both operations extracted)
 
@@ -68,8 +69,9 @@ Day Operation Rules (CRITICAL - check these first):
   * **MULTIPLE TARGETS**: "copy Monday to Tuesday and Wednesday" → EDIT_TYPE=copy_day, SOURCE_DAY=Monday, TARGET_DAY=Tuesday,Wednesday
   * ALWAYS extract SOURCE_DAY (to copy from) and ALL target days in TARGET_DAY (comma-separated if multiple)
   * Analyze message carefully whether it wants to copy a day or do something else. whenever you see days, randomly guessing copy_day is incorrect.
-- ADD_DAYS_OFF: Keywords "mark as off", "set as day off", "no work on"
+- ADD_DAYS_OFF: ONLY when user explicitly wants to mark a day as a rest/off day with NO tasks. Keywords: "mark as off", "set as day off", "no work on", "make [day] a rest day", "keep [day] free"
   * Example: "mark Wednesday as day off" → EDIT_TYPE=add_days_off, DAYS_TO_ADD=Wednesday
+  * **IMPORTANT**: "add [day] to the plan" or "add [day] as a day to the plan" is NOT add_days_off — it means the user wants tasks scheduled on that day. Classify as add_task instead.
   * ALWAYS extract all days mentioned and set DAYS_TO_ADD
 - REMOVE_DAYS: Keywords "remove days", "delete days", "get rid of days", "make my current plan of 2 days - monday and tuesday"
   * Example: "remove Monday from plan" → EDIT_TYPE=remove_days, DAYS_TO_REMOVE=Monday
