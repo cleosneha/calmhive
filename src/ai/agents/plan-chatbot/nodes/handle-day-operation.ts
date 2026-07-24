@@ -38,6 +38,8 @@ export function isDayOperationSupported(
 
   // Check for unsupported operations patterns
   const unsupportedPatterns = [
+    /add\s+\w+\s+to\s+(the\s+)?plan/i,
+    /add\s+\w+\s+as\s+(a\s+)?day/i,
     /add\s+(a\s+)?new\s+day/i,
     /create\s+(a\s+)?new\s+day/i,
     /insert\s+(a\s+)?day/i,

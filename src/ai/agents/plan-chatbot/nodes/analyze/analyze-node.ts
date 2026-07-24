@@ -5,6 +5,7 @@ import { processUserMessage, HARD_CODED_MESSAGES } from "../../utils";
 import { buildEditPreview, buildPreviewMessage } from "../../helpers";
 import { determineIfDoable } from "../../utils/is-doable";
 import { handleClarificationResponse } from "./clarifications";
+import { isDayOperationSupported } from "../handle-day-operation";
 import {
   validateAddTask,
   validateRemoveTask,
@@ -74,6 +75,15 @@ export async function analyzeNode(
       ],
       responseHandled: true,
       awaitingClarification: null,
+    };
+  }
+
+  // PRIORITY: Reject unsupported day operations before hitting the LLM
+  const unsupportedCheck = isDayOperationSupported("", userMessage);
+  if (!unsupportedCheck.supported) {
+    return {
+      messages: [new AIMessage(unsupportedCheck.message!)],
+      responseHandled: true,
     };
   }
 
